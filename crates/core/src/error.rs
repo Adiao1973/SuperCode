@@ -17,6 +17,10 @@ pub enum CoreError {
     #[error("进程不存在: {0}")]
     ProcessNotFound(u64),
 
+    /// 审批链路失败（fail-closed：未知请求、通道关闭等，一律不放行）
+    #[error("审批失败: {0}")]
+    PermissionFailed(String),
+
     /// io 错误
     #[error("io 错误: {0}")]
     Io(#[from] std::io::Error),

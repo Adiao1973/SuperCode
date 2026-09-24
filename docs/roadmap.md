@@ -27,7 +27,7 @@
 | P0-4 | AcpDriver：spawn `opencode acp`，完成 initialize / session/new / session/prompt，事件转 `AgentEvent` | `supercode detect` → 打印 `opencode <版本>`；`supercode run "用一句话介绍你自己" --cwd /tmp` → 终端流式打印 agent 消息，`TurnCompleted{EndTurn}` 收尾 | 已验收 |
 
 > **P0-4 偏差记录**：验收中发现 `opencode acp` 不继承 auth 默认模型，回退到 zen 免费模型 `big-pickle`（限流严格，表现为 provider 429）。处理：在 `~/.config/opencode/opencode.jsonc` 显式固定 `"model": "zhipuai-coding-plan/glm-5.3-flash"`。此为环境配置问题，非代码缺陷；Phase 1 桌面端的 agent 引导流程应包含"默认模型检查"（已记入 P1-7 关注点）。
-| P0-5 | ApprovalBroker + CLI 交互审批（y/n/a） | 配置 `bash(*)` 为 ask 后 `supercode run "运行 git status"` → 出现权限请求提示（完整命令可见），选 y 后工具执行、事件流继续；选 n 后 agent 收到拒绝 | 待办 |
+| P0-5 | ApprovalBroker + CLI 交互审批（y/n/a） | 配置 `bash(*)` 为 ask 后 `supercode run "运行 git status"` → 出现权限请求提示（完整命令可见），选 y 后工具执行、事件流继续；选 n 后 agent 收到拒绝 | 已验收 |
 | P0-6 | 预授权规则引擎（allow/deny/ask + pattern） | 规则 `allow: ["bash(git status)"]` 时同一任务**不再**弹审批；`deny` 规则直接拒绝且 approvals 留痕 | 待办 |
 | P0-7 | 取消：`session/cancel` + 超时兜底杀进程组 | 长任务运行中按 Ctrl-C / `supercode cancel` → 收到 `TurnCompleted{Cancelled}`；agent 进程组无残留 | 待办 |
 | P0-8 | 会话恢复：session/load + SQLite 存档 | `supercode sessions list` 列出历史；`supercode resume <id> "继续"` 基于原上下文回答（可被人工核验） | 待办 |
