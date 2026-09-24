@@ -84,23 +84,26 @@ SuperCode/
 pub enum AgentEvent {
     /// 会话已创建（含 sessionId）
     SessionStarted { session_id: String },
-    /// agent 消息增量块（同一 message_id 的 chunk 按序拼接）
+    /// agent 消息增量块（同一 message_id 的 chunk 按序拼接；ACP 的 message_id
+    /// 可选，缺失时由 driver 按轮合成 turn-N）
     MessageChunk { message_id: String, text: String },
-    /// 工具调用（首次出现，status=pending）
+    /// agent 思考过程增量块（ACP agent_thought_chunk）
+    ThoughtChunk { message_id: String, text: String },
+    /// 工具调用（首次出现，status=pending；ACP 的 name/raw_input 均可选）
     ToolCall {
         tool_call_id: String,
-        name: String,
+        name: Option<String>,
         title: Option<String>,
-        kind: ToolKind,          // Read | Edit | Execute | Other
-        raw_input: serde_json::Value,
+        kind: ToolKind,          // Read | Edit | Delete | Move | Search | Execute | Fetch | Other
+        raw_input: Option<serde_json::Value>,
     },
-    /// 工具调用状态更新（in_progress / completed / failed，可含 content/locations/diff）
+    /// 工具调用状态更新（status 可选：update 可能只带 content/locations）
     ToolCallUpdate {
         tool_call_id: String,
-        status: ToolStatus,
-        content: Vec<ContentBlock>,   // 对齐 ACP ContentBlock（text/image/resource）
-        locations: Vec<FileLocation>, // 可选：涉及文件与行区间
-        diff: Option<String>,         // 统一 diff 文本（若有）
+        status: Option<ToolStatus>,  // Pending | InProgress | Completed | Failed
+        content: Vec<ContentBlock>,
+        locations: Vec<FileLocation>,
+        diff: Option<String>,        // ACP v1 无独立 diff 字段，StreamJson 等 driver 填充
     },
     /// agent 生成的计划（plan 模式）
     Plan { entries: Vec<PlanEntry> },
@@ -116,14 +119,25 @@ pub enum AgentEvent {
 **支撑类型**（与 `AgentEvent` 同模块，语义对齐 ACP v1）：
 
 ```rust
-pub enum ToolKind { Read, Edit, Execute, Other }          // serde snake_case
+pub enum ToolKind { Read, Edit, Delete, Move, Search, Execute, Fetch, Other } // 对齐 ACP v1
 pub enum ToolStatus { Pending, InProgress, Completed, Failed }
 pub enum ContentBlock { Text { text }, Image { data, mime_type }, ResourceLink { uri } } // tag="type"
-pub struct FileLocation { pub path: PathBuf, pub line_start: Option<u32>, pub line_end: Option<u32> }
+pub struct FileLocation { pub path: PathBuf, pub line: Option<u32> } // 对齐 ACP ToolCallLocation
 pub struct PlanEntry { pub content: String, pub status: PlanEntryStatus }
 pub enum PlanEntryStatus { Pending, InProgress, Completed, Cancelled }
 pub enum StopReason { EndTurn, Cancelled, MaxTokens, MaxTurnRequests, Refusal }
 ```
+
+**权限模型**（对齐 ACP：option_id 是 agent 定义的**不透明字符串**，kind 才是语义）：
+
+```rust
+pub struct PermissionOption { pub option_id: String, pub name: String, pub kind: PermissionOptionKind }
+pub enum PermissionOptionKind { AllowOnce, AllowAlways, RejectOnce, RejectAlways }
+pub struct PermissionDecision { pub option_id: String, pub updated_input: Option<serde_json::Value> }
+```
+
+**落地节奏**：`AgentDriver` trait（§4.2）在 P0-8 会话恢复完成后再 trait 化（避免过早抽象）；
+Phase 0 期间 AcpDriver 先以具体方法 `run_prompt(cwd, prompt, events, permissions)` 落地。
 
 ### 4.2 `AgentDriver` trait
 
@@ -345,10 +359,8 @@ tasks(id TEXT PK, title TEXT, cwd TEXT, status TEXT, -- backlog|in_progress|revi
 
 ## 7. 进程生命周期管理
 
-- **spawn**：`command_group::AsyncGroupChild`（进程组），避免 agent 派生孙进程后杀不干净；子进程 stdout/stderr 分流，stderr 全量落日志文件。
-- **心跳**：driver 层监测 JSON-RPC 活性；进程意外退出 → 发 `AgentEvent::DriverError` 并标记会话 `failed`。
-- **取消**：优先协议层取消（ACP `session/cancel`）；超时（默认 10s）未响应则进程组 SIGKILL。
-- **app 退出清理**：宿主（CLI/Tauri）退出时对所有存活 agent 进程组发终止信号，登记到的 worktree/临时资源统一回收（Phase 2）。
+- **ACP 连接（AcpDriver）**：进程生命周期交由 `agent-client-protocol` SDK 管理——`AcpAgent` 以独立进程组 spawn（unix process_group(0)，专治 npx 包装器孤儿问题），连接结束由 ChildGuard 整组回收，stderr 捕获进错误信息；`AcpAgent::with_debug` 可拿到原始收发行做日志。取消优先协议层 `session/cancel`。
+- **非 ACP 进程（StreamJsonDriver 等 / 后续 Sidecar）**：走 `ProcessManager`（command_group 进程组杀树）+ 心跳 + 宿主退出 `shutdown_all` 清理。
 
 ## 8. 错误处理约定
 

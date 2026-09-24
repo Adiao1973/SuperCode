@@ -16,24 +16,29 @@ pub enum AgentEvent {
     /// 会话已创建（含 sessionId）
     SessionStarted { session_id: String },
 
-    /// agent 消息增量块（同一 message_id 的 chunk 按序拼接）
+    /// agent 消息增量块（同一 message_id 的 chunk 按序拼接；ACP 的 message_id
+    /// 可选，缺失时由 driver 按连接合成固定 id）
     MessageChunk { message_id: String, text: String },
 
-    /// 工具调用（首次出现，status=pending）
+    /// agent 思考过程增量块（ACP agent_thought_chunk）
+    ThoughtChunk { message_id: String, text: String },
+
+    /// 工具调用（首次出现，status=pending；ACP 的 name/raw_input 均可选）
     ToolCall {
         tool_call_id: String,
-        name: String,
+        name: Option<String>,
         title: Option<String>,
         kind: ToolKind,
-        raw_input: serde_json::Value,
+        raw_input: Option<serde_json::Value>,
     },
 
-    /// 工具调用状态更新（in_progress / completed / failed，可含 content/locations/diff）
+    /// 工具调用状态更新（status 可选：update 可能只带 content/locations）
     ToolCallUpdate {
         tool_call_id: String,
-        status: ToolStatus,
+        status: Option<ToolStatus>,
         content: Vec<ContentBlock>,
         locations: Vec<FileLocation>,
+        /// ACP v1 无独立 diff 字段，StreamJson 等 driver 填充
         diff: Option<String>,
     },
 
@@ -59,7 +64,11 @@ pub enum AgentEvent {
 pub enum ToolKind {
     Read,
     Edit,
+    Delete,
+    Move,
+    Search,
     Execute,
+    Fetch,
     Other,
 }
 
@@ -83,8 +92,7 @@ pub enum ContentBlock {
 #[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct FileLocation {
     pub path: PathBuf,
-    pub line_start: Option<u32>,
-    pub line_end: Option<u32>,
+    pub line: Option<u32>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize)]
@@ -131,7 +139,7 @@ mod tests {
 
         let ev = AgentEvent::ToolCallUpdate {
             tool_call_id: "t1".into(),
-            status: ToolStatus::InProgress,
+            status: Some(ToolStatus::InProgress),
             content: vec![ContentBlock::Text { text: "ok".into() }],
             locations: Vec::new(),
             diff: None,

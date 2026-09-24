@@ -55,17 +55,15 @@ impl EventAggregator {
 
 /// 入批：相邻同 message_id 的 chunk 就地拼接，其余保持原序入批。
 fn push_coalescing(batch: &mut Vec<AgentEvent>, event: AgentEvent) {
-    if let AgentEvent::MessageChunk { message_id, text } = &event {
-        if let Some(AgentEvent::MessageChunk {
+    if let AgentEvent::MessageChunk { message_id, text } = &event
+        && let Some(AgentEvent::MessageChunk {
             message_id: last_id,
             text: last_text,
         }) = batch.last_mut()
-        {
-            if last_id == message_id {
-                last_text.push_str(text);
-                return;
-            }
-        }
+        && last_id == message_id
+    {
+        last_text.push_str(text);
+        return;
     }
     batch.push(event);
 }
@@ -96,10 +94,10 @@ mod tests {
     fn tool_call(tool_call_id: &str) -> AgentEvent {
         AgentEvent::ToolCall {
             tool_call_id: tool_call_id.into(),
-            name: "bash".into(),
+            name: Some("bash".into()),
             title: None,
             kind: ToolKind::Execute,
-            raw_input: serde_json::json!({"command": "git status"}),
+            raw_input: Some(serde_json::json!({"command": "git status"})),
         }
     }
 

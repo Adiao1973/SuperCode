@@ -1,0 +1,415 @@
+//! AcpDriver：经 ACP（Agent Client Protocol v1）驱动 agent 子进程（当前：opencode）。
+//!
+//! 进程生命周期由 SDK 管理：`AcpAgent` 以独立进程组 spawn，连接结束整组回收。
+//! 事件经 `session/update` 通知流入，转换为统一的 [`AgentEvent`]。
+
+use std::path::PathBuf;
+use std::str::FromStr;
+
+use agent_client_protocol::schema::v1 as acp;
+use agent_client_protocol::{AcpAgent, Agent, Client as AcpClient, ConnectionTo};
+use tokio::sync::mpsc;
+
+use super::{
+    PermissionDecision, PermissionHandler, PermissionOption, PermissionOptionKind,
+    PermissionRequest,
+};
+use crate::error::{CoreError, Result};
+use crate::events::{
+    AgentEvent, ContentBlock, FileLocation, PlanEntry, PlanEntryStatus, StopReason, ToolKind,
+    ToolStatus,
+};
+
+/// ACP 的 message_id 缺失时，同一连接内 agent 输出共用的合成消息 id
+///（一次性 run_prompt 只有一轮，合成 id 使聚合器可正确拼接）。
+const SYNTHETIC_MESSAGE_ID: &str = "agent-message";
+
+/// JSON-RPC internal error code，用于把 CoreError 映射进 SDK 的错误通道
+const JSONRPC_INTERNAL_ERROR: i32 = -32603;
+
+fn acp_error(err: CoreError) -> agent_client_protocol::Error {
+    agent_client_protocol::Error::new(JSONRPC_INTERNAL_ERROR, err.to_string())
+}
+
+pub struct AcpDriver {
+    /// spawn 命令（shell-words 语法，如 "opencode acp"）
+    pub command: String,
+}
+
+impl AcpDriver {
+    pub fn new(command: impl Into<String>) -> Self {
+        Self {
+            command: command.into(),
+        }
+    }
+
+    /// 一次性会话：initialize → session/new → session/prompt。
+    /// 事件实时送入 `events`；权限请求经 `permissions` 裁决；返回该轮 stop_reason。
+    pub async fn run_prompt(
+        &self,
+        cwd: PathBuf,
+        prompt: String,
+        events: mpsc::Sender<AgentEvent>,
+        permissions: PermissionHandler,
+    ) -> Result<StopReason> {
+        let agent = AcpAgent::from_str(&self.command)
+            .map_err(|e| CoreError::Spawn(format!("{}: {e}", self.command)))?;
+
+        let events_for_notification = events.clone();
+        let permissions_for_request = permissions;
+
+        let stop_reason = AcpClient
+            .builder()
+            .on_receive_notification(
+                move |notification: acp::SessionNotification, _cx| {
+                    let events = events_for_notification.clone();
+                    async move {
+                        if let Some(event) = convert_update(&notification.update) {
+                            let _ = events.send(event).await;
+                        }
+                        Ok::<(), agent_client_protocol::Error>(())
+                    }
+                },
+                agent_client_protocol::on_receive_notification!(),
+            )
+            .on_receive_request(
+                move |request: acp::RequestPermissionRequest,
+                      responder: agent_client_protocol::Responder<
+                    acp::RequestPermissionResponse,
+                >,
+                      _connection| {
+                    let permissions = permissions_for_request.clone();
+                    async move {
+                        let decision: Result<PermissionDecision> =
+                            (*permissions)(convert_permission_request(&request)).await;
+                        match decision {
+                            Ok(decision) => responder.respond(acp::RequestPermissionResponse::new(
+                                acp::RequestPermissionOutcome::Selected(
+                                    acp::SelectedPermissionOutcome::new(decision.option_id),
+                                ),
+                            )),
+                            Err(_) => responder.respond(acp::RequestPermissionResponse::new(
+                                acp::RequestPermissionOutcome::Cancelled,
+                            )),
+                        }
+                    }
+                },
+                agent_client_protocol::on_receive_request!(),
+            )
+            .connect_with(agent, move |connection: ConnectionTo<Agent>| async move {
+                let _init = connection
+                    .send_request(acp::InitializeRequest::new(
+                        agent_client_protocol::schema::ProtocolVersion::V1,
+                    ))
+                    .block_task()
+                    .await
+                    .map_err(|e| acp_error(CoreError::Protocol(format!("initialize 失败: {e}"))))?;
+
+                let session = connection
+                    .send_request(acp::NewSessionRequest::new(cwd))
+                    .block_task()
+                    .await
+                    .map_err(|e| {
+                        acp_error(CoreError::Protocol(format!("session/new 失败: {e}")))
+                    })?;
+                let _ = events
+                    .send(AgentEvent::SessionStarted {
+                        session_id: session.session_id.0.to_string(),
+                    })
+                    .await;
+
+                let response = connection
+                    .send_request(acp::PromptRequest::new(
+                        session.session_id.clone(),
+                        vec![acp::ContentBlock::Text(acp::TextContent::new(prompt))],
+                    ))
+                    .block_task()
+                    .await
+                    .map_err(|e| {
+                        acp_error(CoreError::Protocol(format!("session/prompt 失败: {e}")))
+                    })?;
+
+                Ok::<StopReason, agent_client_protocol::Error>(StopReason::from(
+                    response.stop_reason,
+                ))
+            })
+            .await
+            .map_err(|e| CoreError::Protocol(e.to_string()))?;
+
+        Ok(stop_reason)
+    }
+}
+
+/// ACP `SessionUpdate` → 统一 `AgentEvent`（纯函数，单测覆盖）。
+/// 返回 None 的事件（用户消息回显、模式/配置更新等）在 P0-4 阶段忽略。
+fn convert_update(update: &acp::SessionUpdate) -> Option<AgentEvent> {
+    use acp::SessionUpdate as U;
+    match update {
+        U::AgentMessageChunk(chunk) => {
+            let text = extract_text(&chunk.content)?;
+            Some(AgentEvent::MessageChunk {
+                message_id: chunk
+                    .message_id
+                    .as_ref()
+                    .map(|id| id.0.to_string())
+                    .unwrap_or_else(|| SYNTHETIC_MESSAGE_ID.into()),
+                text,
+            })
+        }
+        U::AgentThoughtChunk(chunk) => {
+            let text = extract_text(&chunk.content)?;
+            Some(AgentEvent::ThoughtChunk {
+                message_id: chunk
+                    .message_id
+                    .as_ref()
+                    .map(|id| id.0.to_string())
+                    .unwrap_or_else(|| SYNTHETIC_MESSAGE_ID.into()),
+                text,
+            })
+        }
+        U::ToolCall(call) => Some(AgentEvent::ToolCall {
+            tool_call_id: call.tool_call_id.0.to_string(),
+            name: call.name.clone(),
+            title: Some(call.title.clone()),
+            kind: ToolKind::from(call.kind),
+            raw_input: call.raw_input.clone(),
+        }),
+        U::ToolCallUpdate(update) => Some(AgentEvent::ToolCallUpdate {
+            tool_call_id: update.tool_call_id.0.to_string(),
+            status: update.fields.status.map(ToolStatus::from),
+            content: update
+                .fields
+                .content
+                .as_deref()
+                .unwrap_or_default()
+                .iter()
+                .filter_map(convert_tool_content)
+                .collect(),
+            locations: update
+                .fields
+                .locations
+                .as_deref()
+                .unwrap_or_default()
+                .iter()
+                .map(|loc| FileLocation {
+                    path: loc.path.clone(),
+                    line: loc.line,
+                })
+                .collect(),
+            diff: None,
+        }),
+        U::Plan(plan) => Some(AgentEvent::Plan {
+            entries: plan
+                .entries
+                .iter()
+                .map(|entry| PlanEntry {
+                    content: entry.content.clone(),
+                    status: PlanEntryStatus::from(entry.status.clone()),
+                })
+                .collect(),
+        }),
+        U::UsageUpdate(usage) => Some(AgentEvent::UsageUpdate {
+            used: Some(usage.used),
+            size: Some(usage.size),
+            cost: usage.cost.as_ref().map(|c| c.amount),
+        }),
+        // 用户消息回显 / 模式与配置更新 / session_info：P0-4 忽略
+        _ => None,
+    }
+}
+
+fn extract_text(block: &acp::ContentBlock) -> Option<String> {
+    match block {
+        acp::ContentBlock::Text(text) => Some(text.text.clone()),
+        _ => None,
+    }
+}
+
+fn convert_tool_content(content: &acp::ToolCallContent) -> Option<ContentBlock> {
+    match content {
+        acp::ToolCallContent::Content(block) => match &block.content {
+            acp::ContentBlock::Text(text) => Some(ContentBlock::Text {
+                text: text.text.clone(),
+            }),
+            acp::ContentBlock::ResourceLink(link) => Some(ContentBlock::ResourceLink {
+                uri: link.uri.clone(),
+            }),
+            _ => None,
+        },
+        // Diff/Terminal 内容的专门呈现留给 Phase 1 桌面 UI
+        _ => None,
+    }
+}
+
+fn convert_permission_request(request: &acp::RequestPermissionRequest) -> PermissionRequest {
+    PermissionRequest {
+        session_id: request.session_id.0.to_string(),
+        tool_call_id: request.tool_call.tool_call_id.0.to_string(),
+        tool_name: request
+            .tool_call
+            .fields
+            .title
+            .clone()
+            .or_else(|| request.tool_call.fields.name.clone())
+            .unwrap_or_else(|| "未知工具".into()),
+        raw_input: request.tool_call.fields.raw_input.clone(),
+        options: request
+            .options
+            .iter()
+            .map(|option| PermissionOption {
+                option_id: option.option_id.0.to_string(),
+                name: option.name.clone(),
+                kind: PermissionOptionKind::from(option.kind),
+            })
+            .collect(),
+    }
+}
+
+impl From<acp::ToolKind> for ToolKind {
+    fn from(kind: acp::ToolKind) -> Self {
+        match kind {
+            acp::ToolKind::Read => Self::Read,
+            acp::ToolKind::Edit => Self::Edit,
+            acp::ToolKind::Delete => Self::Delete,
+            acp::ToolKind::Move => Self::Move,
+            acp::ToolKind::Search => Self::Search,
+            acp::ToolKind::Execute => Self::Execute,
+            acp::ToolKind::Fetch => Self::Fetch,
+            _ => Self::Other,
+        }
+    }
+}
+
+impl From<acp::ToolCallStatus> for ToolStatus {
+    fn from(status: acp::ToolCallStatus) -> Self {
+        match status {
+            acp::ToolCallStatus::Pending => Self::Pending,
+            acp::ToolCallStatus::InProgress => Self::InProgress,
+            acp::ToolCallStatus::Completed => Self::Completed,
+            acp::ToolCallStatus::Failed => Self::Failed,
+            _ => Self::Failed,
+        }
+    }
+}
+
+impl From<acp::PlanEntryStatus> for PlanEntryStatus {
+    fn from(status: acp::PlanEntryStatus) -> Self {
+        match status {
+            acp::PlanEntryStatus::Pending => Self::Pending,
+            acp::PlanEntryStatus::InProgress => Self::InProgress,
+            acp::PlanEntryStatus::Completed => Self::Completed,
+            _ => Self::Completed,
+        }
+    }
+}
+
+impl From<acp::StopReason> for StopReason {
+    fn from(reason: acp::StopReason) -> Self {
+        match reason {
+            acp::StopReason::EndTurn => Self::EndTurn,
+            acp::StopReason::Cancelled => Self::Cancelled,
+            acp::StopReason::MaxTokens => Self::MaxTokens,
+            acp::StopReason::MaxTurnRequests => Self::MaxTurnRequests,
+            acp::StopReason::Refusal => Self::Refusal,
+            _ => Self::EndTurn,
+        }
+    }
+}
+
+impl From<acp::PermissionOptionKind> for PermissionOptionKind {
+    fn from(kind: acp::PermissionOptionKind) -> Self {
+        match kind {
+            acp::PermissionOptionKind::AllowOnce => Self::AllowOnce,
+            acp::PermissionOptionKind::AllowAlways => Self::AllowAlways,
+            acp::PermissionOptionKind::RejectOnce => Self::RejectOnce,
+            acp::PermissionOptionKind::RejectAlways => Self::RejectAlways,
+            _ => Self::RejectOnce,
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn text_chunk(text: &str) -> acp::ContentChunk {
+        acp::ContentChunk::new(acp::ContentBlock::Text(acp::TextContent::new(text)))
+    }
+
+    #[test]
+    fn 消息块转换为message_chunk() {
+        let event =
+            convert_update(&acp::SessionUpdate::AgentMessageChunk(text_chunk("你好"))).unwrap();
+        assert_eq!(
+            event,
+            AgentEvent::MessageChunk {
+                message_id: SYNTHETIC_MESSAGE_ID.into(),
+                text: "你好".into(),
+            }
+        );
+    }
+
+    #[test]
+    fn 非文本消息块被忽略() {
+        let chunk = acp::ContentChunk::new(acp::ContentBlock::Image(acp::ImageContent::new(
+            "data",
+            "image/png",
+        )));
+        assert!(convert_update(&acp::SessionUpdate::AgentMessageChunk(chunk)).is_none());
+    }
+
+    #[test]
+    fn 工具调用与状态更新转换() {
+        let call = acp::ToolCall::new("t1", "读取 Cargo.toml").kind(acp::ToolKind::Read);
+        let event = convert_update(&acp::SessionUpdate::ToolCall(call)).unwrap();
+        match event {
+            AgentEvent::ToolCall {
+                tool_call_id,
+                kind,
+                title,
+                ..
+            } => {
+                assert_eq!(tool_call_id, "t1");
+                assert_eq!(kind, ToolKind::Read);
+                assert_eq!(title.as_deref(), Some("读取 Cargo.toml"));
+            }
+            other => panic!("应为 ToolCall: {other:?}"),
+        }
+
+        let update = acp::ToolCallUpdate::new(
+            "t1",
+            acp::ToolCallUpdateFields::new().status(acp::ToolCallStatus::Completed),
+        );
+        let event = convert_update(&acp::SessionUpdate::ToolCallUpdate(update)).unwrap();
+        assert_eq!(
+            event,
+            AgentEvent::ToolCallUpdate {
+                tool_call_id: "t1".into(),
+                status: Some(ToolStatus::Completed),
+                content: Vec::new(),
+                locations: Vec::new(),
+                diff: None,
+            }
+        );
+    }
+
+    #[test]
+    fn 用量更新转换() {
+        let usage = acp::UsageUpdate::new(1200, 200000).cost(acp::Cost::new(0.05, "USD"));
+        let event = convert_update(&acp::SessionUpdate::UsageUpdate(usage)).unwrap();
+        assert_eq!(
+            event,
+            AgentEvent::UsageUpdate {
+                used: Some(1200),
+                size: Some(200000),
+                cost: Some(0.05),
+            }
+        );
+    }
+
+    #[test]
+    fn 用户消息回显被忽略() {
+        let chunk = acp::ContentChunk::new(acp::ContentBlock::Text(acp::TextContent::new("hi")));
+        assert!(convert_update(&acp::SessionUpdate::UserMessageChunk(chunk)).is_none());
+    }
+}
