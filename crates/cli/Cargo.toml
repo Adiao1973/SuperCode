@@ -1,0 +1,20 @@
+[package]
+name = "supercode-cli"
+description = "SuperCode CLI：Phase 0 原型宿主，驱动本机 agent CLI（当前仅 opencode）"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[[bin]]
+name = "supercode"
+path = "src/main.rs"
+
+[dependencies]
+clap = { version = "4.6.7", features = ["derive"] }
+futures = "0.3.34"
+supercode-core.workspace = true
+tokio = { version = "1.53.1", features = ["rt", "rt-multi-thread", "macros", "signal"] }
+tokio-util = "0.7.19"
+uuid = { version = "1.26.1", features = ["v4"] }

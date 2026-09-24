@@ -1,0 +1,28 @@
+# ===== 本地 agent 工具状态（不入库） =====
+.zcode/
+.zcodeignore
+.claude/
+.codex/
+.opencode/
+.mimo/
+.supercode/
+
+# ===== macOS =====
+.DS_Store
+
+# ===== Rust =====
+target/
+
+# ===== Node（Phase 1 起） =====
+node_modules/
+dist/
+*.local
+
+# ===== 环境与密钥 =====
+.env
+.env.*
+
+# ===== 编辑器 =====
+.idea/
+.vscode/
+*.swp
