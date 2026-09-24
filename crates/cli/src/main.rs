@@ -10,6 +10,7 @@ use std::sync::Arc;
 
 use clap::{Parser, Subcommand};
 use tokio::sync::mpsc;
+use tokio_util::sync::CancellationToken;
 
 use supercode_core::approval::{ApprovalBroker, DecisionRecord, DecisionSource, PermissionRules};
 use supercode_core::driver::{
@@ -131,9 +132,25 @@ async fn cmd_run(
         })
     };
 
+    // 取消：第一次 Ctrl-C 走协议层取消，第二次强制退出（用户显式覆盖）
+    let cancel = CancellationToken::new();
+    tokio::spawn({
+        let cancel = cancel.clone();
+        async move {
+            if tokio::signal::ctrl_c().await.is_ok() {
+                eprintln!("\n· 收到 Ctrl-C，正在取消当前任务（再按一次强制退出）…");
+                cancel.cancel();
+                if tokio::signal::ctrl_c().await.is_ok() {
+                    eprintln!("· 强制退出");
+                    std::process::exit(130);
+                }
+            }
+        }
+    });
+
     let driver = AcpDriver::new(def.command);
     let stop_reason = driver
-        .run_prompt(cwd, prompt, events_tx.clone(), permissions)
+        .run_prompt(cwd, prompt, events_tx.clone(), permissions, cancel)
         .await;
 
     drop(events_tx);

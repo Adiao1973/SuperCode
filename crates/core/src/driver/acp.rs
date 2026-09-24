@@ -9,6 +9,7 @@ use std::str::FromStr;
 use agent_client_protocol::schema::v1 as acp;
 use agent_client_protocol::{AcpAgent, Agent, Client as AcpClient, ConnectionTo};
 use tokio::sync::mpsc;
+use tokio_util::sync::CancellationToken;
 
 use super::{
     PermissionDecision, PermissionHandler, PermissionOption, PermissionOptionKind,
@@ -27,6 +28,10 @@ const SYNTHETIC_MESSAGE_ID: &str = "agent-message";
 /// JSON-RPC internal error code，用于把 CoreError 映射进 SDK 的错误通道
 const JSONRPC_INTERNAL_ERROR: i32 = -32603;
 
+/// 取消宽限期：session/cancel 发出后等待 agent 以 Cancelled 收尾的上限，
+/// 超时则由连接 teardown（ChildGuard 杀整组）兜底（docs/architecture.md §7）。
+const CANCEL_GRACE: std::time::Duration = std::time::Duration::from_secs(10);
+
 fn acp_error(err: CoreError) -> agent_client_protocol::Error {
     agent_client_protocol::Error::new(JSONRPC_INTERNAL_ERROR, err.to_string())
 }
@@ -44,13 +49,15 @@ impl AcpDriver {
     }
 
     /// 一次性会话：initialize → session/new → session/prompt。
-    /// 事件实时送入 `events`；权限请求经 `permissions` 裁决；返回该轮 stop_reason。
+    /// 事件实时送入 `events`；权限请求经 `permissions` 裁决；
+    /// `cancel` 触发后走协议层取消（session/cancel → Cancelled → 超时 teardown 兜底）。
     pub async fn run_prompt(
         &self,
         cwd: PathBuf,
         prompt: String,
         events: mpsc::Sender<AgentEvent>,
         permissions: PermissionHandler,
+        cancel: CancellationToken,
     ) -> Result<StopReason> {
         let agent = AcpAgent::from_str(&self.command)
             .map_err(|e| CoreError::Spawn(format!("{}: {e}", self.command)))?;
@@ -118,16 +125,40 @@ impl AcpDriver {
                     })
                     .await;
 
-                let response = connection
+                let prompt_task = connection
                     .send_request(acp::PromptRequest::new(
                         session.session_id.clone(),
                         vec![acp::ContentBlock::Text(acp::TextContent::new(prompt))],
                     ))
-                    .block_task()
-                    .await
-                    .map_err(|e| {
+                    .block_task();
+                tokio::pin!(prompt_task);
+
+                let response = tokio::select! {
+                    res = &mut prompt_task => res.map_err(|e| {
                         acp_error(CoreError::Protocol(format!("session/prompt 失败: {e}")))
-                    })?;
+                    })?,
+                    _ = cancel.cancelled() => {
+                        // 协议层取消优先；失败不致命（连接 teardown 仍会兜底）
+                        if let Err(e) = connection.send_notification(acp::CancelNotification::new(
+                            session.session_id.clone(),
+                        )) {
+                            return Err(acp_error(CoreError::Protocol(format!(
+                                "session/cancel 发送失败: {e}"
+                            ))));
+                        }
+                        // 等待 agent 以 Cancelled 收尾；超时交给 teardown（ChildGuard 杀整组）
+                        match tokio::time::timeout(CANCEL_GRACE, &mut prompt_task).await {
+                            Ok(res) => res.map_err(|e| {
+                                acp_error(CoreError::Protocol(format!("session/prompt 失败: {e}")))
+                            })?,
+                            Err(_) => {
+                                return Err(acp_error(CoreError::Timeout(
+                                    "agent 未在取消宽限期内响应，连接将被强制回收".into(),
+                                )))
+                            }
+                        }
+                    }
+                };
 
                 Ok::<StopReason, agent_client_protocol::Error>(StopReason::from(
                     response.stop_reason,

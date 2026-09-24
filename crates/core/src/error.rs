@@ -13,6 +13,10 @@ pub enum CoreError {
     #[error("协议错误: {0}")]
     Protocol(String),
 
+    /// 超时（如取消宽限期内 agent 未响应）
+    #[error("超时: {0}")]
+    Timeout(String),
+
     /// 操作的进程句柄不存在（已 wait 移除，或从未 spawn）
     #[error("进程不存在: {0}")]
     ProcessNotFound(u64),

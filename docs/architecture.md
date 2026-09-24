@@ -392,7 +392,14 @@ tasks(id TEXT PK, title TEXT, cwd TEXT, status TEXT, -- backlog|in_progress|revi
 
 ## 7. 进程生命周期管理
 
-- **ACP 连接（AcpDriver）**：进程生命周期交由 `agent-client-protocol` SDK 管理——`AcpAgent` 以独立进程组 spawn（unix process_group(0)，专治 npx 包装器孤儿问题），连接结束由 ChildGuard 整组回收，stderr 捕获进错误信息；`AcpAgent::with_debug` 可拿到原始收发行做日志。取消优先协议层 `session/cancel`。
+- **ACP 连接（AcpDriver）**：进程生命周期交由 `agent-client-protocol` SDK 管理——`AcpAgent` 以独立进程组 spawn（unix process_group(0)，专治 npx 包装器孤儿问题），连接结束由 ChildGuard 整组回收，stderr 捕获进错误信息；`AcpAgent::with_debug` 可拿到原始收发行做日志。
+- **取消链路（P0-7）**：`run_prompt(..., cancel: CancellationToken)`：
+  1. prompt 期间监听 cancel；触发后先发协议层 `session/cancel` 通知（`CancelNotification`）；
+  2. 继续等待 prompt 响应，agent 应回 `stopReason=Cancelled`（`CANCEL_GRACE = 10s` 宽限）；
+  3. 超时未响应 → 返回 `CoreError::Timeout`，`connect_with` 结束触发 SDK teardown，
+     ChildGuard 杀整组兜底。
+  - CLI 宿主：Ctrl-C 触发 cancel；第二次 Ctrl-C 强制退出（用户显式覆盖）。
+  - `supercode cancel` 跨进程子命令需要会话注册表，推迟到 Phase 1（记入 P1 任务）。
 - **非 ACP 进程（StreamJsonDriver 等 / 后续 Sidecar）**：走 `ProcessManager`（command_group 进程组杀树）+ 心跳 + 宿主退出 `shutdown_all` 清理。
 
 ## 8. 错误处理约定
