@@ -234,11 +234,11 @@ mod tests {
         // 轮询等待后台泵任务把 marker 写入日志（≤2s）
         let mut found = false;
         for _ in 0..40 {
-            if let Ok(content) = tokio::fs::read_to_string(&p.log_path).await {
-                if content.contains("supercode-p0-2-stderr-marker") {
-                    found = true;
-                    break;
-                }
+            if let Ok(content) = tokio::fs::read_to_string(&p.log_path).await
+                && content.contains("supercode-p0-2-stderr-marker")
+            {
+                found = true;
+                break;
             }
             tokio::time::sleep(Duration::from_millis(50)).await;
         }

@@ -9,6 +9,10 @@ pub enum CoreError {
     #[error("spawn 进程失败: {0}")]
     Spawn(String),
 
+    /// ACP/JSON-RPC 协议层错误（握手失败、非法响应等）
+    #[error("协议错误: {0}")]
+    Protocol(String),
+
     /// 操作的进程句柄不存在（已 wait 移除，或从未 spawn）
     #[error("进程不存在: {0}")]
     ProcessNotFound(u64),
