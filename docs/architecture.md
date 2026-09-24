@@ -195,21 +195,38 @@ pub struct PermissionDecision {
 ### 4.3 `ApprovalBroker`（审批代理）
 
 ```rust
-/// 所有 driver 的权限请求汇入统一队列；UI（或 CLI）应答后回写对应协议。
-pub struct ApprovalBroker { /* 预授权规则 + 待决队列 */ }
+/// 进入待决队列的权限请求（带 broker 分配的关联 id）
+pub struct PendingPermission {
+    pub id: Uuid,
+    pub request: PermissionRequest,
+}
+
+/// 所有 driver 的权限请求汇入统一队列；规则引擎先行裁决，
+/// 未命中的请求广播给订阅方（UI 审批中心 / CLI 交互），应答后回写对应协议。
+pub struct ApprovalBroker { /* 规则(P0-6) + 待决表 */ }
 
 impl ApprovalBroker {
-    /// 规则引擎先行裁决：命中 allow/deny 规则直接返回，不打扰用户
-    /// 未命中规则的请求进入待决队列，等待 UI/CLI 应答
+    /// driver 的权限回调入口（P0-5：无规则，一律进入待决队列）：
+    /// 1. (P0-6) 命中 allow/deny 规则 → 直接返回裁决，不打扰用户
+    /// 2. 未命中 → 分配 Uuid、登记待决表、广播 PendingPermission
+    /// 3. 挂起等待 respond 回填；等待通道意外关闭 → 按拒绝处理（fail-closed）
     pub async fn resolve(&self, req: PermissionRequest) -> Result<PermissionDecision>;
 
-    /// 待决队列订阅（UI 审批中心 / CLI 交互都从这里拿请求）
-    pub fn subscribe(&self) -> mpsc::Receiver<PermissionRequest>;
+    /// 订阅待决请求（broadcast：审批中心 UI 与 CLI 宿主可并存）
+    pub fn subscribe(&self) -> broadcast::Receiver<PendingPermission>;
 
-    /// 用户应答（allow once/always、reject），驱动等待中的 resolve 返回
+    /// 用户应答（allow once/always、reject once/always），驱动等待中的 resolve 返回
     pub async fn respond(&self, request_id: Uuid, decision: PermissionDecision) -> Result<()>;
 }
 ```
+
+**fail-closed 原则**：审批链路任何异常（无订阅方消费、通道关闭、宿主崩溃）都不得放行——
+resolve 返回 Err，driver 层转为 ACP `cancelled` outcome，agent 收到"未获批准"。
+
+**宿主接入形态**：
+- CLI：spawn 一个审批任务消费 `subscribe()`，终端 y/a/n 交互后调 `respond()`；
+  driver 的 PermissionHandler 绑定为 `broker.resolve`。
+- 桌面（Phase 1）：审批中心 UI 消费同一广播，卡片式应答。
 
 **预授权规则**（参考 opencode permission 配置语义）：
 

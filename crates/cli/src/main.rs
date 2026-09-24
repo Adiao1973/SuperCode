@@ -9,9 +9,9 @@ use std::process::ExitCode;
 use std::sync::Arc;
 
 use clap::{Parser, Subcommand};
-use futures::future::BoxFuture;
 use tokio::sync::mpsc;
 
+use supercode_core::approval::ApprovalBroker;
 use supercode_core::driver::{
     AcpDriver, PermissionDecision, PermissionHandler, PermissionOptionKind, PermissionRequest,
 };
@@ -84,13 +84,36 @@ async fn cmd_run(prompt: String, cwd: Option<PathBuf>) -> ExitCode {
         }
     });
 
+    // 审批代理：driver 的权限回调统一走 broker，终端审批任务消费待决队列
+    let broker = ApprovalBroker::new();
+    let mut requests = broker.subscribe();
+    let approver = tokio::spawn({
+        let broker = broker.clone();
+        async move {
+            while let Ok(pending) = requests.recv().await {
+                let decision = console_decide(&pending.request);
+                if broker.respond(pending.id, decision).await.is_err() {
+                    break; // broker 链路异常（如请求已超时移除），退出审批任务
+                }
+            }
+        }
+    });
+    let permissions: PermissionHandler = {
+        let broker = broker.clone();
+        Arc::new(move |request: PermissionRequest| {
+            let broker = broker.clone();
+            Box::pin(async move { broker.resolve(request).await })
+        })
+    };
+
     let driver = AcpDriver::new(def.command);
     let stop_reason = driver
-        .run_prompt(cwd, prompt, events_tx.clone(), interactive_permissions())
+        .run_prompt(cwd, prompt, events_tx.clone(), permissions)
         .await;
 
     drop(events_tx);
     let _ = printer.await;
+    approver.abort();
 
     match stop_reason {
         Ok(reason) => {
@@ -104,48 +127,40 @@ async fn cmd_run(prompt: String, cwd: Option<PathBuf>) -> ExitCode {
     }
 }
 
-/// 终端交互审批：y=允许一次 / a=总是允许 / n=拒绝。其余输入按拒绝处理（保守默认）。
-fn interactive_permissions() -> PermissionHandler {
-    Arc::new(
-        |request: PermissionRequest| -> BoxFuture<'_, supercode_core::error::Result<PermissionDecision>> {
-            Box::pin(async move {
-                eprintln!();
-                eprintln!("⚡ 权限请求: {}", request.tool_name);
-                if let Some(input) = &request.raw_input {
-                    eprintln!("   输入: {input}");
-                }
-                for option in &request.options {
-                    eprintln!("   - {} [{:?}]", option.name, option.kind);
-                }
+/// 终端审批：打印待决请求（完整命令可见），y/a/n 交互裁决。
+/// 其余输入按拒绝处理（保守默认）。
+fn console_decide(request: &PermissionRequest) -> PermissionDecision {
+    eprintln!();
+    eprintln!("⚡ 权限请求: {}", request.tool_name);
+    if let Some(input) = &request.raw_input {
+        eprintln!("   输入: {input}");
+    }
 
-                eprint!("允许吗？(y=允许一次 / a=总是允许 / n=拒绝): ");
-                let _ = std::io::stderr().flush();
+    eprint!("允许吗？(y=允许一次 / a=总是允许 / n=拒绝): ");
+    let _ = std::io::stderr().flush();
 
-                // CLI 单任务场景，阻塞读 stdin 等人即可
-                let mut answer = String::new();
-                let _ = std::io::stdin().read_line(&mut answer);
-                let pick = |kind: PermissionOptionKind| {
-                    request
-                        .options
-                        .iter()
-                        .find(|option| option.kind == kind)
-                        .map(|option| option.option_id.clone())
-                };
-                let option_id = match answer.trim() {
-                    "y" | "Y" => pick(PermissionOptionKind::AllowOnce),
-                    "a" | "A" => pick(PermissionOptionKind::AllowAlways),
-                    _ => pick(PermissionOptionKind::RejectOnce)
-                        .or_else(|| pick(PermissionOptionKind::RejectAlways)),
-                }
-                .unwrap_or_default();
+    // CLI 单任务场景，阻塞读 stdin 等人即可
+    let mut answer = String::new();
+    let _ = std::io::stdin().read_line(&mut answer);
+    let pick = |kind: PermissionOptionKind| {
+        request
+            .options
+            .iter()
+            .find(|option| option.kind == kind)
+            .map(|option| option.option_id.clone())
+    };
+    let option_id = match answer.trim() {
+        "y" | "Y" => pick(PermissionOptionKind::AllowOnce),
+        "a" | "A" => pick(PermissionOptionKind::AllowAlways),
+        _ => pick(PermissionOptionKind::RejectOnce)
+            .or_else(|| pick(PermissionOptionKind::RejectAlways)),
+    }
+    .unwrap_or_default();
 
-                Ok(PermissionDecision {
-                    option_id,
-                    updated_input: None,
-                })
-            })
-        },
-    )
+    PermissionDecision {
+        option_id,
+        updated_input: None,
+    }
 }
 
 fn print_event(event: &AgentEvent) {
