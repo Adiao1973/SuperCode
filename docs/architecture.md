@@ -113,6 +113,18 @@ pub enum AgentEvent {
 }
 ```
 
+**支撑类型**（与 `AgentEvent` 同模块，语义对齐 ACP v1）：
+
+```rust
+pub enum ToolKind { Read, Edit, Execute, Other }          // serde snake_case
+pub enum ToolStatus { Pending, InProgress, Completed, Failed }
+pub enum ContentBlock { Text { text }, Image { data, mime_type }, ResourceLink { uri } } // tag="type"
+pub struct FileLocation { pub path: PathBuf, pub line_start: Option<u32>, pub line_end: Option<u32> }
+pub struct PlanEntry { pub content: String, pub status: PlanEntryStatus }
+pub enum PlanEntryStatus { Pending, InProgress, Completed, Cancelled }
+pub enum StopReason { EndTurn, Cancelled, MaxTokens, MaxTurnRequests, Refusal }
+```
+
 ### 4.2 `AgentDriver` trait
 
 ```rust
@@ -263,6 +275,25 @@ impl ProcessManager {
 ```
 
 约定：`kill_on_drop(true)` 作为兜底（child 被 drop 时至少杀 leader）；显式 `kill` 才保证杀整组。
+
+### 4.6 事件聚合器 `EventAggregator`（`events` 模块）
+
+```rust
+/// 帧级合帧聚合器：吸收 driver 的高频事件，按帧批量输出（§5 事件管道的 Rust 侧实现）。
+pub struct EventAggregator { /* tick 周期 */ }
+
+impl EventAggregator {
+    /// tick 为 flush 周期（桌面宿主用 ~16ms；测试可调大以保证确定性）
+    pub fn new(tick: Duration) -> Self;
+    /// 消费 input 直到关闭；每个 flush 周期输出一个批次（Vec）到 output。
+    /// 合帧规则：相邻且同 message_id 的 MessageChunk 合并为一条（文本拼接）；
+    /// 任何非 chunk 事件（或不同 message_id）切断合并并保持原序直通；
+    /// input 关闭时 flush 余量后结束。
+    pub async fn run(self, input: mpsc::Receiver<AgentEvent>, output: mpsc::Sender<Vec<AgentEvent>>);
+}
+```
+
+输出为**批次**（`Vec<AgentEvent>`）：桌面宿主把整批经 Tauri Channel 一次推送；CLI 宿主逐条打印。
 
 ## 5. 事件管道（性能架构约束，非优化项）
 
