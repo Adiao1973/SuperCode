@@ -1,9 +1,9 @@
 //! Agent 适配层：统一权限模型与各协议 driver。
-//! `AgentDriver` trait 的完整定义见 docs/architecture.md §4.2（P0-8 会话恢复后 trait 化）。
+//! `AgentDriver` trait 的完整定义见 docs/architecture.md §4.2（多 driver 出现时 trait 化）。
 
 mod acp;
 
-pub use acp::AcpDriver;
+pub use acp::{AcpDriver, StartMode};
 
 use futures::future::BoxFuture;
 use std::sync::Arc;
