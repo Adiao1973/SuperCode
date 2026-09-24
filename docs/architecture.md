@@ -1,7 +1,7 @@
 # SuperCode 架构设计文档
 
 > 本文档是 SuperCode 接口设计的**单一事实源**：任何接口 / 数据模型变更，先改本文档再改代码。
-> 版本：0.1（Step 0 产出）· 变更记录见文末。
+> 版本：0.2（Phase 0 落地，对应 v0.1.0）· 变更记录见文末。
 
 ## 1. 项目概述
 
@@ -432,3 +432,4 @@ P0-8 落地迁移 0001（六表）；运行期写入 sessions/messages/tool_call
 | 日期 | 版本 | 摘要 |
 |---|---|---|
 | 2026-09-24 | 0.1 | Step 0 初版：分层架构、AgentDriver/AgentEvent/ApprovalBroker/Registry 接口、事件管道、数据模型、进程与安全约定 |
+| 2026-09-24 | 0.2 | Phase 0 落地（v0.1.0）：§4.1 对齐 ACP v1 实际 schema（ThoughtChunk、Option 字段、ToolKind 全集）；§4.3 规则引擎 + 留痕流；§4.5 ProcessManager；§4.6 EventAggregator；§4.2 StartMode 与 trait 化节奏；§6 迁移 0001 六表 + SessionRecorder；§7 取消链路与 SDK 托管进程组 |
