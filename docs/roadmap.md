@@ -32,7 +32,10 @@
 
 > **P0-6 留痕说明**：裁决留痕以 `DecisionRecord` 广播流落地（`subscribe_decisions()`），
 > CLI 已打印、Phase 1 审批历史 UI 可直接消费；SQLite approvals 表持久化按计划在 P0-8 落地。
-| P0-7 | 取消：`session/cancel` + 超时兜底杀进程组 | 长任务运行中按 Ctrl-C / `supercode cancel` → 收到 `TurnCompleted{Cancelled}`；agent 进程组无残留 | 待办 |
+| P0-7 | 取消：`session/cancel` + 超时兜底杀进程组 | 长任务运行中按 Ctrl-C / `supercode cancel` → 收到 `TurnCompleted{Cancelled}`；agent 进程组无残留 | 已验收 |
+
+> **P0-7 范围说明**：Ctrl-C 路径已验收（协议层取消 + teardown 兜底）；
+> `supercode cancel` 跨进程子命令需要会话注册表，推迟到 Phase 1（多会话管理时落地）。
 | P0-8 | 会话恢复：session/load + SQLite 存档 | `supercode sessions list` 列出历史；`supercode resume <id> "继续"` 基于原上下文回答（可被人工核验） | 待办 |
 | P0-9 | justfile：`just verify` 一键 fmt+clippy+test | `just verify` 全绿，耗时 < 2min | 待办 |
 | P0-10 | Phase 0 整体验收 + tag v0.1.0 合入 main | 验收剧本逐条执行留痕（见下）；`git tag v0.1.0`；dev 合回 main | 待办 |
