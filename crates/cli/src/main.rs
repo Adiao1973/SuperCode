@@ -11,7 +11,7 @@ use std::sync::Arc;
 use clap::{Parser, Subcommand};
 use tokio::sync::mpsc;
 
-use supercode_core::approval::ApprovalBroker;
+use supercode_core::approval::{ApprovalBroker, DecisionRecord, DecisionSource, PermissionRules};
 use supercode_core::driver::{
     AcpDriver, PermissionDecision, PermissionHandler, PermissionOptionKind, PermissionRequest,
 };
@@ -40,6 +40,12 @@ enum Cmd {
         /// 会话工作目录（默认当前目录）
         #[arg(long)]
         cwd: Option<PathBuf>,
+        /// 预授权放行规则（可重复），如 --allow 'bash(git status)' --allow 'bash(git diff *)'
+        #[arg(long = "allow")]
+        allows: Vec<String>,
+        /// 预授权拒绝规则（可重复），优先级高于 allow
+        #[arg(long = "deny")]
+        denies: Vec<String>,
     },
 }
 
@@ -48,7 +54,12 @@ async fn main() -> ExitCode {
     let cli = Cli::parse();
     match cli.cmd {
         Cmd::Detect => cmd_detect().await,
-        Cmd::Run { prompt, cwd } => cmd_run(prompt, cwd).await,
+        Cmd::Run {
+            prompt,
+            cwd,
+            allows,
+            denies,
+        } => cmd_run(prompt, cwd, allows, denies).await,
     }
 }
 
@@ -62,7 +73,12 @@ async fn cmd_detect() -> ExitCode {
     ExitCode::SUCCESS
 }
 
-async fn cmd_run(prompt: String, cwd: Option<PathBuf>) -> ExitCode {
+async fn cmd_run(
+    prompt: String,
+    cwd: Option<PathBuf>,
+    allows: Vec<String>,
+    denies: Vec<String>,
+) -> ExitCode {
     let def = registry::AgentDefinition::find("opencode").expect("内置注册表必有 opencode");
     if let Some(version) = def.detect_version().await {
         eprintln!("· agent: {} {version}", def.display_name);
@@ -85,15 +101,24 @@ async fn cmd_run(prompt: String, cwd: Option<PathBuf>) -> ExitCode {
     });
 
     // 审批代理：driver 的权限回调统一走 broker，终端审批任务消费待决队列
-    let broker = ApprovalBroker::new();
+    let broker = ApprovalBroker::with_rules(PermissionRules::new(allows, denies));
     let mut requests = broker.subscribe();
+    let mut decision_log = broker.subscribe_decisions();
     let approver = tokio::spawn({
         let broker = broker.clone();
         async move {
-            while let Ok(pending) = requests.recv().await {
-                let decision = console_decide(&pending.request);
-                if broker.respond(pending.id, decision).await.is_err() {
-                    break; // broker 链路异常（如请求已超时移除），退出审批任务
+            loop {
+                tokio::select! {
+                    Ok(pending) = requests.recv() => {
+                        let decision = console_decide(&pending.request);
+                        if broker.respond(pending.id, decision).await.is_err() {
+                            break; // broker 链路异常（如请求已超时移除），退出审批任务
+                        }
+                    }
+                    Ok(record) = decision_log.recv() => {
+                        print_decision_record(&record);
+                    }
+                    else => break,
                 }
             }
         }
@@ -160,6 +185,21 @@ fn console_decide(request: &PermissionRequest) -> PermissionDecision {
     PermissionDecision {
         option_id,
         updated_input: None,
+    }
+}
+
+fn print_decision_record(record: &DecisionRecord) {
+    match &record.source {
+        DecisionSource::Rule { pattern, effect } => eprintln!(
+            "· 预授权命中 [{:?}] {pattern} → {}",
+            effect, record.decision.option_id
+        ),
+        DecisionSource::User => {
+            eprintln!(
+                "· 用户裁决 {} → {}",
+                record.request.tool_name, record.decision.option_id
+            )
+        }
     }
 }
 
