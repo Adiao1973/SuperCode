@@ -60,7 +60,7 @@ SuperCode/
 ├── Cargo.toml              # [workspace]
 ├── crates/
 │   ├── core/               # supercode-core：全部核心逻辑（纯库）
-│   │   └── src/{lib.rs, driver/, approval/, events/, proc/, registry/, db/, orchestrator.rs}
+│   │   └── src/{lib.rs, error.rs, driver/, approval/, events/, proc/, registry/, db/, orchestrator.rs}
 │   └── cli/                # supercode-cli：Phase 0 验证原型（bin）
 │       └── src/main.rs
 ├── apps/
@@ -225,6 +225,45 @@ impl AgentRegistry {
 | mimo | `mimo acp` | Acp | Phase 2 |
 | zcode | `zcode -p --output-format stream-json --mode yolo` | StreamJson | Phase 2（**受限支持**：无外部权限审批） |
 
+### 4.5 进程管理器 `ProcessManager`（`proc` 模块）
+
+```rust
+/// 进程管理器分配的句柄 id（区别于 OS pid，避免 pid 复用歧义）。
+pub struct ProcessId(u64);
+
+/// spawn 一个子进程所需的最小描述（AgentRegistry 的 SpawnSpec 转换为它）。
+pub struct ProcessSpec {
+    pub program: String,
+    pub args: Vec<String>,
+    pub cwd: Option<PathBuf>,
+    pub envs: Vec<(String, String)>,
+}
+
+/// spawn 成功后交给调用方的句柄：stdin/stdout 由调用方持有（协议通道），
+/// stderr 已由管理器接管写入日志文件。
+pub struct SpawnedProcess {
+    pub id: ProcessId,
+    pub pid: u32,
+    pub log_path: PathBuf,     // <log_dir>/proc-<id>.log
+    pub stdin: ChildStdin,
+    pub stdout: ChildStdout,
+}
+
+impl ProcessManager {
+    pub fn new(log_dir: impl Into<PathBuf>) -> Self;
+    /// 以独立进程组 spawn（command_group）；stderr 后台泵入日志文件
+    pub async fn spawn(&self, spec: ProcessSpec) -> Result<SpawnedProcess>;
+    /// 杀掉整个进程组（孙进程一并终止）；进程已退出视为成功
+    pub async fn kill(&self, id: ProcessId) -> Result<()>;
+    /// 等待退出并移除登记（返回 ExitStatus）
+    pub async fn wait(&self, id: ProcessId) -> Result<ExitStatus>;
+    /// 宿主退出清理：对所有存活进程组发终止，返回处理数量
+    pub async fn shutdown_all(&self) -> Result<usize>;
+}
+```
+
+约定：`kill_on_drop(true)` 作为兜底（child 被 drop 时至少杀 leader）；显式 `kill` 才保证杀整组。
+
 ## 5. 事件管道（性能架构约束，非优化项）
 
 Tauri 的 `tauri://` 页面**不支持 SSE/EventSource**；且 agent 事件可达每秒几十条。因此：
@@ -282,7 +321,7 @@ tasks(id TEXT PK, title TEXT, cwd TEXT, status TEXT, -- backlog|in_progress|revi
 
 ## 8. 错误处理约定
 
-- `supercode-core` 统一 `thiserror` 定义 `CoreError`：`Spawn / Protocol / Timeout / PermissionDenied / Db / Io / AgentExited { code, stderr_tail }`。
+- `supercode-core` 统一 `thiserror` 定义 `CoreError`：`Spawn / Protocol / Timeout / PermissionDenied / ProcessNotFound / Db / Io / AgentExited { code, stderr_tail }`（随模块落地逐步增补，`error.rs`）。
 - 可恢复错误（单轮失败）不冒泡为进程错误：转为 `AgentEvent::DriverError` + 会话状态流转，宿主决定 UI 呈现。
 - 任何跨模块边界返回 `Result<T, CoreError>`；panic 只允许表示程序自身 bug。
 

@@ -14,6 +14,7 @@
 pub mod approval;
 pub mod db;
 pub mod driver;
+pub mod error;
 pub mod events;
 pub mod orchestrator;
 pub mod proc;
