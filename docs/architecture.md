@@ -239,6 +239,22 @@ resolve 返回 Err，driver 层转为 ACP `cancelled` outcome，agent 收到"未
 }
 ```
 
+**规则语法与求值**：
+- 模式三形：`*`（全匹配）；`tool`（工具名全匹配，任意参数）；`tool(args)`（args 为
+  glob：`*` 任意序列含空格、`?` 单字符）。
+- 求值优先级：**deny > allow > ask**；全不命中 → 进入待决队列（人工裁决）。
+- 匹配目标（tool, subject）从 `PermissionRequest` 推断：`raw_input` 含 `command`
+  字符串字段 → (`bash`, command)；否则 tool = tool_name 首词、subject = tool_name。
+  （ACP v1 权限请求不带机器可读工具名，此推断覆盖 opencode 的 bash 工具；后续随
+  driver 侧 tool_call 关联补强。）
+- 规则裁决的 option 选择：allow → 首个 allow 类 option（偏好 AllowOnce——持续性由
+  我方规则承担）；deny → 首个 reject 类 option；agent 未提供所需类别时 fail-closed
+  （allow 缺失降级为询问，deny 缺失报错拒绝）。
+
+**裁决留痕**：broker 广播 `DecisionRecord { request, source: Rule{pattern,effect} | User,
+decision }`（`subscribe_decisions()`）——CLI 打印、Phase 1 审批历史 UI 消费；
+SQLite approvals 表持久化在 P0-8 落地（表结构见 §6，decision_by = rule:<pattern>）。
+
 ### 4.4 `AgentDefinition` 与 `AgentRegistry`
 
 ```rust
