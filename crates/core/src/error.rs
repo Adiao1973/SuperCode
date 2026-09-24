@@ -17,6 +17,10 @@ pub enum CoreError {
     #[error("超时: {0}")]
     Timeout(String),
 
+    /// 数据库错误
+    #[error("数据库错误: {0}")]
+    Db(String),
+
     /// 操作的进程句柄不存在（已 wait 移除，或从未 spawn）
     #[error("进程不存在: {0}")]
     ProcessNotFound(u64),

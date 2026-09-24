@@ -41,6 +41,15 @@ pub struct AcpDriver {
     pub command: String,
 }
 
+/// 会话启动方式：新建或恢复既有 agent 会话。
+#[derive(Debug, Clone)]
+pub enum StartMode {
+    /// session/new
+    New,
+    /// session/load：agent 重放历史通知后沿用原 session id 继续 prompt
+    Load(String),
+}
+
 impl AcpDriver {
     pub fn new(command: impl Into<String>) -> Self {
         Self {
@@ -48,12 +57,26 @@ impl AcpDriver {
         }
     }
 
-    /// 一次性会话：initialize → session/new → session/prompt。
-    /// 事件实时送入 `events`；权限请求经 `permissions` 裁决；
-    /// `cancel` 触发后走协议层取消（session/cancel → Cancelled → 超时 teardown 兜底）。
+    /// 一次性新会话（兼容入口）。见 [`Self::run`]。
     pub async fn run_prompt(
         &self,
         cwd: PathBuf,
+        prompt: String,
+        events: mpsc::Sender<AgentEvent>,
+        permissions: PermissionHandler,
+        cancel: CancellationToken,
+    ) -> Result<StopReason> {
+        self.run(cwd, StartMode::New, prompt, events, permissions, cancel)
+            .await
+    }
+
+    /// 一次会话轮次：initialize → (session/new | session/load) → session/prompt。
+    /// 事件实时送入 `events`；权限请求经 `permissions` 裁决；
+    /// `cancel` 触发后走协议层取消（session/cancel → Cancelled → 超时 teardown 兜底）。
+    pub async fn run(
+        &self,
+        cwd: PathBuf,
+        mode: StartMode,
         prompt: String,
         events: mpsc::Sender<AgentEvent>,
         permissions: PermissionHandler,
@@ -112,22 +135,40 @@ impl AcpDriver {
                     .await
                     .map_err(|e| acp_error(CoreError::Protocol(format!("initialize 失败: {e}"))))?;
 
-                let session = connection
-                    .send_request(acp::NewSessionRequest::new(cwd))
-                    .block_task()
-                    .await
-                    .map_err(|e| {
-                        acp_error(CoreError::Protocol(format!("session/new 失败: {e}")))
-                    })?;
+                let session_id = match mode {
+                    StartMode::New => {
+                        let session = connection
+                            .send_request(acp::NewSessionRequest::new(cwd))
+                            .block_task()
+                            .await
+                            .map_err(|e| {
+                                acp_error(CoreError::Protocol(format!("session/new 失败: {e}")))
+                            })?;
+                        session.session_id
+                    }
+                    StartMode::Load(agent_session_id) => {
+                        let session_id = acp::SessionId::from(agent_session_id);
+                        // 重放的历史通知会先于响应流入 events 通道
+                        connection
+                            .send_request(acp::LoadSessionRequest::new(session_id.clone(), cwd))
+                            .block_task()
+                            .await
+                            .map_err(|e| {
+                                acp_error(CoreError::Protocol(format!("session/load 失败: {e}")))
+                            })?;
+                        // session/load 沿用原 session id（LoadSessionResponse 无新 id）
+                        session_id
+                    }
+                };
                 let _ = events
                     .send(AgentEvent::SessionStarted {
-                        session_id: session.session_id.0.to_string(),
+                        session_id: session_id.0.to_string(),
                     })
                     .await;
 
                 let prompt_task = connection
                     .send_request(acp::PromptRequest::new(
-                        session.session_id.clone(),
+                        session_id.clone(),
                         vec![acp::ContentBlock::Text(acp::TextContent::new(prompt))],
                     ))
                     .block_task();
@@ -140,7 +181,7 @@ impl AcpDriver {
                     _ = cancel.cancelled() => {
                         // 协议层取消优先；失败不致命（连接 teardown 仍会兜底）
                         if let Err(e) = connection.send_notification(acp::CancelNotification::new(
-                            session.session_id.clone(),
+                            session_id.clone(),
                         )) {
                             return Err(acp_error(CoreError::Protocol(format!(
                                 "session/cancel 发送失败: {e}"
@@ -160,9 +201,12 @@ impl AcpDriver {
                     }
                 };
 
-                Ok::<StopReason, agent_client_protocol::Error>(StopReason::from(
-                    response.stop_reason,
-                ))
+                // 无论正常结束还是取消，轮次终点必须以 TurnCompleted 事件广播
+                //（宿主依赖它落库/收尾，不只是拿 run() 的返回值）
+                let stop_reason = StopReason::from(response.stop_reason);
+                let _ = events.send(AgentEvent::TurnCompleted { stop_reason }).await;
+
+                Ok::<StopReason, agent_client_protocol::Error>(stop_reason)
             })
             .await
             .map_err(|e| CoreError::Protocol(e.to_string()))?;

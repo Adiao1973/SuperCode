@@ -36,7 +36,12 @@
 
 > **P0-7 范围说明**：Ctrl-C 路径已验收（协议层取消 + teardown 兜底）；
 > `supercode cancel` 跨进程子命令需要会话注册表，推迟到 Phase 1（多会话管理时落地）。
-| P0-8 | 会话恢复：session/load + SQLite 存档 | `supercode sessions list` 列出历史；`supercode resume <id> "继续"` 基于原上下文回答（可被人工核验） | 待办 |
+| P0-8 | 会话恢复：session/load + SQLite 存档 | `supercode sessions list` 列出历史；`supercode resume <id> "继续"` 基于原上下文回答（可被人工核验） | 已验收 |
+
+> **P0-8 修复记录**：验收中发现 P0-4 遗留缺陷——`TurnCompleted` 事件从未发射
+> （stop_reason 只作为 run() 返回值），此前仅影响输出重复，接入持久层后导致
+> agent 消息与状态不落库。已在 driver 收到 prompt 响应后补发事件（含取消路径）。
+> 另修正默认库路径为 `<data>/SuperCode/supercode.db`（原误落在 SuperCode 文件）。
 | P0-9 | justfile：`just verify` 一键 fmt+clippy+test | `just verify` 全绿，耗时 < 2min | 待办 |
 | P0-10 | Phase 0 整体验收 + tag v0.1.0 合入 main | 验收剧本逐条执行留痕（见下）；`git tag v0.1.0`；dev 合回 main | 待办 |
 

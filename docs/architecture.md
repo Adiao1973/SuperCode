@@ -136,8 +136,10 @@ pub enum PermissionOptionKind { AllowOnce, AllowAlways, RejectOnce, RejectAlways
 pub struct PermissionDecision { pub option_id: String, pub updated_input: Option<serde_json::Value> }
 ```
 
-**落地节奏**：`AgentDriver` trait（§4.2）在 P0-8 会话恢复完成后再 trait 化（避免过早抽象）；
-Phase 0 期间 AcpDriver 先以具体方法 `run_prompt(cwd, prompt, events, permissions)` 落地。
+**落地节奏**：`AgentDriver` trait（§4.2）在多 driver 出现（Phase 2）前保持具体方法形态，
+避免过早抽象。Phase 0 期间 AcpDriver 以 `run(cwd, mode: StartMode, prompt, events,
+permissions, cancel)` 落地：`StartMode::New`（session/new）| `StartMode::Load(agent_session_id)`
+（session/load——agent 重放历史通知后沿用原 session id 继续 prompt）。
 
 ### 4.2 `AgentDriver` trait
 
@@ -389,6 +391,9 @@ tasks(id TEXT PK, title TEXT, cwd TEXT, status TEXT, -- backlog|in_progress|revi
 ```
 
 迁移管理：`sqlx migrate`（`crates/core/migrations/`），迁移文件只增不改。
+P0-8 落地迁移 0001（六表）；运行期写入 sessions/messages/tool_calls/approvals
+（`SessionRecorder` 消费事件流：消息 chunk 在 TurnCompleted 时组装落库），tasks 表 Phase 1 使用。
+时间戳为 RFC3339 文本。`SUPERCODE_DB` 环境变量可覆盖库文件路径（测试/多环境用）。
 
 ## 7. 进程生命周期管理
 
