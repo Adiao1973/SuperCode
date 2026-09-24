@@ -1,0 +1,17 @@
+[workspace]
+resolver = "2"
+members = ["crates/core", "crates/cli"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+repository = "https://github.com/Adiao1973/SuperCode"
+rust-version = "1.85"
+
+[workspace.dependencies]
+supercode-core = { path = "crates/core" }
+
+[profile.release]
+lto = "thin"
+strip = true

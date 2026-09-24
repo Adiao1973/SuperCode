@@ -1,0 +1,10 @@
+[package]
+name = "supercode-core"
+description = "SuperCode 核心库：agent 适配层、审批代理、事件管道、进程管理、注册表与持久化"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[dependencies]
