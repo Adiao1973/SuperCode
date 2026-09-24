@@ -23,7 +23,7 @@
 |---|---|---|---|
 | P0-1 | cargo workspace 脚手架 | `cargo build` 成功；workspace 含 `crates/core`、`crates/cli`；`apps/desktop/README.md` 占位 | 已验收 |
 | P0-2 | 进程管理器 `proc`：command_group spawn + 进程组杀树 + stderr 落日志 | 单测：spawn `sleep 1000` 的子进程派生孙进程后 kill，断言孙进程一并退出（`pgrep` 无残留）；日志文件存在且非空 | 已验收 |
-| P0-3 | 事件模型 `AgentEvent` + 合帧聚合器 | 单测：灌入 100 条同 id MessageChunk + 混合事件，断言合帧输出条数与顺序；`cargo test` 绿 | 待办 |
+| P0-3 | 事件模型 `AgentEvent` + 合帧聚合器 | 单测：灌入 100 条同 id MessageChunk + 混合事件，断言合帧输出条数与顺序；`cargo test` 绿 | 已验收 |
 | P0-4 | AcpDriver：spawn `opencode acp`，完成 initialize / session/new / session/prompt，事件转 `AgentEvent` | `supercode detect` → 打印 `opencode <版本>`；`supercode run "用一句话介绍你自己" --cwd /tmp` → 终端流式打印 agent 消息，`TurnCompleted{EndTurn}` 收尾 | 待办 |
 | P0-5 | ApprovalBroker + CLI 交互审批（y/n/a） | 配置 `bash(*)` 为 ask 后 `supercode run "运行 git status"` → 出现权限请求提示（完整命令可见），选 y 后工具执行、事件流继续；选 n 后 agent 收到拒绝 | 待办 |
 | P0-6 | 预授权规则引擎（allow/deny/ask + pattern） | 规则 `allow: ["bash(git status)"]` 时同一任务**不再**弹审批；`deny` 规则直接拒绝且 approvals 留痕 | 待办 |
