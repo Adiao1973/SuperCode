@@ -57,3 +57,10 @@ P1-2 桌面壳验收暴露了两个事实：
 - P1-7 增加严格模式引导（opencode permission 配置检查/收紧建议），补客户端管辖边界之外的缺口。
 - architecture.md §4.3 增补模式化管线（v2 设计稿）；P1-2 桌面壳沿用 fail-closed 直至 P1-5 接管。
 - 语义边界（只管 agent 问的，不管 agent 不问的）写入 architecture 与用户文档，避免"规则没拦住"的误报。
+
+## 实证记录（2026-09-25，P1-2 验收期间）
+
+- opencode 权限默认值宽松：`bash`/`edit` 默认 **allow**（官方 docs/permissions 确认）——sleep、echo、新建文件 write 均不发询问，直接执行。
+- opencode 支持项目级配置：会话 cwd 下 `opencode.jsonc` 写入 `"permission": {"edit": "ask", "bash": "ask"}` 后，bash/edit 全部转为询问转发客户端（opencode 日志 `loading path=…/opencode.jsonc` + 客户端 deny 规则命中留痕）。
+- 昨天 P0 审批三路径能全部验证通过，正是因为测试目录 `/tmp/sc-test` 留有该配置；换到无配置目录后"规则失效"假象即由此而来。
+- **P1-7 严格模式的落点由此明确**：SuperCode 检测会话目录的 opencode permission 配置，宽松时引导/自动写入 ask 配置（后续评估经 `OPENCODE_CONFIG` 环境变量注入托管配置，避免改动用户目录）。
