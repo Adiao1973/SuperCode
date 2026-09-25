@@ -88,7 +88,26 @@
 > `stream.running` 永不置位，按钮/列表/状态条全失灵；② `begin` 未重置 `acpSessionId`——
 > 重跑后残留旧 id，cancel_run 打到已结束会话上报"不在运行中"；③ ⌘R 无防重入。
 > 另：opencode 会话 id 前 8 位是时间桶前缀（多个会话同前缀），短 id 展示改为尾部 6 位。
-| P1-4 | 会话视图：消息流（@virtuoso.dev/message-list）+ 工具调用时间线 + diff 展示（@git-diff-view/react） | 长会话（200+ 消息）滚动流畅；edit 类工具显示 diff | 待办 |
+| P1-4 | 会话视图：消息流（@virtuoso.dev/message-list）+ 工具调用时间线 + diff 展示（@git-diff-view/react） | 长会话（200+ 消息）滚动流畅；edit 类工具显示 diff | ✅ 已验收（2026-09-25，依赖有两处替换，见偏差记录） |
+
+> **P1-4 验收记录**：react-virtuoso 虚拟列表消息流（followOutput 跟随流式输出）+
+> 会话列表状态点/短 id + DEV 压测按钮（注入 320 条合成事件，滚动流畅）+ diff 展示
+> （@pierre/diffs MultiFileDiff，edit 结构化 diff 与 write 磁盘懒读双路径，用户实机验收）。
+> core 侧修正：ACP `ToolCallContent::Diff` 此前被 driver 丢弃，现映射为结构化
+> `DiffPayload{path, old_text, new_text}`（§4.1 契约更新，附提取单测）。
+>
+> **P1-4 偏差记录（依赖三处调整 + 一项数据源发现）**：
+> ① `@virtuoso.dev/message-list` 为**商业许可**组件（trial 模式）→ 替换为同作者
+>    MIT 的 **react-virtuoso**（同一虚拟化核心）；
+> ② `@git-diff-view/react` 0.1.7 表格布局行号列被内容撑开无法对齐、hunks 传空
+>    时不自行计算 diff → 替换为 **@pierre/diffs**（Apache-2.0，zai-org/ZCode 桌面端
+>    同款，对齐其 diff-viewer.tsx 用法）；
+> ③ **write 新建文件的 diff 数据源**：事件流留痕证明 opencode 的 ACP write 事件
+>    `raw_input` 为空、无 Diff 块——新文件内容不在事件流里。处理：新增
+>    `read_text_file` Tauri 命令，展开时从磁盘懒读（路径取事件 locations，
+>    上限 1MB）；edit 继续用事件自带的结构化 diff。
+> ④ 排查方法论沉淀：前端状态类问题用**事件留痕**（Frame→JSON→文件）拿真实数据，
+>    不做无依据推测；数据源缺失类问题从"源头取数"而非客户端拼凑。
 | P1-5 | 审批中心 UI：**权限模式选择器（会话级，plan/ask/autoedit/full，ADR-0006）** + 待决队列 + 规则库管理（设置页，SQLite 持久化） | 四模式行为与管线位次（architecture §4.3 v2）逐一验收；审批/预授权/拒绝路径与 Phase 0 一致 | 待办 |
 | P1-6 | SQLite 持久化 + 会话恢复 UI | 重启 app 后会话历史仍在，可恢复上下文 | 待办 |
 | P1-7 | opencode 安装探测与引导（含**严格模式引导**：检测/建议收紧 opencode `permission` 配置，补客户端管辖边界外的白名单缺口，ADR-0006） | 未安装时给出安装指引（命令可复制）；严格模式引导可见可复制 | 待办 |

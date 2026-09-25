@@ -1,7 +1,7 @@
 # SuperCode 架构设计文档
 
 > 本文档是 SuperCode 接口设计的**单一事实源**：任何接口 / 数据模型变更，先改本文档再改代码。
-> 版本：0.5（P1-3 多会话管理落地）· 变更记录见文末。
+> 版本：0.6（P1-4 会话视图落地）· 变更记录见文末。
 
 ## 1. 项目概述
 
@@ -469,6 +469,7 @@ P0-8 落地迁移 0001（六表）；运行期写入 sessions/messages/tool_call
 
 | 日期 | 版本 | 摘要 |
 |---|---|---|
+| 2026-09-25 | 0.6 | P1-4 会话视图落地：§4.1 diff 字段改为结构化 DiffPayload（ACP ToolCallContent::Diff 提取）；IPC 新增 read_text_file（write 新文件内容磁盘懒读）；前端 react-virtuoso + @pierre/diffs（依赖替换偏差见 roadmap） |
 | 2026-09-25 | 0.5 | P1-3 多会话管理落地：§5.1 多会话并行说明（客户端会话键路由、active run map 并发）；前端 sessions store + 会话列表/切换；IPC 契约不变（run_prompt 并发调用） |
 | 2026-09-25 | 0.4 | P1-2 事件管道落地：新增 §5.1 Tauri IPC 契约（run_prompt/cancel_run + Channel 批量推送）；§4.3 增补权限模式管线 v2 设计稿与管辖边界（ADR-0006，ZCode 源码研究结论），P1-5/P1-7 验收要点相应重写 |
 | 2026-09-24 | 0.1 | Step 0 初版：分层架构、AgentDriver/AgentEvent/ApprovalBroker/Registry 接口、事件管道、数据模型、进程与安全约定 |
