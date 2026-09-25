@@ -187,6 +187,7 @@ mod tests {
                 title: Some("git status".into()),
                 kind: ToolKind::Execute,
                 raw_input: None,
+                diff: None,
             })
             .await;
         recorder

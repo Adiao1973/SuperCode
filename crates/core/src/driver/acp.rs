@@ -17,8 +17,8 @@ use super::{
 };
 use crate::error::{CoreError, Result};
 use crate::events::{
-    AgentEvent, ContentBlock, FileLocation, PlanEntry, PlanEntryStatus, StopReason, ToolKind,
-    ToolStatus,
+    AgentEvent, ContentBlock, DiffPayload, FileLocation, PlanEntry, PlanEntryStatus, StopReason,
+    ToolKind, ToolStatus,
 };
 
 /// ACP 的 message_id 缺失时，同一连接内 agent 输出共用的合成消息 id
@@ -248,6 +248,7 @@ fn convert_update(update: &acp::SessionUpdate) -> Option<AgentEvent> {
             title: Some(call.title.clone()),
             kind: ToolKind::from(call.kind),
             raw_input: call.raw_input.clone(),
+            diff: extract_diff(&call.content),
         }),
         U::ToolCallUpdate(update) => Some(AgentEvent::ToolCallUpdate {
             tool_call_id: update.tool_call_id.0.to_string(),
@@ -271,7 +272,7 @@ fn convert_update(update: &acp::SessionUpdate) -> Option<AgentEvent> {
                     line: loc.line,
                 })
                 .collect(),
-            diff: None,
+            diff: update.fields.content.as_deref().and_then(extract_diff),
         }),
         U::Plan(plan) => Some(AgentEvent::Plan {
             entries: plan
@@ -311,9 +312,21 @@ fn convert_tool_content(content: &acp::ToolCallContent) -> Option<ContentBlock> 
             }),
             _ => None,
         },
-        // Diff/Terminal 内容的专门呈现留给 Phase 1 桌面 UI
+        // Diff 走 ToolCall/ToolCallUpdate 的专属字段；Terminal 呈现留待后续
         _ => None,
     }
+}
+
+/// 提取工具事件 content 中的首个 Diff 块（opencode edit 类工具携带）
+fn extract_diff(content: &[acp::ToolCallContent]) -> Option<DiffPayload> {
+    content.iter().find_map(|item| match item {
+        acp::ToolCallContent::Diff(diff) => Some(DiffPayload {
+            path: diff.path.to_string_lossy().into_owned(),
+            old_text: diff.old_text.clone(),
+            new_text: diff.new_text.clone(),
+        }),
+        _ => None,
+    })
 }
 
 fn convert_permission_request(request: &acp::RequestPermissionRequest) -> PermissionRequest {
@@ -466,6 +479,43 @@ mod tests {
                 diff: None,
             }
         );
+    }
+
+    /// P1-4：opencode edit 类工具在 content 中携带 Diff 块，须映射为结构化 diff
+    #[test]
+    fn 工具事件提取diff内容块() {
+        let diff = acp::Diff::new("/tmp/a.txt", "新内容").old_text("旧内容");
+        let call = acp::ToolCall::new("t1", "编辑 a.txt")
+            .kind(acp::ToolKind::Edit)
+            .content(vec![acp::ToolCallContent::Diff(diff)]);
+        let event = convert_update(&acp::SessionUpdate::ToolCall(call)).unwrap();
+        match event {
+            AgentEvent::ToolCall { diff, kind, .. } => {
+                let diff = diff.expect("ToolCall 应携带 diff");
+                assert_eq!(kind, ToolKind::Edit);
+                assert_eq!(diff.path, "/tmp/a.txt");
+                assert_eq!(diff.old_text.as_deref(), Some("旧内容"));
+                assert_eq!(diff.new_text, "新内容");
+            }
+            other => panic!("应为 ToolCall: {other:?}"),
+        }
+
+        // 新建文件：old_text 缺省（None）→ 全部为新增
+        let update = acp::ToolCallUpdate::new(
+            "t1",
+            acp::ToolCallUpdateFields::new().content(vec![acp::ToolCallContent::Diff(
+                acp::Diff::new("/tmp/b.txt", "新文件内容"),
+            )]),
+        );
+        let event = convert_update(&acp::SessionUpdate::ToolCallUpdate(update)).unwrap();
+        match event {
+            AgentEvent::ToolCallUpdate { diff, .. } => {
+                let diff = diff.expect("ToolCallUpdate 应携带 diff");
+                assert_eq!(diff.old_text, None);
+                assert_eq!(diff.new_text, "新文件内容");
+            }
+            other => panic!("应为 ToolCallUpdate: {other:?}"),
+        }
     }
 
     #[test]

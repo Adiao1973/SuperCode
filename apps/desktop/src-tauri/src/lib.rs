@@ -151,12 +151,29 @@ async fn cancel_run(app: tauri::AppHandle, session_id: String) -> Result<(), Str
     }
 }
 
+/// 读取文本文件（write 工具 diff 展示用：opencode 的 ACP 事件不含新文件内容，
+/// 展开时从磁盘取）。上限 1MB，非 UTF-8 内容按替换字符降级。
+#[tauri::command]
+async fn read_text_file(path: String) -> Result<String, String> {
+    const MAX_BYTES: u64 = 1024 * 1024;
+    let meta = std::fs::metadata(&path).map_err(|e| format!("读取文件信息失败：{e}"))?;
+    if meta.len() > MAX_BYTES {
+        return Err("文件超过 1MB，不展示 diff".into());
+    }
+    let bytes = std::fs::read(&path).map_err(|e| format!("读取文件失败：{e}"))?;
+    Ok(String::from_utf8_lossy(&bytes).into_owned())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .manage(AppState::default())
-        .invoke_handler(tauri::generate_handler![run_prompt, cancel_run])
+        .invoke_handler(tauri::generate_handler![
+            run_prompt,
+            cancel_run,
+            read_text_file
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

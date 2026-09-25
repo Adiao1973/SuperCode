@@ -40,7 +40,9 @@ export type SessionsAction =
   /** 开跑：清空事件流并置 running（P1-3 重构时曾遗漏导致按钮/列表状态失灵） */
   | { type: "begin"; key: string }
   | { type: "batch"; key: string; batch: AgentEvent[] }
-  | { type: "invokeError"; key: string; message: string | null };
+  | { type: "invokeError"; key: string; message: string | null }
+  /** DEV 专用：注入合成事件（虚拟列表滚动压测，P1-4） */
+  | { type: "seed"; key: string };
 
 let sessionSeq = 0;
 
@@ -121,6 +123,12 @@ export function sessionsReducer(
         invokeError: stream.running ? null : it.invokeError,
       }));
     }
+    case "seed":
+      return updateEntry(state, action.key, (it) => ({
+        ...it,
+        title: it.title === "新会话" ? "压测会话" : it.title,
+        stream: seededStream(),
+      }));
     case "invokeError":
       return updateEntry(state, action.key, (it) => ({
         ...it,
@@ -148,4 +156,47 @@ export function sessionStatus(entry: SessionEntry): {
     };
   }
   return { label: "空闲", tone: "idle" };
+}
+
+/** DEV 压测数据：320 条合成条目（虚拟列表滚动性能验收用，P1-4） */
+function seededStream(): StreamState {
+  const items: StreamState["items"] = [];
+  for (let i = 1; i <= 80; i++) {
+    items.push({
+      key: `seed-t-${i}`,
+      kind: "thought",
+      id: `seed-thought-${i}`,
+      text: `（压测 ${i}）正在分析第 ${i} 个子任务……`,
+      active: false,
+    });
+    items.push({
+      key: `seed-m-${i}`,
+      kind: "message",
+      id: `seed-msg-${i}`,
+      text: `（压测 ${i}）第 ${i} 步已完成：文件 chunk-${String(i).padStart(3, "0")}.txt 已写入并通过校验。`,
+      active: false,
+    });
+    items.push({
+      key: `seed-tool-${i}`,
+      kind: "tool",
+      id: `seed-call-${i}`,
+      name: "write",
+      title: `chunk-${String(i).padStart(3, "0")}.txt`,
+      toolKind: "edit",
+      status: "completed",
+      content: ["Wrote file successfully."],
+      locations: [{ path: `/tmp/seed/chunk-${String(i).padStart(3, "0")}.txt` }],
+      diff: {
+        path: `/tmp/seed/chunk-${String(i).padStart(3, "0")}.txt`,
+        old_text: null,
+        new_text: `line 1 of chunk ${i}\nline 2 of chunk ${i}\nline 3 of chunk ${i}\n`,
+      },
+    });
+  }
+  items.push({
+    key: "seed-turn",
+    kind: "turn_end",
+    stopReason: "end_turn",
+  });
+  return { items, running: false, usage: { used: 0, size: null, cost: 0 } };
 }

@@ -31,3 +31,8 @@ export function runPrompt(options: {
 export function cancelRun(sessionId: string): Promise<void> {
   return invoke("cancel_run", { sessionId });
 }
+
+/** 读取文本文件（write 工具 diff 展开时从磁盘取内容，opencode ACP 事件不携带） */
+export function readTextFile(path: string): Promise<string> {
+  return invoke("read_text_file", { path });
+}

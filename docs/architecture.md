@@ -1,7 +1,7 @@
 # SuperCode 架构设计文档
 
 > 本文档是 SuperCode 接口设计的**单一事实源**：任何接口 / 数据模型变更，先改本文档再改代码。
-> 版本：0.5（P1-3 多会话管理落地）· 变更记录见文末。
+> 版本：0.6（P1-4 会话视图落地）· 变更记录见文末。
 
 ## 1. 项目概述
 
@@ -97,6 +97,7 @@ pub enum AgentEvent {
         title: Option<String>,
         kind: ToolKind,          // Read | Edit | Delete | Move | Search | Execute | Fetch | Other
         raw_input: Option<serde_json::Value>,
+        diff: Option<DiffPayload>,   // ACP ToolCallContent::Diff 映射（opencode edit 类工具）
     },
     /// 工具调用状态更新（status 可选：update 可能只带 content/locations）
     ToolCallUpdate {
@@ -104,7 +105,7 @@ pub enum AgentEvent {
         status: Option<ToolStatus>,  // Pending | InProgress | Completed | Failed
         content: Vec<ContentBlock>,
         locations: Vec<FileLocation>,
-        diff: Option<String>,        // ACP v1 无独立 diff 字段，StreamJson 等 driver 填充
+        diff: Option<DiffPayload>,   // 有值时覆盖同 id 工具此前的 diff
     },
     /// agent 生成的计划（plan 模式）
     Plan { entries: Vec<PlanEntry> },
@@ -123,6 +124,10 @@ pub enum AgentEvent {
 pub enum ToolKind { Read, Edit, Delete, Move, Search, Execute, Fetch, Other } // 对齐 ACP v1
 pub enum ToolStatus { Pending, InProgress, Completed, Failed }
 pub enum ContentBlock { Text { text }, Image { data, mime_type }, ResourceLink { uri } } // tag="type"
+/// 结构化文件修改（对齐 ACP ToolCallContent::Diff{path, oldText, newText}）：
+/// driver 从工具事件的 content 块中提取；old_text=None 表示新建文件。
+/// diff 算法与渲染是前端职责（@git-diff-view/react 接收原始新旧内容）。
+pub struct DiffPayload { pub path: String, pub old_text: Option<String>, pub new_text: String }
 pub struct FileLocation { pub path: PathBuf, pub line: Option<u32> } // 对齐 ACP ToolCallLocation
 pub struct PlanEntry { pub content: String, pub status: PlanEntryStatus }
 pub enum PlanEntryStatus { Pending, InProgress, Completed, Cancelled }
@@ -464,6 +469,7 @@ P0-8 落地迁移 0001（六表）；运行期写入 sessions/messages/tool_call
 
 | 日期 | 版本 | 摘要 |
 |---|---|---|
+| 2026-09-25 | 0.6 | P1-4 会话视图落地：§4.1 diff 字段改为结构化 DiffPayload（ACP ToolCallContent::Diff 提取）；IPC 新增 read_text_file（write 新文件内容磁盘懒读）；前端 react-virtuoso + @pierre/diffs（依赖替换偏差见 roadmap） |
 | 2026-09-25 | 0.5 | P1-3 多会话管理落地：§5.1 多会话并行说明（客户端会话键路由、active run map 并发）；前端 sessions store + 会话列表/切换；IPC 契约不变（run_prompt 并发调用） |
 | 2026-09-25 | 0.4 | P1-2 事件管道落地：新增 §5.1 Tauri IPC 契约（run_prompt/cancel_run + Channel 批量推送）；§4.3 增补权限模式管线 v2 设计稿与管辖边界（ADR-0006，ZCode 源码研究结论），P1-5/P1-7 验收要点相应重写 |
 | 2026-09-24 | 0.1 | Step 0 初版：分层架构、AgentDriver/AgentEvent/ApprovalBroker/Registry 接口、事件管道、数据模型、进程与安全约定 |

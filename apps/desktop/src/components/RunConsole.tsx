@@ -1,27 +1,24 @@
 /**
- * 会话详情视图（P1-3 由单运行控制台改造）：绑定单个会话条目，
- * 表单草稿与事件流都来自 sessions store；启动/停止走 Tauri 命令。
+ * 会话详情视图：绑定单个会话条目，表单草稿与事件流都来自 sessions store。
+ * 消息流用 react-virtuoso 虚拟列表（P1-4：200+ 条目滚动流畅）；
+ * edit 类工具的 diff 用 @git-diff-view/react 渲染。
  */
-import {
-  memo,
-  useCallback,
-  useEffect,
-  useRef,
-  type Dispatch,
-} from "react";
+import { memo, useCallback, useEffect, useRef, useState, type Dispatch } from "react";
+import { MultiFileDiff } from "@pierre/diffs/react";
+import { Virtuoso } from "react-virtuoso";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
-import { cancelRun, runPrompt } from "@/lib/agent";
+import { cancelRun, readTextFile, runPrompt } from "@/lib/agent";
 import type { StreamItem } from "@/lib/stream";
-import type {
-  SessionEntry,
-  SessionsAction,
-} from "@/lib/sessions";
+import type { SessionEntry, SessionsAction } from "@/lib/sessions";
+import type { DiffPayload } from "@/lib/events";
 import type { ToolKind, ToolStatus } from "@/lib/events";
 import {
+  ChevronDown,
+  ChevronRight,
   CircleStop,
   FileText,
   FilePen,
@@ -68,14 +65,7 @@ interface RunConsoleProps {
 
 export function RunConsole({ session, dispatch }: RunConsoleProps) {
   const { draft, stream } = session;
-  const transcriptRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const el = transcriptRef.current;
-    if (el) {
-      el.scrollTop = el.scrollHeight;
-    }
-  }, [stream.items]);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   const start = useCallback(async () => {
     if (stream.running) {
@@ -214,18 +204,26 @@ export function RunConsole({ session, dispatch }: RunConsoleProps) {
         </p>
       </div>
 
-      {/* 事件流时间线（合帧批 → 单次 dispatch → 仅活动 chunk 重渲染） */}
-      <div ref={transcriptRef} className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
-        <div className="mx-auto flex max-w-3xl flex-col gap-3">
-          {stream.items.length === 0 && (
-            <p className="text-muted-foreground py-8 text-center text-sm">
-              点击「运行」驱动 opencode（ACP）执行任务，事件经 Rust 合帧 → Tauri Channel 到达这里。
-            </p>
-          )}
-          {stream.items.map((item) => (
-            <StreamItemView key={item.key} item={item} />
-          ))}
-        </div>
+      {/* 事件流时间线：虚拟列表（合帧批 → 单次 dispatch → 仅活动 chunk 重渲染） */}
+      <div ref={scrollRef} className="min-h-0 flex-1">
+        {stream.items.length === 0 ? (
+          <p className="text-muted-foreground py-8 text-center text-sm">
+            点击「运行」驱动 opencode（ACP）执行任务，事件经 Rust 合帧 → Tauri Channel 到达这里。
+          </p>
+        ) : (
+          <Virtuoso
+            style={{ height: "100%" }}
+            data={stream.items}
+            computeItemKey={(_, item) => item.key}
+            followOutput="auto"
+            increaseViewportBy={{ top: 600, bottom: 600 }}
+            itemContent={(_, item) => (
+              <div className="mx-auto max-w-3xl px-5 pb-3">
+                <StreamItemView item={item} />
+              </div>
+            )}
+          />
+        )}
       </div>
 
       {/* 状态条 */}
@@ -328,6 +326,115 @@ const ToolView = memo(function ToolView({
         <pre className="text-muted-foreground mt-1 max-h-40 overflow-y-auto font-mono text-[11px] whitespace-pre-wrap break-all">
           {item.content.join("\n")}
         </pre>
+      )}
+      <DiffBlock diff={item.diff} lazyPath={writeLazyPath(item)} />
+    </div>
+  );
+});
+
+/** write 类工具（无结构化 diff）的磁盘懒读路径：opencode 的 ACP 事件不含新文件内容 */
+function writeLazyPath(item: Extract<StreamItem, { kind: "tool" }>): string | null {
+  if (item.diff || item.locations.length === 0) {
+    return null;
+  }
+  const label = `${item.name ?? ""} ${item.title ?? ""}`.toLowerCase();
+  return /write|create|save/.test(label) ? item.locations[0].path : null;
+}
+
+/**
+ * 工具 diff 展示（默认折叠，展开渲染 @pierre/diffs——ZCode 同款渲染方案）。
+ * 数据来源分两种：结构化 diff（opencode edit 完成事件携带）；
+ * write（新建文件）ACP 事件不含内容，展开时从磁盘读（read_text_file）。
+ */
+const DiffBlock = memo(function DiffBlock({
+  diff,
+  lazyPath,
+}: {
+  diff: DiffPayload | null;
+  lazyPath?: string | null;
+}) {
+  const [open, setOpen] = useState(false);
+  const [lazyDiff, setLazyDiff] = useState<DiffPayload | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const payload = diff ?? lazyDiff;
+
+  useEffect(() => {
+    if (!open || diff || !lazyPath || lazyDiff || loadError) {
+      return;
+    }
+    let cancelled = false;
+    void readTextFile(lazyPath)
+      .then((content) => {
+        if (!cancelled) {
+          setLazyDiff({ path: lazyPath, old_text: null, new_text: content });
+        }
+      })
+      .catch((e) => {
+        if (!cancelled) {
+          setLoadError(String(e));
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [open, diff, lazyPath, lazyDiff, loadError]);
+
+  return (
+    <div className="mt-2">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="text-muted-foreground hover:text-foreground flex items-center gap-1 font-mono text-[11px] transition-colors"
+      >
+        {open ? <ChevronDown className="size-3" /> : <ChevronRight className="size-3" />}
+        <span className="truncate">{(diff ?? { path: lazyPath })?.path}</span>
+        {payload ? (
+          <>
+            <span className="text-emerald-500">
+              +{payload.new_text.replace(/\n$/, "").split("\n").length}
+            </span>
+            {payload.old_text != null && (
+              <span className="text-destructive">
+                -{payload.old_text.replace(/\n$/, "").split("\n").length}
+              </span>
+            )}
+          </>
+        ) : lazyPath ? (
+          <span className="text-muted-foreground/60">从磁盘读取…</span>
+        ) : null}
+      </button>
+      {open && payload && (
+        <div
+          className="mt-1 max-h-72 overflow-auto rounded border"
+          style={
+            {
+              "--diffs-font-family": "var(--font-mono)",
+              "--diffs-font-size": "11px",
+            } as React.CSSProperties
+          }
+        >
+          <MultiFileDiff
+            oldFile={
+              payload.old_text == null
+                ? null
+                : { name: payload.path, contents: payload.old_text }
+            }
+            newFile={{ name: payload.path, contents: payload.new_text }}
+            options={{
+              diffStyle: "unified",
+              overflow: "scroll",
+              disableFileHeader: true,
+              hunkSeparators: "simple",
+              themeType: "dark",
+            }}
+          />
+        </div>
+      )}
+      {open && !payload && !lazyPath && (
+        <p className="text-muted-foreground mt-1 text-[11px]">无 diff 数据</p>
+      )}
+      {loadError && (
+        <p className="text-destructive mt-1 text-[11px]">{loadError}</p>
       )}
     </div>
   );
