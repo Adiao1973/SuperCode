@@ -353,6 +353,10 @@ fn print_decision_record(record: &DecisionRecord) {
             "· 预授权命中 [{:?}] {pattern} → {}",
             effect, record.decision.option_id
         ),
+        DecisionSource::Mode { mode } => eprintln!(
+            "· 权限模式 [{mode:?}] 兜底裁决 {} → {}",
+            record.request.tool_name, record.decision.option_id
+        ),
         DecisionSource::User => eprintln!(
             "· 用户裁决 {} → {}",
             record.request.tool_name, record.decision.option_id

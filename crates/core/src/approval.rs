@@ -18,10 +18,17 @@ pub struct PendingPermission {
     pub request: PermissionRequest,
 }
 
-/// 裁决来源：预授权规则（带命中模式与效果）或用户。
+/// 裁决来源：预授权规则（带命中模式与效果）、权限模式兜底或用户。
 #[derive(Debug, Clone, PartialEq)]
 pub enum DecisionSource {
-    Rule { pattern: String, effect: RuleEffect },
+    Rule {
+        pattern: String,
+        effect: RuleEffect,
+    },
+    /// 权限模式兜底（plan 拒绝 / full 放行 / autoedit 放行 / fail-closed 拒绝）
+    Mode {
+        mode: PermissionMode,
+    },
     User,
 }
 
@@ -29,6 +36,43 @@ pub enum DecisionSource {
 pub enum RuleEffect {
     Allow,
     Deny,
+    Ask,
+}
+
+/// 权限模式（ADR-0006）：未匹配请求的默认策略，会话级可热切换。
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, serde::Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum PermissionMode {
+    /// 计划：一律拒绝（只读保证，allow 规则不再考察）
+    Plan,
+    /// 变更前确认：全部进待决队列（默认）
+    #[default]
+    Ask,
+    /// 自动编辑：edit/write 类放行，其余进队列
+    AutoEdit,
+    /// 完全访问：全部放行（deny 规则仍生效）
+    FullAccess,
+}
+
+impl PermissionMode {
+    pub fn from_str_value(value: &str) -> Option<Self> {
+        match value {
+            "plan" => Some(Self::Plan),
+            "ask" => Some(Self::Ask),
+            "autoedit" => Some(Self::AutoEdit),
+            "full" => Some(Self::FullAccess),
+            _ => None,
+        }
+    }
+}
+
+/// edit/write 类工具（AutoEdit 模式的放行范围；bash/execute 不在此列——ADR-0006）
+fn is_edit_class_request(request: &PermissionRequest) -> bool {
+    let (tool, _) = infer_tool_and_subject(request);
+    matches!(
+        tool.to_lowercase().as_str(),
+        "write" | "edit" | "multiedit" | "notebookedit" | "patch" | "apply_patch" | "str_replace"
+    )
 }
 
 /// 裁决留痕记录（`subscribe_decisions()` 广播；SQLite 持久化在 P0-8 落地）。
@@ -39,25 +83,40 @@ pub struct DecisionRecord {
     pub decision: PermissionDecision,
 }
 
-/// 预授权规则集（deny > allow > ask，全不命中 → 询问）。
+/// 预授权规则集（求值顺序 deny > ask > allow，全不命中 → 按权限模式兜底）。
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct PermissionRules {
     pub allow: Vec<String>,
     pub deny: Vec<String>,
+    pub ask: Vec<String>,
 }
 
 impl PermissionRules {
     pub fn new(allow: Vec<String>, deny: Vec<String>) -> Self {
-        Self { allow, deny }
+        Self {
+            allow,
+            deny,
+            ask: Vec::new(),
+        }
     }
 
-    /// 求值：返回首个命中的 deny/allow；None = 询问（进入待决队列）。
-    /// deny 优先于 allow（保守：冲突时拒绝）。
+    pub fn with_ask(mut self, ask: Vec<String>) -> Self {
+        self.ask = ask;
+        self
+    }
+
+    /// 求值：返回首个命中的 deny/ask/allow；None = 未命中（按权限模式兜底）。
+    /// deny 优先（保守：冲突时拒绝）；ask 压过 allow（显式要求逐次确认的优先）。
     pub fn evaluate(&self, request: &PermissionRequest) -> Option<(String, RuleEffect)> {
         let (tool, subject) = infer_tool_and_subject(request);
         for pattern in &self.deny {
             if pattern_matches(pattern, &tool, &subject) {
                 return Some((pattern.clone(), RuleEffect::Deny));
+            }
+        }
+        for pattern in &self.ask {
+            if pattern_matches(pattern, &tool, &subject) {
+                return Some((pattern.clone(), RuleEffect::Ask));
             }
         }
         for pattern in &self.allow {
@@ -147,6 +206,8 @@ struct Waiting {
 #[derive(Clone)]
 pub struct ApprovalBroker {
     rules: PermissionRules,
+    /// 权限模式（会话级，可经 set_mode 热切换）
+    mode: Arc<std::sync::Mutex<PermissionMode>>,
     waiting: Arc<Mutex<Waiting>>,
     /// 待决请求广播（审批中心 UI / CLI 宿主）；broadcast 自身线程安全，订阅无需加锁
     requests_tx: broadcast::Sender<PendingPermission>,
@@ -160,6 +221,12 @@ impl Default for ApprovalBroker {
     }
 }
 
+/// 管线裁决结果：Queue = 待决队列（等用户应答）；Decision = 已裁决（含留痕）
+enum PipelineOutcome {
+    Queue,
+    Decision(Box<DecisionRecord>),
+}
+
 impl ApprovalBroker {
     pub fn new() -> Self {
         Self::default()
@@ -170,6 +237,7 @@ impl ApprovalBroker {
         let (decisions_tx, _) = broadcast::channel(128);
         Self {
             rules,
+            mode: Arc::new(std::sync::Mutex::new(PermissionMode::default())),
             waiting: Arc::new(Mutex::new(Waiting {
                 entries: HashMap::new(),
             })),
@@ -178,36 +246,131 @@ impl ApprovalBroker {
         }
     }
 
-    /// driver 权限回调入口：规则引擎先行裁决；未命中（或 allow 规则无法适用）进入待决队列。
-    pub async fn resolve(&self, request: PermissionRequest) -> Result<PermissionDecision> {
-        // 1) 规则引擎先行（deny > allow）
-        if let Some((pattern, effect)) = self.rules.evaluate(&request)
-            // allow 规则命中但 agent 未提供 allow 选项 → None，降级为询问（落入待决队列）
-            && let Some(decision) = self.rule_decision(&request, &pattern, effect)?
-        {
-            let _ = self.decisions_tx.send(DecisionRecord {
-                request,
-                source: DecisionSource::Rule { pattern, effect },
-                decision: decision.clone(),
-            });
-            return Ok(decision);
+    /// 热切换权限模式（会话级模式选择器）
+    pub fn set_mode(&self, mode: PermissionMode) {
+        *self.mode.lock().unwrap() = mode;
+    }
+
+    pub fn mode(&self) -> PermissionMode {
+        *self.mode.lock().unwrap()
+    }
+
+    /// 管线裁决（§4.3 v2）：Queue = 交由调用方入队等应答；Decision = 已裁决待广播。
+    fn decide(&self, request: &PermissionRequest, fallback_deny: bool) -> Result<PipelineOutcome> {
+        let matched = self.rules.evaluate(request);
+
+        // 1) deny 规则 → 拒绝（任何模式最硬）
+        if let Some((pattern, RuleEffect::Deny)) = &matched {
+            let decision = self
+                .rule_decision(request, pattern, RuleEffect::Deny)?
+                .ok_or_else(|| {
+                    CoreError::PermissionFailed(format!(
+                        "规则 {pattern} 命中 deny 但 agent 未提供 reject 选项"
+                    ))
+                })?;
+            return Ok(PipelineOutcome::Decision(Box::new(DecisionRecord {
+                request: request.clone(),
+                source: DecisionSource::Rule {
+                    pattern: pattern.clone(),
+                    effect: RuleEffect::Deny,
+                },
+                decision,
+            })));
         }
 
-        // 2) 未命中 → 待决队列
+        let mode = self.mode();
+
+        // 2) plan 模式 → 拒绝（allow 规则不再考察——计划模式保证只读）
+        if mode == PermissionMode::Plan {
+            let decision = self
+                .rule_decision(request, "<plan>", RuleEffect::Deny)?
+                .ok_or_else(|| {
+                    CoreError::PermissionFailed("agent 未提供拒绝选项（plan 模式）".into())
+                })?;
+            return Ok(PipelineOutcome::Decision(Box::new(DecisionRecord {
+                request: request.clone(),
+                source: DecisionSource::Mode { mode },
+                decision,
+            })));
+        }
+
+        // 3) full 模式 → 放行
+        if mode == PermissionMode::FullAccess {
+            let decision = self
+                .rule_decision(request, "<full>", RuleEffect::Allow)?
+                .ok_or_else(|| {
+                    CoreError::PermissionFailed("agent 未提供允许选项（full 模式）".into())
+                })?;
+            return Ok(PipelineOutcome::Decision(Box::new(DecisionRecord {
+                request: request.clone(),
+                source: DecisionSource::Mode { mode },
+                decision,
+            })));
+        }
+
+        // 4) ask 规则 → 待决队列（用户显式要求逐次确认的优先于 allow）
+        if matches!(matched, Some((_, RuleEffect::Ask))) {
+            return Ok(PipelineOutcome::Queue);
+        }
+
+        // 5) allow 规则 → 放行（agent 未提供 allow 选项则降级询问）
+        if let Some((pattern, RuleEffect::Allow)) = &matched {
+            return match self.rule_decision(request, pattern, RuleEffect::Allow)? {
+                Some(decision) => Ok(PipelineOutcome::Decision(Box::new(DecisionRecord {
+                    request: request.clone(),
+                    source: DecisionSource::Rule {
+                        pattern: pattern.clone(),
+                        effect: RuleEffect::Allow,
+                    },
+                    decision,
+                }))),
+                None => Ok(PipelineOutcome::Queue),
+            };
+        }
+
+        // 6) autoedit ∧ edit/write 类 → 放行（bash 类不在此列）
+        if mode == PermissionMode::AutoEdit && is_edit_class_request(request) {
+            let decision = self
+                .rule_decision(request, "<autoedit>", RuleEffect::Allow)?
+                .ok_or_else(|| {
+                    CoreError::PermissionFailed("agent 未提供允许选项（autoedit 模式）".into())
+                })?;
+            return Ok(PipelineOutcome::Decision(Box::new(DecisionRecord {
+                request: request.clone(),
+                source: DecisionSource::Mode { mode },
+                decision,
+            })));
+        }
+
+        // 7) 兜底：无审批 UI 宿主 fail-closed 拒绝；否则待决队列
+        if fallback_deny {
+            let decision = self
+                .rule_decision(request, "<default-deny>", RuleEffect::Deny)?
+                .ok_or_else(|| CoreError::PermissionFailed("agent 未提供拒绝选项".into()))?;
+            Ok(PipelineOutcome::Decision(Box::new(DecisionRecord {
+                request: request.clone(),
+                source: DecisionSource::Mode { mode },
+                decision,
+            })))
+        } else {
+            Ok(PipelineOutcome::Queue)
+        }
+    }
+
+    /// 记录并返回裁决
+    /// 登记待决队列并广播，等待用户应答（resolve/resolve_fail_closed 共用）
+    async fn enqueue_and_wait(&self, request: PermissionRequest) -> Result<PermissionDecision> {
         let id = Uuid::new_v4();
         let (decision_tx, decision_rx) = oneshot::channel();
-
         {
             let mut waiting = self.waiting.lock().await;
             waiting.entries.insert(id, decision_tx);
-            // 无订阅方不视为错误：请求留在待决表，driver 侧挂起等待——
-            // 宿主必须先 subscribe 再开跑（见 architecture.md 宿主接入形态）
+            // 无订阅方不视为错误：请求留在待决表，driver 侧挂起等待
             let _ = self.requests_tx.send(PendingPermission {
                 id,
                 request: request.clone(),
             });
         }
-
         match decision_rx.await {
             Ok(decision) => {
                 let _ = self.decisions_tx.send(DecisionRecord {
@@ -222,6 +385,17 @@ impl ApprovalBroker {
                 "审批回填通道关闭，按拒绝处理：{}",
                 request.tool_name
             ))),
+        }
+    }
+
+    /// driver 权限回调入口（模式化管线 §4.3 v2，兜底走待决队列）。
+    pub async fn resolve(&self, request: PermissionRequest) -> Result<PermissionDecision> {
+        match self.decide(&request, false)? {
+            PipelineOutcome::Decision(record) => {
+                let _ = self.decisions_tx.send(*record.clone());
+                Ok(record.decision)
+            }
+            PipelineOutcome::Queue => self.enqueue_and_wait(request).await,
         }
     }
 
@@ -252,6 +426,8 @@ impl ApprovalBroker {
                     ))
                 },
             )?),
+            // ask 规则不产生自动裁决（管线第 4 步直接入待决队列）；占位防御
+            RuleEffect::Ask => None,
         };
         Ok(option_id.map(|option_id| PermissionDecision {
             option_id,
@@ -264,8 +440,8 @@ impl ApprovalBroker {
         self.requests_tx.subscribe()
     }
 
-    /// fail-closed 解析变体：规则未命中的请求**直接选拒绝 option**，不进待决队列。
-    /// 供无审批 UI 的宿主（P1-2 桌面壳）使用。
+    /// fail-closed 解析变体：管线兜底改为**直接选拒绝 option**，不进待决队列。
+    /// 供无审批 UI 的宿主使用；模式化管线与 `resolve` 完全一致。
     ///
     /// 注意：不要用追加通配 deny（`"*"`）实现兜底——求值是 deny 优先，
     /// 通配 deny 会连 allow 规则一并压掉，全部请求被拒。
@@ -273,29 +449,15 @@ impl ApprovalBroker {
         &self,
         request: PermissionRequest,
     ) -> Result<PermissionDecision> {
-        if let Some((pattern, effect)) = self.rules.evaluate(&request)
-            && let Some(decision) = self.rule_decision(&request, &pattern, effect)?
-        {
-            let _ = self.decisions_tx.send(DecisionRecord {
-                request,
-                source: DecisionSource::Rule { pattern, effect },
-                decision: decision.clone(),
-            });
-            return Ok(decision);
+        match self.decide(&request, true)? {
+            PipelineOutcome::Decision(record) => {
+                let _ = self.decisions_tx.send(*record.clone());
+                Ok(record.decision)
+            }
+            // 管线在 fail-closed 下不会产生 Queue（兜底已改为拒绝）；
+            // ask 规则命中仍走队列——显式 ask 语义优先于宿主兜底
+            PipelineOutcome::Queue => self.enqueue_and_wait(request).await,
         }
-        // 未命中 → 默认拒绝（留痕 pattern 标记为默认策略，落库 decided_by=rule:<default-deny>）
-        let decision = self
-            .rule_decision(&request, "<default-deny>", RuleEffect::Deny)?
-            .ok_or_else(|| CoreError::PermissionFailed("agent 未提供拒绝选项".into()))?;
-        let _ = self.decisions_tx.send(DecisionRecord {
-            request,
-            source: DecisionSource::Rule {
-                pattern: "<default-deny>".into(),
-                effect: RuleEffect::Deny,
-            },
-            decision: decision.clone(),
-        });
-        Ok(decision)
     }
 
     /// 订阅裁决留痕（CLI 打印 / Phase 1 审批历史 UI / P0-8 落库）。
@@ -592,5 +754,116 @@ mod tests {
             rejected.option_id, "reject-once",
             "deny(*) 优先于 allow(git status)——这正是不能用它做兜底的原因"
         );
+    }
+
+    /// edit/write 类请求样例（AutoEdit 放行范围）
+    fn edit_class_request() -> PermissionRequest {
+        PermissionRequest {
+            session_id: "ses_1".into(),
+            tool_call_id: "call_e1".into(),
+            tool_name: "write".into(),
+            raw_input: Some(serde_json::json!({"filePath": "/tmp/a.txt", "content": "hi\n"})),
+            options: vec![
+                PermissionOption {
+                    option_id: "allow-once".into(),
+                    name: "允许".into(),
+                    kind: PermissionOptionKind::AllowOnce,
+                },
+                PermissionOption {
+                    option_id: "reject-once".into(),
+                    name: "拒绝".into(),
+                    kind: PermissionOptionKind::RejectOnce,
+                },
+            ],
+        }
+    }
+
+    /// P1-5 管线位次 1+2：plan 模式未匹配请求直接拒绝，allow 规则不再考察
+    #[tokio::test]
+    async fn plan模式拒绝且压过allow规则() {
+        let broker = ApprovalBroker::with_rules(PermissionRules::new(
+            vec!["bash(git status)".into()],
+            vec![],
+        ));
+        broker.set_mode(PermissionMode::Plan);
+        let rejected = broker.resolve_fail_closed(sample_request()).await.unwrap();
+        assert_eq!(rejected.option_id, "reject-once");
+    }
+
+    /// P1-5 管线位次 1+3：full 模式放行，但 deny 规则仍最硬
+    #[tokio::test]
+    async fn full模式放行但deny规则仍拒绝() {
+        let broker =
+            ApprovalBroker::with_rules(PermissionRules::new(vec![], vec!["bash(rm *)".into()]));
+        broker.set_mode(PermissionMode::FullAccess);
+
+        let allowed = broker.resolve_fail_closed(sample_request()).await.unwrap();
+        assert_eq!(allowed.option_id, "allow-once");
+
+        let mut denied = sample_request();
+        denied.raw_input = Some(serde_json::json!({"command": "rm -rf /"}));
+        let rejected = broker.resolve_fail_closed(denied).await.unwrap();
+        assert_eq!(rejected.option_id, "reject-once");
+    }
+
+    /// P1-5 管线位次 4+6：autoedit 放行 edit 类、bash 类仍入待决队列
+    #[tokio::test]
+    async fn autoedit放行edit类bash类进队列() {
+        let broker = ApprovalBroker::new();
+        broker.set_mode(PermissionMode::AutoEdit);
+
+        let allowed = broker
+            .resolve_fail_closed(edit_class_request())
+            .await
+            .unwrap();
+        assert_eq!(allowed.option_id, "allow-once");
+
+        let mut requests = broker.subscribe();
+        let queued = broker.resolve_fail_closed(sample_request()).await.unwrap();
+        assert_eq!(queued.option_id, "reject-once");
+        assert!(
+            requests.try_recv().is_err(),
+            "bash 类在 autoedit 下走 fail-closed，不进队列"
+        );
+    }
+
+    /// P1-5 管线位次 4>5：ask 规则压过 allow 规则（AutoEdit 下 write 请求本应放行，
+    /// 但 ask 规则命中 → 待决队列）
+    #[tokio::test]
+    async fn ask规则压过allow规则进队列() {
+        let broker = ApprovalBroker::with_rules(
+            PermissionRules::new(vec!["write".into()], vec![]).with_ask(vec!["write".into()]),
+        );
+        broker.set_mode(PermissionMode::AutoEdit);
+
+        let mut requests = broker.subscribe();
+        let resolver = tokio::spawn({
+            let broker = broker.clone();
+            async move { broker.resolve(edit_class_request()).await }
+        });
+        let pending = tokio::time::timeout(std::time::Duration::from_secs(2), requests.recv())
+            .await
+            .expect("ask 规则应命中待决队列（位次 4 先于 allow 的位次 5）")
+            .unwrap();
+        broker
+            .respond(pending.id, decision("allow-once"))
+            .await
+            .unwrap();
+        let resolved = resolver.await.unwrap().unwrap();
+        assert_eq!(resolved.option_id, "allow-once");
+    }
+
+    /// P1-5：set_mode 热切换立即生效（同一 broker 先拒后放）
+    #[tokio::test]
+    async fn 模式热切换立即生效() {
+        let broker = ApprovalBroker::new();
+        broker.set_mode(PermissionMode::Plan);
+        let rejected = broker.resolve_fail_closed(sample_request()).await.unwrap();
+        assert_eq!(rejected.option_id, "reject-once");
+
+        broker.set_mode(PermissionMode::FullAccess);
+        let allowed = broker.resolve_fail_closed(sample_request()).await.unwrap();
+        assert_eq!(allowed.option_id, "allow-once");
+        assert_eq!(broker.mode(), PermissionMode::FullAccess);
     }
 }

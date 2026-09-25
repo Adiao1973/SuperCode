@@ -197,6 +197,7 @@ impl Store {
     pub async fn insert_approval(&self, session: Uuid, record: &DecisionRecord) -> Result<()> {
         let decided_by = match &record.source {
             crate::approval::DecisionSource::Rule { pattern, .. } => format!("rule:{pattern}"),
+            crate::approval::DecisionSource::Mode { mode } => format!("mode:{mode:?}"),
             crate::approval::DecisionSource::User => "user".to_string(),
         };
         let now = now_rfc3339();
