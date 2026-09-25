@@ -538,19 +538,3 @@ mod tests {
         assert!(convert_update(&acp::SessionUpdate::UserMessageChunk(chunk)).is_none());
     }
 }
-
-#[cfg(test)]
-mod debug_tests {
-    use super::*;
-
-    /// P1-4 排查：模拟 opencode write 工具的首事件，打印前端实际收到的 JSON
-    #[test]
-    fn 调试_write首事件json() {
-        let call = acp::ToolCall::new("t1", "write w.txt")
-            .kind(acp::ToolKind::Edit)
-            .name("write")
-            .raw_input(serde_json::json!({"content": "abc\n", "filePath": "/tmp/w.txt"}));
-        let event = convert_update(&acp::SessionUpdate::ToolCall(call)).unwrap();
-        println!("WRITE_EVENT_JSON: {}", serde_json::to_string(&event).unwrap());
-    }
-}

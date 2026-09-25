@@ -4,15 +4,14 @@
  * edit 类工具的 diff 用 @git-diff-view/react 渲染。
  */
 import { memo, useCallback, useEffect, useRef, useState, type Dispatch } from "react";
+import { MultiFileDiff } from "@pierre/diffs/react";
 import { Virtuoso } from "react-virtuoso";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
-import { cancelRun, runPrompt } from "@/lib/agent";
-import { parsePatch, unifiedPatch } from "@/lib/diff";
-import { cn } from "@/lib/utils";
+import { cancelRun, readTextFile, runPrompt } from "@/lib/agent";
 import type { StreamItem } from "@/lib/stream";
 import type { SessionEntry, SessionsAction } from "@/lib/sessions";
 import type { DiffPayload } from "@/lib/events";
@@ -328,16 +327,58 @@ const ToolView = memo(function ToolView({
           {item.content.join("\n")}
         </pre>
       )}
-      {item.diff && <DiffBlock diff={item.diff} />}
+      <DiffBlock diff={item.diff} lazyPath={writeLazyPath(item)} />
     </div>
   );
 });
 
-/** edit 类工具的文件修改展示（默认折叠，展开为自渲染 unified diff——行号列固定宽度对齐） */
-const DiffBlock = memo(function DiffBlock({ diff }: { diff: DiffPayload }) {
+/** write 类工具（无结构化 diff）的磁盘懒读路径：opencode 的 ACP 事件不含新文件内容 */
+function writeLazyPath(item: Extract<StreamItem, { kind: "tool" }>): string | null {
+  if (item.diff || item.locations.length === 0) {
+    return null;
+  }
+  const label = `${item.name ?? ""} ${item.title ?? ""}`.toLowerCase();
+  return /write|create|save/.test(label) ? item.locations[0].path : null;
+}
+
+/**
+ * 工具 diff 展示（默认折叠，展开渲染 @pierre/diffs——ZCode 同款渲染方案）。
+ * 数据来源分两种：结构化 diff（opencode edit 完成事件携带）；
+ * write（新建文件）ACP 事件不含内容，展开时从磁盘读（read_text_file）。
+ */
+const DiffBlock = memo(function DiffBlock({
+  diff,
+  lazyPath,
+}: {
+  diff: DiffPayload | null;
+  lazyPath?: string | null;
+}) {
   const [open, setOpen] = useState(false);
-  const patch = unifiedPatch(diff.path, diff.old_text, diff.new_text);
-  const rows = open && patch ? parsePatch(patch) : [];
+  const [lazyDiff, setLazyDiff] = useState<DiffPayload | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const payload = diff ?? lazyDiff;
+
+  useEffect(() => {
+    if (!open || diff || !lazyPath || lazyDiff || loadError) {
+      return;
+    }
+    let cancelled = false;
+    void readTextFile(lazyPath)
+      .then((content) => {
+        if (!cancelled) {
+          setLazyDiff({ path: lazyPath, old_text: null, new_text: content });
+        }
+      })
+      .catch((e) => {
+        if (!cancelled) {
+          setLoadError(String(e));
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [open, diff, lazyPath, lazyDiff, loadError]);
+
   return (
     <div className="mt-2">
       <button
@@ -346,46 +387,54 @@ const DiffBlock = memo(function DiffBlock({ diff }: { diff: DiffPayload }) {
         className="text-muted-foreground hover:text-foreground flex items-center gap-1 font-mono text-[11px] transition-colors"
       >
         {open ? <ChevronDown className="size-3" /> : <ChevronRight className="size-3" />}
-        <span className="truncate">{diff.path}</span>
-        <span className="text-emerald-500">
-          +{diff.new_text.replace(/\n$/, "").split("\n").length}
-        </span>
-        {diff.old_text != null && (
-          <span className="text-destructive">
-            -{diff.old_text.replace(/\n$/, "").split("\n").length}
-          </span>
-        )}
+        <span className="truncate">{(diff ?? { path: lazyPath })?.path}</span>
+        {payload ? (
+          <>
+            <span className="text-emerald-500">
+              +{payload.new_text.replace(/\n$/, "").split("\n").length}
+            </span>
+            {payload.old_text != null && (
+              <span className="text-destructive">
+                -{payload.old_text.replace(/\n$/, "").split("\n").length}
+              </span>
+            )}
+          </>
+        ) : lazyPath ? (
+          <span className="text-muted-foreground/60">从磁盘读取…</span>
+        ) : null}
       </button>
-      {open && (
-        <div className="mt-1 overflow-x-auto rounded border font-mono text-[11px] leading-5">
-          {rows.map((row, i) => {
-            if (row.type === "hunk") {
-              return (
-                <div key={i} className="bg-muted/40 text-muted-foreground px-3 py-0.5">
-                  {row.text}
-                </div>
-              );
+      {open && payload && (
+        <div
+          className="mt-1 max-h-72 overflow-auto rounded border"
+          style={
+            {
+              "--diffs-font-family": "var(--font-mono)",
+              "--diffs-font-size": "11px",
+            } as React.CSSProperties
+          }
+        >
+          <MultiFileDiff
+            oldFile={
+              payload.old_text == null
+                ? null
+                : { name: payload.path, contents: payload.old_text }
             }
-            const tone =
-              row.type === "add"
-                ? "bg-emerald-500/10 text-emerald-300"
-                : row.type === "del"
-                  ? "bg-destructive/10 text-destructive"
-                  : "text-foreground/70";
-            return (
-              <div key={i} className={cn("flex", tone)}>
-                <span className="text-muted-foreground/50 w-10 shrink-0 select-none pr-1.5 text-right tabular-nums">
-                  {row.oldNo ?? ""}
-                </span>
-                <span className="text-muted-foreground/50 w-10 shrink-0 select-none pr-1.5 text-right tabular-nums">
-                  {row.newNo ?? ""}
-                </span>
-                <span className="w-3 shrink-0 select-none">{row.type === "add" ? "+" : row.type === "del" ? "-" : " "}</span>
-                <span className="whitespace-pre-wrap break-all">{row.text}</span>
-              </div>
-            );
-          })}
+            newFile={{ name: payload.path, contents: payload.new_text }}
+            options={{
+              diffStyle: "unified",
+              overflow: "scroll",
+              disableFileHeader: true,
+              hunkSeparators: "simple",
+              themeType: "dark",
+            }}
+          />
         </div>
+      )}
+      {open && !payload && !lazyPath && (
+        <p className="text-muted-foreground mt-1 text-[11px]">无 diff 数据</p>
+      )}
+      {loadError && (
+        <p className="text-destructive mt-1 text-[11px]">{loadError}</p>
       )}
     </div>
   );
