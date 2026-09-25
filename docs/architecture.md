@@ -1,7 +1,7 @@
 # SuperCode 架构设计文档
 
 > 本文档是 SuperCode 接口设计的**单一事实源**：任何接口 / 数据模型变更，先改本文档再改代码。
-> 版本：0.3（P1-1 桌面壳脚手架落地）· 变更记录见文末。
+> 版本：0.4（P1-2 事件管道落地 + 权限模式 v2 设计稿）· 变更记录见文末。
 
 ## 1. 项目概述
 
@@ -254,6 +254,25 @@ resolve 返回 Err，driver 层转为 ACP `cancelled` outcome，agent 收到"未
   我方规则承担）；deny → 首个 reject 类 option；agent 未提供所需类别时 fail-closed
   （allow 缺失降级为询问，deny 缺失报错拒绝）。
 
+**权限模式（v2 设计稿，P1-5 落地；决策记录见 ADR-0006）**：
+会话级 `PermissionMode { plan | ask | autoedit | full }` 作为未匹配请求的默认策略，
+规则库降级为高级例外层。裁决管线（对齐 ZCode `PermissionService.checkPermission` 位次）：
+
+```
+1. deny 规则 → 拒绝（任何模式最硬）
+2. plan 模式 → 拒绝（allow 规则不再考察——计划模式保证只读）
+3. full 模式 → 放行
+4. ask 规则 → 待决队列
+5. allow 规则 → 放行
+6. autoedit ∧ 请求推断为 edit/write 类 → 放行（bash 类不在此列）
+7. 兜底 → 待决队列；无审批 UI 宿主 → 拒绝（resolve_fail_closed）
+```
+
+**管辖边界（重要产品语义）**：模式与规则只裁决 agent **主动询问**的操作。
+opencode 对安全命令白名单（echo/ls 等）与新建文件 write 不发权限请求、直接放行——
+这部分须由 P1-7 的严格模式引导（收紧 opencode `permission` 配置）纳入询问范围，
+SuperCode 侧无法拦截。
+
 **裁决留痕**：broker 广播 `DecisionRecord { request, source: Rule{pattern,effect} | User,
 decision }`（`subscribe_decisions()`）——CLI 打印、Phase 1 审批历史 UI 消费；
 SQLite approvals 表持久化在 P0-8 落地（表结构见 §6，decision_by = rule:<pattern>）。
@@ -361,6 +380,19 @@ driver ──AgentEvent──► events::Aggregator（Rust 侧）
 - 前端纪律：已完成的 message/chunk 必须 memo 化，只有活动中的 chunk 触发重渲染。
 - 该层为**硬性架构约束**，任何"先直连后面再优化"的 shortcuts 都不允许。
 
+### 5.1 Tauri IPC 契约（P1-2 起，桌面宿主命令面）
+
+supercode-desktop 对渲染层暴露的命令（invoke）；事件经 `tauri::ipc::Channel` 批量推送，载荷为 `Vec<AgentEvent>`（JSON 序列化沿用 §4.1 的 `tag=type, snake_case`，前端 TS 类型与其镜像）：
+
+| 命令 | 参数 | 返回 | 语义 |
+|---|---|---|---|
+| `run_prompt` | `prompt`、`cwd`、`allow: Vec<String>`、`deny: Vec<String>`、`on_events: Channel<Vec<AgentEvent>>` | `RunInfo { session_id }`（错误为 String） | 新会话一轮任务（StartMode::New）。宿主内部：driver events → tap（捕获 SessionStarted 得 session_id，oneshot 回传命令返回值）→ EventAggregator(16ms) → Channel 批量推送 |
+| `cancel_run` | `session_id` | `()` | 触发协议级取消链（§7：session/cancel → Cancelled → CANCEL_GRACE 兜底） |
+
+- **fail-closed 权限约定**：P1-2/P1-4 阶段无审批 UI，宿主用 `ApprovalBroker::resolve_fail_closed`——未匹配任何 allow 规则的权限请求直接选拒绝 option（不进待决队列）。P1-5 审批中心接管后改为用户应答。**不可**用追加通配 deny（`"*"`）实现兜底：规则求值 deny 优先，通配 deny 会连 allow 规则一并压掉。
+- **P1-2 为单活动运行**（active run map 已就绪，多会话并行由 P1-3 展开为列表 UI）。
+- 运行结束（`run` 返回 StopReason 或出错）后宿主将 handle 移出 active map；结束本身不再发额外事件，以流内 `turn_completed` / `driver_error` 为准。
+
 ## 6. 数据模型（SQLite，sqlx）
 
 库文件：`~/Library/Application Support/<bundle-id>/supercode.db`（`dirs` crate 定位；开发期可用 `SUPERCODE_DB` 覆盖）。
@@ -432,6 +464,7 @@ P0-8 落地迁移 0001（六表）；运行期写入 sessions/messages/tool_call
 
 | 日期 | 版本 | 摘要 |
 |---|---|---|
+| 2026-09-25 | 0.4 | P1-2 事件管道落地：新增 §5.1 Tauri IPC 契约（run_prompt/cancel_run + Channel 批量推送）；§4.3 增补权限模式管线 v2 设计稿与管辖边界（ADR-0006，ZCode 源码研究结论），P1-5/P1-7 验收要点相应重写 |
 | 2026-09-24 | 0.1 | Step 0 初版：分层架构、AgentDriver/AgentEvent/ApprovalBroker/Registry 接口、事件管道、数据模型、进程与安全约定 |
 | 2026-09-25 | 0.3 | P1-1 脚手架落地：apps/desktop 为 Tauri v2 壳（crate `supercode-desktop` 并入 cargo workspace；pnpm-workspace 管理 apps/*）；前端 React 19 + Tailwind v4 + shadcn/ui（radix-nova 预设）；§5 事件管道与命令接入自 P1-2 起 |
 | 2026-09-24 | 0.2 | Phase 0 落地（v0.1.0）：§4.1 对齐 ACP v1 实际 schema（ThoughtChunk、Option 字段、ToolKind 全集）；§4.3 规则引擎 + 留痕流；§4.5 ProcessManager；§4.6 EventAggregator；§4.2 StartMode 与 trait 化节奏；§6 迁移 0001 六表 + SessionRecorder；§7 取消链路与 SDK 托管进程组 |

@@ -59,12 +59,29 @@
 | ID | 任务 | 验收要点（细化时补命令） | 状态 |
 |---|---|---|---|
 | P1-1 | Tauri v2 + React 19 + Tailwind + shadcn/ui 脚手架 | `pnpm tauri dev` 起窗；窗口渲染基础布局 | ✅ 已验收（2026-09-25） |
-| P1-2 | 事件管道接通：Rust 合帧 → Tauri Channel → 前端 | UI 中跑通 P0-4 同款任务，消息流式渲染无明显卡顿（活动 chunk 重渲染纪律） | 待办 |
+| P1-2 | 事件管道接通：Rust 合帧 → Tauri Channel → 前端 | UI 中跑通 P0-4 同款任务，消息流式渲染无明显卡顿（活动 chunk 重渲染纪律） | ✅ 已验收（2026-09-25） |
+
+> **P1-2 验收记录**：桌面壳经 `run_prompt`（Channel 批量推送 ≤16ms 帧）驱动真实 opencode
+> 完成三剧本——A 真实任务流式渲染（思考/工具卡/最终消息/用量）；B″ fail-closed 拒绝
+> （无规则时 sleep 被自动拒，bash 卡「失败」）；C 协议级取消（`bash(sleep *)` 放行后
+> 中途停止 →「已取消」，agent 收到 User aborted）。均为用户实机截图留痕。
+> `ApprovalBroker::resolve_fail_closed` 新增（无审批 UI 宿主的 fail-closed 变体，2 个单测）。
+
+> **P1-2 偏差记录（两项重要发现）**：
+> ① **opencode 权限两层模型**：opencode 自带 permission 配置层，默认 bash/edit=allow
+> （不发询问直接执行）；客户端规则/审批只裁决其主动询问的操作。项目级 `opencode.jsonc`
+> 写 `permission:{edit:"ask",bash:"ask"}` 后全部转发询问——P0 审批验证有效正是因此。
+> 严格模式注入归 P1-7（详见 ADR-0006 实证记录）。
+> ② **规则输入框单行 Input 剥换行**：多行规则被浏览器合并为一条垃圾规则，导致规则
+> 全废（B″ 侥幸通过、C 放行失灵）。已改 Textarea 修复。教训：表单控件类型必须匹配
+> 数据形状（多行语义）。
+> 另：验收期间以 zai-org/ZCode（Apache-2.0）权限源码为参照确立权限模式设计（ADR-0006），
+> P1-5/P1-7 验收要点已相应重写。
 | P1-3 | 多会话管理 UI（会话列表/新建/切换/取消） | 并行 2 个会话互不串台；取消生效 | 待办 |
 | P1-4 | 会话视图：消息流（@virtuoso.dev/message-list）+ 工具调用时间线 + diff 展示（@git-diff-view/react） | 长会话（200+ 消息）滚动流畅；edit 类工具显示 diff | 待办 |
-| P1-5 | 审批中心 UI：待决队列 + once/always/reject + 预授权规则管理 | 审批/预授权/拒绝三条路径与 Phase 0 行为一致 | 待办 |
+| P1-5 | 审批中心 UI：**权限模式选择器（会话级，plan/ask/autoedit/full，ADR-0006）** + 待决队列 + 规则库管理（设置页，SQLite 持久化） | 四模式行为与管线位次（architecture §4.3 v2）逐一验收；审批/预授权/拒绝路径与 Phase 0 一致 | 待办 |
 | P1-6 | SQLite 持久化 + 会话恢复 UI | 重启 app 后会话历史仍在，可恢复上下文 | 待办 |
-| P1-7 | opencode 安装探测与引导 | 未安装时给出安装指引（命令可复制） | 待办 |
+| P1-7 | opencode 安装探测与引导（含**严格模式引导**：检测/建议收紧 opencode `permission` 配置，补客户端管辖边界外的白名单缺口，ADR-0006） | 未安装时给出安装指引（命令可复制）；严格模式引导可见可复制 | 待办 |
 | P1-8 | 简版任务看板（任务=标题+目录+绑定会话+状态） | 任务创建→指派会话→状态流转闭环 | 待办 |
 | P1-9 | Phase 1 整体验收 + tag v0.2.0 合入 main | 验收剧本（细化时预写）+ 打包出 .app 可运行 | 待办 |
 
