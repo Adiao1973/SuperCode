@@ -222,6 +222,12 @@ async fn cancel_run(app: tauri::AppHandle, session_id: String) -> Result<(), Str
     match runs.get(&session_id) {
         Some(handle) => {
             handle.cancel.cancel();
+            // 权限挂起会阻塞取消链（opencode 等应答时收不到 session/cancel），
+            // 先把待决请求按拒绝收尾，让 agent 走完取消流程
+            let rejected = handle.broker.reject_all_pending().await;
+            if rejected > 0 {
+                eprintln!("[p1-5] 取消时收尾 {rejected} 条待决权限");
+            }
             Ok(())
         }
         None => Err(format!("会话 {session_id} 不在运行中")),

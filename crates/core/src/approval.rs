@@ -226,8 +226,14 @@ fn glob_match(pattern: &str, text: &str) -> bool {
 }
 
 struct Waiting {
-    /// 等待应答的请求：id → 回填通道
-    entries: HashMap<Uuid, oneshot::Sender<PermissionDecision>>,
+    /// 等待应答的请求：id → 请求原文 + 回填通道
+    entries: HashMap<Uuid, PendingWaiter>,
+}
+
+/// 一条等待用户应答的请求
+struct PendingWaiter {
+    request: PermissionRequest,
+    tx: oneshot::Sender<PermissionDecision>,
 }
 
 /// 审批代理。clone 友好（内部共享状态），CLI/桌面宿主持有一份传给 driver 即可。
@@ -392,7 +398,13 @@ impl ApprovalBroker {
         let (decision_tx, decision_rx) = oneshot::channel();
         {
             let mut waiting = self.waiting.lock().await;
-            waiting.entries.insert(id, decision_tx);
+            waiting.entries.insert(
+                id,
+                PendingWaiter {
+                    request: request.clone(),
+                    tx: decision_tx,
+                },
+            );
             // 无订阅方不视为错误：请求留在待决表，driver 侧挂起等待
             let _ = self.requests_tx.send(PendingPermission {
                 id,
@@ -488,6 +500,28 @@ impl ApprovalBroker {
         }
     }
 
+    /// 取消链路配套：把全部待决请求按拒绝收尾，解除 agent 的等待阻塞
+    /// （opencode 被权限应答阻塞时收不到 session/cancel 的效果）。
+    /// 返回收尾的请求数。
+    pub async fn reject_all_pending(&self) -> usize {
+        let mut waiting = self.waiting.lock().await;
+        let ids: Vec<Uuid> = waiting.entries.keys().copied().collect();
+        let count = ids.len();
+        for id in ids {
+            if let Some(waiter) = waiting.entries.remove(&id) {
+                let decision = self
+                    .rule_decision(&waiter.request, "<cancelled>", RuleEffect::Deny)
+                    .ok()
+                    .and_then(|option| option);
+                if let Some(decision) = decision {
+                    let _ = waiter.tx.send(decision);
+                }
+                // 无 reject option 时丢弃通道 → resolve 侧 fail-closed，同样解锁
+            }
+        }
+        count
+    }
+
     /// 订阅裁决留痕（CLI 打印 / Phase 1 审批历史 UI / P0-8 落库）。
     pub fn subscribe_decisions(&self) -> broadcast::Receiver<DecisionRecord> {
         self.decisions_tx.subscribe()
@@ -497,8 +531,9 @@ impl ApprovalBroker {
     pub async fn respond(&self, request_id: Uuid, decision: PermissionDecision) -> Result<()> {
         let mut waiting = self.waiting.lock().await;
         match waiting.entries.remove(&request_id) {
-            Some(decision_tx) => {
-                decision_tx
+            Some(waiter) => {
+                waiter
+                    .tx
                     .send(decision)
                     .map_err(|_| CoreError::PermissionFailed("resolve 侧已放弃等待".into()))?;
                 Ok(())

@@ -138,18 +138,30 @@ export function sessionsReducer(
       }));
     }
     case "approvalAdd":
-      return updateEntry(state, action.acpSessionId, (it) =>
-        it.pendingApprovals.some((p) => p.id === action.pending.id)
-          ? it
-          : { ...it, pendingApprovals: [...it.pendingApprovals, action.pending] },
-      );
-    case "approvalRemoveByTool":
-      return updateEntry(state, action.acpSessionId, (it) => ({
-        ...it,
-        pendingApprovals: it.pendingApprovals.filter(
-          (p) => p.request.tool_call_id !== action.toolCallId,
+      // 注意按 ACP session id 匹配（事件携带的是 ACP id，非客户端 key）
+      return {
+        ...state,
+        items: state.items.map((it) =>
+          it.acpSessionId === action.acpSessionId &&
+          !it.pendingApprovals.some((p) => p.id === action.pending.id)
+            ? { ...it, pendingApprovals: [...it.pendingApprovals, action.pending] }
+            : it,
         ),
-      }));
+      };
+    case "approvalRemoveByTool":
+      return {
+        ...state,
+        items: state.items.map((it) =>
+          it.acpSessionId === action.acpSessionId
+            ? {
+                ...it,
+                pendingApprovals: it.pendingApprovals.filter(
+                  (p) => p.request.tool_call_id !== action.toolCallId,
+                ),
+              }
+            : it,
+        ),
+      };
     case "seed":
       return updateEntry(state, action.key, (it) => ({
         ...it,
