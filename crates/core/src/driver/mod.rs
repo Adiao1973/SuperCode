@@ -11,7 +11,7 @@ use std::sync::Arc;
 use crate::error::Result;
 
 /// driver 层向审批方（ApprovalBroker / CLI 交互）发起的权限请求。
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize)]
 pub struct PermissionRequest {
     pub session_id: String,
     pub tool_call_id: String,
@@ -22,14 +22,15 @@ pub struct PermissionRequest {
     pub options: Vec<PermissionOption>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
 pub struct PermissionOption {
     pub option_id: String,
     pub name: String,
     pub kind: PermissionOptionKind,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize)]
+#[serde(rename_all = "snake_case")]
 pub enum PermissionOptionKind {
     AllowOnce,
     AllowAlways,
@@ -44,7 +45,7 @@ impl PermissionOptionKind {
 }
 
 /// 审批裁决：回写 agent 提供的 option_id（不透明，须来自 options 列表）。
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize)]
 pub struct PermissionDecision {
     pub option_id: String,
     pub updated_input: Option<serde_json::Value>,

@@ -8,18 +8,27 @@ use std::sync::Arc;
 use tokio::sync::{Mutex, broadcast, oneshot};
 use uuid::Uuid;
 
+fn serialize_uuid<S: serde::Serializer>(
+    value: &Uuid,
+    serializer: S,
+) -> std::result::Result<S::Ok, S::Error> {
+    serializer.serialize_str(&value.to_string())
+}
+
 use crate::driver::{PermissionDecision, PermissionOptionKind, PermissionRequest};
 use crate::error::{CoreError, Result};
 
 /// 进入待决队列的权限请求（带 broker 分配的关联 id）。
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize)]
 pub struct PendingPermission {
+    #[serde(serialize_with = "serialize_uuid")]
     pub id: Uuid,
     pub request: PermissionRequest,
 }
 
 /// 裁决来源：预授权规则（带命中模式与效果）、权限模式兜底或用户。
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize)]
+#[serde(rename_all = "snake_case")]
 pub enum DecisionSource {
     Rule {
         pattern: String,
@@ -91,7 +100,7 @@ fn is_edit_class_request(request: &PermissionRequest) -> bool {
 }
 
 /// 裁决留痕记录（`subscribe_decisions()` 广播；SQLite 持久化在 P0-8 落地）。
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize)]
 pub struct DecisionRecord {
     pub request: PermissionRequest,
     pub source: DecisionSource,
