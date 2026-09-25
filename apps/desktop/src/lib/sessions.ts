@@ -14,6 +14,8 @@ export interface SessionDraft {
   prompt: string;
   cwd: string;
   rulesText: string;
+  /** 会话级权限模式（ADR-0006），运行时传入 broker，可热切换 */
+  mode: string;
 }
 
 export interface SessionEntry {
@@ -52,7 +54,12 @@ function makeEntry(cwd?: string): SessionEntry {
     key: `s-${sessionSeq}`,
     acpSessionId: null,
     title: "新会话",
-    draft: { prompt: "", cwd: cwd ?? "/tmp/supercode-p13", rulesText: DEFAULT_RULES },
+    draft: {
+      prompt: "",
+      cwd: cwd ?? "/tmp/supercode-p13",
+      rulesText: DEFAULT_RULES,
+      mode: "ask",
+    },
     stream: initialStream,
     invokeError: null,
   };

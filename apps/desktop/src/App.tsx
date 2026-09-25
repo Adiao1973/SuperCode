@@ -1,6 +1,9 @@
 import { useEffect, useReducer, useState } from "react";
 import { Badge } from "@/components/ui/badge";
+import { ApprovalsView } from "@/components/ApprovalsView";
 import { SessionsWorkspace } from "@/components/SessionsWorkspace";
+import { SettingsView } from "@/components/SettingsView";
+import { permissionCenter } from "@/lib/permissions";
 import { cn } from "@/lib/utils";
 import { initialSessionsState, sessionsReducer } from "@/lib/sessions";
 import {
@@ -16,7 +19,7 @@ const NAV_ITEMS = [
   { id: "sessions", label: "会话", icon: MessageSquare, hint: "P1-3" },
   { id: "kanban", label: "任务看板", icon: LayoutGrid, hint: "P1-8" },
   { id: "approvals", label: "审批中心", icon: ShieldCheck, hint: "P1-5" },
-  { id: "settings", label: "设置", icon: Settings, hint: "P1-7" },
+  { id: "settings", label: "设置", icon: Settings, hint: "P1-5" },
 ] as const;
 
 type NavId = (typeof NAV_ITEMS)[number]["id"];
@@ -29,6 +32,11 @@ function App() {
     () => initialSessionsState(),
   );
   const activeNav = NAV_ITEMS.find((item) => item.id === nav) ?? NAV_ITEMS[0];
+
+  // 审批中心事件订阅（应用级一次）
+  useEffect(() => {
+    void permissionCenter.setup();
+  }, []);
 
   // 全局快捷键：⌘N 新建会话、⌘1..8 切换会话（配合详情页 ⌘R 运行 / ⌘. 停止）
   useEffect(() => {
@@ -105,12 +113,17 @@ function App() {
         <header className="flex h-13 shrink-0 items-center gap-3 border-b px-5">
           <h1 className="text-sm font-semibold">{activeNav.label}</h1>
           <Badge variant="outline" className="text-[10px]">
-            {nav === "sessions" ? `多会话 · ${activeNav.hint}` : `待接入 · ${activeNav.hint}`}
+            {nav === "sessions"
+              ? `多会话 · ${activeNav.hint}`
+              : nav === "kanban"
+                ? `待接入 · ${activeNav.hint}`
+                : activeNav.hint}
           </Badge>
         </header>
-        {nav === "sessions" ? (
-          <SessionsWorkspace state={sessions} dispatch={dispatch} />
-        ) : (
+        {nav === "sessions" && <SessionsWorkspace state={sessions} dispatch={dispatch} />}
+        {nav === "approvals" && <ApprovalsView />}
+        {nav === "settings" && <SettingsView />}
+        {nav === "kanban" && (
           <div className="text-muted-foreground flex flex-1 flex-col items-center justify-center gap-2 text-sm">
             <activeNav.icon className="size-8 opacity-40" />
             {activeNav.label}视图将在 {activeNav.hint} 接入

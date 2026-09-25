@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
-import { cancelRun, readTextFile, runPrompt } from "@/lib/agent";
+import { cancelRun, readTextFile, runPrompt, setPermissionMode } from "@/lib/agent";
 import type { StreamItem } from "@/lib/stream";
 import type { SessionEntry, SessionsAction } from "@/lib/sessions";
 import type { DiffPayload } from "@/lib/events";
@@ -82,6 +82,7 @@ export function RunConsole({ session, dispatch }: RunConsoleProps) {
           .map((line) => line.trim())
           .filter(Boolean),
         deny: [],
+        mode: draft.mode,
         // 事件按客户端会话键路由；acpSessionId 由 session_started 事件带入 store
         onEvents: (batch) => dispatch({ type: "batch", key, batch }),
       });
@@ -153,6 +154,29 @@ export function RunConsole({ session, dispatch }: RunConsoleProps) {
             className="w-64 font-mono text-xs"
             placeholder="工作目录"
           />
+          {/* 会话级权限模式选择器（ADR-0006）：运行时随 run_prompt 传入，可热切换 */}
+          <select
+            value={draft.mode}
+            onChange={(e) => {
+              dispatch({
+                type: "patchDraft",
+                key: session.key,
+                patch: { mode: e.target.value },
+              });
+              if (session.acpSessionId) {
+                void setPermissionMode(session.acpSessionId, e.target.value).catch(
+                  (err) => dispatch({ type: "invokeError", key: session.key, message: String(err) }),
+                );
+              }
+            }}
+            className="h-9 shrink-0 rounded-md border px-2 font-mono text-xs"
+            title="权限模式：plan 计划(全拒绝) / ask 确认 / autoedit 自动编辑 / full 完全访问"
+          >
+            <option value="plan">计划</option>
+            <option value="ask">确认</option>
+            <option value="autoedit">自动编辑</option>
+            <option value="full">完全访问</option>
+          </select>
           {/* 规则必须多行：单行 Input 会被浏览器剥掉换行符，规则解析全废（P1-2 验收踩坑） */}
           <Textarea
             value={draft.rulesText}
