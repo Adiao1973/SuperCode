@@ -1,7 +1,7 @@
 # SuperCode 架构设计文档
 
 > 本文档是 SuperCode 接口设计的**单一事实源**：任何接口 / 数据模型变更，先改本文档再改代码。
-> 版本：0.4（P1-2 事件管道落地 + 权限模式 v2 设计稿）· 变更记录见文末。
+> 版本：0.5（P1-3 多会话管理落地）· 变更记录见文末。
 
 ## 1. 项目概述
 
@@ -390,7 +390,7 @@ supercode-desktop 对渲染层暴露的命令（invoke）；事件经 `tauri::ip
 | `cancel_run` | `session_id` | `()` | 触发协议级取消链（§7：session/cancel → Cancelled → CANCEL_GRACE 兜底） |
 
 - **fail-closed 权限约定**：P1-2/P1-4 阶段无审批 UI，宿主用 `ApprovalBroker::resolve_fail_closed`——未匹配任何 allow 规则的权限请求直接选拒绝 option（不进待决队列）。P1-5 审批中心接管后改为用户应答。**不可**用追加通配 deny（`"*"`）实现兜底：规则求值 deny 优先，通配 deny 会连 allow 规则一并压掉。
-- **P1-2 为单活动运行**（active run map 已就绪，多会话并行由 P1-3 展开为列表 UI）。
+- **多会话并行（P1-3）**：`run_prompt` 可并发调用——每次运行独立 spawn agent 进程与合帧管道（互不共享状态）；Rust 侧 active run map 按 ACP session_id 管理取消与清理；前端以客户端会话键路由事件批到对应会话视图（列表 / 切换 / 取消）。
 - 运行结束（`run` 返回 StopReason 或出错）后宿主将 handle 移出 active map；结束本身不再发额外事件，以流内 `turn_completed` / `driver_error` 为准。
 
 ## 6. 数据模型（SQLite，sqlx）
@@ -464,6 +464,7 @@ P0-8 落地迁移 0001（六表）；运行期写入 sessions/messages/tool_call
 
 | 日期 | 版本 | 摘要 |
 |---|---|---|
+| 2026-09-25 | 0.5 | P1-3 多会话管理落地：§5.1 多会话并行说明（客户端会话键路由、active run map 并发）；前端 sessions store + 会话列表/切换；IPC 契约不变（run_prompt 并发调用） |
 | 2026-09-25 | 0.4 | P1-2 事件管道落地：新增 §5.1 Tauri IPC 契约（run_prompt/cancel_run + Channel 批量推送）；§4.3 增补权限模式管线 v2 设计稿与管辖边界（ADR-0006，ZCode 源码研究结论），P1-5/P1-7 验收要点相应重写 |
 | 2026-09-24 | 0.1 | Step 0 初版：分层架构、AgentDriver/AgentEvent/ApprovalBroker/Registry 接口、事件管道、数据模型、进程与安全约定 |
 | 2026-09-25 | 0.3 | P1-1 脚手架落地：apps/desktop 为 Tauri v2 壳（crate `supercode-desktop` 并入 cargo workspace；pnpm-workspace 管理 apps/*）；前端 React 19 + Tailwind v4 + shadcn/ui（radix-nova 预设）；§5 事件管道与命令接入自 P1-2 起 |
