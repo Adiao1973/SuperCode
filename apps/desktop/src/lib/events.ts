@@ -48,6 +48,13 @@ export interface PlanEntry {
   status: PlanEntryStatus;
 }
 
+/** 结构化文件修改（对齐 core DiffPayload；diff 计算与渲染在 @git-diff-view/react） */
+export interface DiffPayload {
+  path: string;
+  old_text?: string | null;
+  new_text: string;
+}
+
 export type AgentEvent =
   | { type: "session_started"; session_id: string }
   | { type: "message_chunk"; message_id: string; text: string }
@@ -59,6 +66,7 @@ export type AgentEvent =
       title?: string | null;
       kind: ToolKind;
       raw_input?: unknown;
+      diff?: DiffPayload | null;
     }
   | {
       type: "tool_call_update";
@@ -66,7 +74,7 @@ export type AgentEvent =
       status?: ToolStatus | null;
       content: ContentBlock[];
       locations: FileLocation[];
-      diff?: string | null;
+      diff?: DiffPayload | null;
     }
   | { type: "plan"; entries: PlanEntry[] }
   | { type: "usage_update"; used?: number | null; size?: number | null; cost?: number | null }

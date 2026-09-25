@@ -6,6 +6,7 @@
 
 import type {
   AgentEvent,
+  DiffPayload,
   FileLocation,
   PlanEntry,
   StopReason,
@@ -26,6 +27,7 @@ export type StreamItem =
       status: ToolStatus;
       content: string[];
       locations: FileLocation[];
+      diff: DiffPayload | null;
     }
   | { key: string; kind: "plan"; entries: PlanEntry[] }
   | { key: string; kind: "turn_end"; stopReason: StopReason }
@@ -96,6 +98,7 @@ function applyBatch(state: StreamState, batch: AgentEvent[]): StreamState {
             status: "pending",
             content: [],
             locations: [],
+            diff: ev.diff ?? null,
           },
         ];
         break;
@@ -114,6 +117,7 @@ function applyBatch(state: StreamState, batch: AgentEvent[]): StreamState {
                   .map((b) => b.text),
               ],
               locations: ev.locations.length > 0 ? ev.locations : it.locations,
+              diff: ev.diff ?? it.diff,
             };
             break;
           }

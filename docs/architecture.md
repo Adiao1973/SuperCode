@@ -97,6 +97,7 @@ pub enum AgentEvent {
         title: Option<String>,
         kind: ToolKind,          // Read | Edit | Delete | Move | Search | Execute | Fetch | Other
         raw_input: Option<serde_json::Value>,
+        diff: Option<DiffPayload>,   // ACP ToolCallContent::Diff 映射（opencode edit 类工具）
     },
     /// 工具调用状态更新（status 可选：update 可能只带 content/locations）
     ToolCallUpdate {
@@ -104,7 +105,7 @@ pub enum AgentEvent {
         status: Option<ToolStatus>,  // Pending | InProgress | Completed | Failed
         content: Vec<ContentBlock>,
         locations: Vec<FileLocation>,
-        diff: Option<String>,        // ACP v1 无独立 diff 字段，StreamJson 等 driver 填充
+        diff: Option<DiffPayload>,   // 有值时覆盖同 id 工具此前的 diff
     },
     /// agent 生成的计划（plan 模式）
     Plan { entries: Vec<PlanEntry> },
@@ -123,6 +124,10 @@ pub enum AgentEvent {
 pub enum ToolKind { Read, Edit, Delete, Move, Search, Execute, Fetch, Other } // 对齐 ACP v1
 pub enum ToolStatus { Pending, InProgress, Completed, Failed }
 pub enum ContentBlock { Text { text }, Image { data, mime_type }, ResourceLink { uri } } // tag="type"
+/// 结构化文件修改（对齐 ACP ToolCallContent::Diff{path, oldText, newText}）：
+/// driver 从工具事件的 content 块中提取；old_text=None 表示新建文件。
+/// diff 算法与渲染是前端职责（@git-diff-view/react 接收原始新旧内容）。
+pub struct DiffPayload { pub path: String, pub old_text: Option<String>, pub new_text: String }
 pub struct FileLocation { pub path: PathBuf, pub line: Option<u32> } // 对齐 ACP ToolCallLocation
 pub struct PlanEntry { pub content: String, pub status: PlanEntryStatus }
 pub enum PlanEntryStatus { Pending, InProgress, Completed, Cancelled }

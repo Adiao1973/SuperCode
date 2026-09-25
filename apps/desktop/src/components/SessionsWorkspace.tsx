@@ -31,15 +31,28 @@ export function SessionsWorkspace({ state, dispatch }: SessionsWorkspaceProps) {
           <span className="text-muted-foreground text-xs font-medium">
             会话（{state.items.length}）
           </span>
-          <Button
-            size="sm"
-            variant="ghost"
-            className="h-7 px-2"
-            onClick={() => dispatch({ type: "new" })}
-            title="新建会话（⌘N）"
-          >
-            <MessageSquarePlus className="size-4" />
-          </Button>
+          <div className="flex items-center">
+            {import.meta.env.DEV && active && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-7 px-2 text-[10px]"
+                onClick={() => dispatch({ type: "seed", key: active.key })}
+                title="向当前会话注入 320 条合成事件（虚拟列表滚动压测，仅开发模式）"
+              >
+                压测
+              </Button>
+            )}
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-7 px-2"
+              onClick={() => dispatch({ type: "new" })}
+              title="新建会话（⌘N）"
+            >
+              <MessageSquarePlus className="size-4" />
+            </Button>
+          </div>
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto px-2 pb-2">
           <div className="flex flex-col gap-1">

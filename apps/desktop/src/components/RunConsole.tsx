@@ -1,14 +1,11 @@
 /**
- * 会话详情视图（P1-3 由单运行控制台改造）：绑定单个会话条目，
- * 表单草稿与事件流都来自 sessions store；启动/停止走 Tauri 命令。
+ * 会话详情视图：绑定单个会话条目，表单草稿与事件流都来自 sessions store。
+ * 消息流用 react-virtuoso 虚拟列表（P1-4：200+ 条目滚动流畅）；
+ * edit 类工具的 diff 用 @git-diff-view/react 渲染。
  */
-import {
-  memo,
-  useCallback,
-  useEffect,
-  useRef,
-  type Dispatch,
-} from "react";
+import { memo, useCallback, useEffect, useRef, type Dispatch } from "react";
+import { DiffModeEnum, DiffView } from "@git-diff-view/react";
+import { Virtuoso } from "react-virtuoso";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,12 +13,12 @@ import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { cancelRun, runPrompt } from "@/lib/agent";
 import type { StreamItem } from "@/lib/stream";
-import type {
-  SessionEntry,
-  SessionsAction,
-} from "@/lib/sessions";
+import type { SessionEntry, SessionsAction } from "@/lib/sessions";
+import type { DiffPayload } from "@/lib/events";
 import type { ToolKind, ToolStatus } from "@/lib/events";
 import {
+  ChevronDown,
+  ChevronRight,
   CircleStop,
   FileText,
   FilePen,
@@ -34,6 +31,8 @@ import {
   Trash2,
   Wrench,
 } from "lucide-react";
+import { useState } from "react";
+import "@git-diff-view/react/styles/diff-view.css";
 
 const TOOL_ICONS: Record<ToolKind, typeof Wrench> = {
   read: FileText,
@@ -68,14 +67,7 @@ interface RunConsoleProps {
 
 export function RunConsole({ session, dispatch }: RunConsoleProps) {
   const { draft, stream } = session;
-  const transcriptRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const el = transcriptRef.current;
-    if (el) {
-      el.scrollTop = el.scrollHeight;
-    }
-  }, [stream.items]);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   const start = useCallback(async () => {
     if (stream.running) {
@@ -214,18 +206,26 @@ export function RunConsole({ session, dispatch }: RunConsoleProps) {
         </p>
       </div>
 
-      {/* 事件流时间线（合帧批 → 单次 dispatch → 仅活动 chunk 重渲染） */}
-      <div ref={transcriptRef} className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
-        <div className="mx-auto flex max-w-3xl flex-col gap-3">
-          {stream.items.length === 0 && (
-            <p className="text-muted-foreground py-8 text-center text-sm">
-              点击「运行」驱动 opencode（ACP）执行任务，事件经 Rust 合帧 → Tauri Channel 到达这里。
-            </p>
-          )}
-          {stream.items.map((item) => (
-            <StreamItemView key={item.key} item={item} />
-          ))}
-        </div>
+      {/* 事件流时间线：虚拟列表（合帧批 → 单次 dispatch → 仅活动 chunk 重渲染） */}
+      <div ref={scrollRef} className="min-h-0 flex-1">
+        {stream.items.length === 0 ? (
+          <p className="text-muted-foreground py-8 text-center text-sm">
+            点击「运行」驱动 opencode（ACP）执行任务，事件经 Rust 合帧 → Tauri Channel 到达这里。
+          </p>
+        ) : (
+          <Virtuoso
+            style={{ height: "100%" }}
+            data={stream.items}
+            computeItemKey={(_, item) => item.key}
+            followOutput="auto"
+            increaseViewportBy={{ top: 600, bottom: 600 }}
+            itemContent={(_, item) => (
+              <div className="mx-auto max-w-3xl px-5 pb-3">
+                <StreamItemView item={item} />
+              </div>
+            )}
+          />
+        )}
       </div>
 
       {/* 状态条 */}
@@ -328,6 +328,43 @@ const ToolView = memo(function ToolView({
         <pre className="text-muted-foreground mt-1 max-h-40 overflow-y-auto font-mono text-[11px] whitespace-pre-wrap break-all">
           {item.content.join("\n")}
         </pre>
+      )}
+      {item.diff && <DiffBlock diff={item.diff} />}
+    </div>
+  );
+});
+
+/** edit 类工具的文件修改展示（默认折叠，点开渲染 unified diff） */
+const DiffBlock = memo(function DiffBlock({ diff }: { diff: DiffPayload }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="mt-2">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="text-muted-foreground hover:text-foreground flex items-center gap-1 font-mono text-[11px] transition-colors"
+      >
+        {open ? <ChevronDown className="size-3" /> : <ChevronRight className="size-3" />}
+        <span className="truncate">{diff.path}</span>
+        <span className="text-emerald-500">+{diff.new_text.split("\n").length}</span>
+        {diff.old_text != null && (
+          <span className="text-destructive">-{diff.old_text.split("\n").length}</span>
+        )}
+      </button>
+      {open && (
+        <div className="mt-1 overflow-hidden rounded border">
+          <DiffView
+            data={{
+              oldFile: { fileName: diff.path, content: diff.old_text ?? null },
+              newFile: { fileName: diff.path, content: diff.new_text },
+              hunks: [],
+            }}
+            diffViewMode={DiffModeEnum.Unified}
+            diffViewTheme="dark"
+            diffViewFontSize={11}
+            diffViewWrap
+          />
+        </div>
       )}
     </div>
   );
