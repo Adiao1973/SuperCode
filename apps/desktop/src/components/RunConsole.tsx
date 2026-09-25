@@ -3,8 +3,7 @@
  * 消息流用 react-virtuoso 虚拟列表（P1-4：200+ 条目滚动流畅）；
  * edit 类工具的 diff 用 @git-diff-view/react 渲染。
  */
-import { memo, useCallback, useEffect, useRef, type Dispatch } from "react";
-import { DiffModeEnum, DiffView } from "@git-diff-view/react";
+import { memo, useCallback, useEffect, useRef, useState, type Dispatch } from "react";
 import { Virtuoso } from "react-virtuoso";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,7 +11,8 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { cancelRun, runPrompt } from "@/lib/agent";
-import { unifiedPatch } from "@/lib/diff";
+import { parsePatch, unifiedPatch } from "@/lib/diff";
+import { cn } from "@/lib/utils";
 import type { StreamItem } from "@/lib/stream";
 import type { SessionEntry, SessionsAction } from "@/lib/sessions";
 import type { DiffPayload } from "@/lib/events";
@@ -32,8 +32,6 @@ import {
   Trash2,
   Wrench,
 } from "lucide-react";
-import { useState } from "react";
-import "@git-diff-view/react/styles/diff-view.css";
 
 const TOOL_ICONS: Record<ToolKind, typeof Wrench> = {
   read: FileText,
@@ -335,10 +333,11 @@ const ToolView = memo(function ToolView({
   );
 });
 
-/** edit 类工具的文件修改展示（默认折叠，点开渲染 unified diff） */
+/** edit 类工具的文件修改展示（默认折叠，展开为自渲染 unified diff——行号列固定宽度对齐） */
 const DiffBlock = memo(function DiffBlock({ diff }: { diff: DiffPayload }) {
   const [open, setOpen] = useState(false);
   const patch = unifiedPatch(diff.path, diff.old_text, diff.new_text);
+  const rows = open && patch ? parsePatch(patch) : [];
   return (
     <div className="mt-2">
       <button
@@ -348,26 +347,44 @@ const DiffBlock = memo(function DiffBlock({ diff }: { diff: DiffPayload }) {
       >
         {open ? <ChevronDown className="size-3" /> : <ChevronRight className="size-3" />}
         <span className="truncate">{diff.path}</span>
-        <span className="text-emerald-500">+{diff.new_text.replace(/\n$/, "").split("\n").length}</span>
+        <span className="text-emerald-500">
+          +{diff.new_text.replace(/\n$/, "").split("\n").length}
+        </span>
         {diff.old_text != null && (
           <span className="text-destructive">
             -{diff.old_text.replace(/\n$/, "").split("\n").length}
           </span>
         )}
       </button>
-      {open && patch && (
-        <div className="mt-1 overflow-hidden rounded border">
-          <DiffView
-            data={{
-              oldFile: { fileName: diff.path, content: diff.old_text ?? "" },
-              newFile: { fileName: diff.path, content: diff.new_text },
-              hunks: [patch],
-            }}
-            diffViewMode={DiffModeEnum.Unified}
-            diffViewTheme="dark"
-            diffViewFontSize={11}
-            diffViewWrap
-          />
+      {open && (
+        <div className="mt-1 overflow-x-auto rounded border font-mono text-[11px] leading-5">
+          {rows.map((row, i) => {
+            if (row.type === "hunk") {
+              return (
+                <div key={i} className="bg-muted/40 text-muted-foreground px-3 py-0.5">
+                  {row.text}
+                </div>
+              );
+            }
+            const tone =
+              row.type === "add"
+                ? "bg-emerald-500/10 text-emerald-300"
+                : row.type === "del"
+                  ? "bg-destructive/10 text-destructive"
+                  : "text-foreground/70";
+            return (
+              <div key={i} className={cn("flex", tone)}>
+                <span className="text-muted-foreground/50 w-10 shrink-0 select-none pr-1.5 text-right tabular-nums">
+                  {row.oldNo ?? ""}
+                </span>
+                <span className="text-muted-foreground/50 w-10 shrink-0 select-none pr-1.5 text-right tabular-nums">
+                  {row.newNo ?? ""}
+                </span>
+                <span className="w-3 shrink-0 select-none">{row.type === "add" ? "+" : row.type === "del" ? "-" : " "}</span>
+                <span className="whitespace-pre-wrap break-all">{row.text}</span>
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

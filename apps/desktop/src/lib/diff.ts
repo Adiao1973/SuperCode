@@ -100,3 +100,56 @@ export function unifiedPatch(
   for (let k = start; k < ctxEndOld; k++) lines.push(` ${oldLines[k]}`);
   return lines.join("\n");
 }
+
+export type DiffRowType = "hunk" | "add" | "del" | "context";
+
+export interface DiffRow {
+  type: DiffRowType;
+  /** 行内容（不含前导符号） */
+  text: string;
+  /** 旧文件行号（hunk/context/del 有值） */
+  oldNo?: number;
+  /** 新文件行号（hunk 无意义，add/context 有值） */
+  newNo?: number;
+}
+
+/** 解析 unifiedPatch 输出为带行号的渲染行 */
+export function parsePatch(patch: string): DiffRow[] {
+  const rows: DiffRow[] = [];
+  let oldNo = 0;
+  let newNo = 0;
+  for (const raw of patch.split("\n")) {
+    // 文件头路径已在 diff 块头部单独展示
+    if (
+      raw.startsWith("diff --git") ||
+      raw.startsWith("index ") ||
+      raw.startsWith("--- ") ||
+      raw.startsWith("+++ ")
+    ) {
+      continue;
+    }
+    if (raw.startsWith("@@")) {
+      const m = /@@ -(\d+)(?:,\d+)? \+(\d+)(?:,\d+)? @@/.exec(raw);
+      if (m) {
+        oldNo = Number(m[1]);
+        newNo = Number(m[2]);
+      }
+      rows.push({ type: "hunk", text: raw });
+      continue;
+    }
+    const sign = raw[0];
+    const text = raw.slice(1);
+    if (sign === "+") {
+      rows.push({ type: "add", text, newNo });
+      newNo++;
+    } else if (sign === "-") {
+      rows.push({ type: "del", text, oldNo });
+      oldNo++;
+    } else {
+      rows.push({ type: "context", text, oldNo, newNo });
+      oldNo++;
+      newNo++;
+    }
+  }
+  return rows;
+}

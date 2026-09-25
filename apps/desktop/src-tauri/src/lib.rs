@@ -83,6 +83,17 @@ async fn run_prompt(
     tauri::async_runtime::spawn(async move {
         let mut frame_rx = frame_rx;
         while let Some(batch) = frame_rx.recv().await {
+            // 诊断日志（P1-4 write 兜底排查用，验收后移除）
+            if let Ok(line) = serde_json::to_string(&batch) {
+                use std::io::Write;
+                if let Ok(mut f) = std::fs::OpenOptions::new()
+                    .create(true)
+                    .append(true)
+                    .open("/tmp/supercode-events.log")
+                {
+                    let _ = writeln!(f, "{line}");
+                }
+            }
             // 窗口已关闭等推送失败：事件流只剩丢弃一条路
             let _ = on_events.send(batch);
         }
