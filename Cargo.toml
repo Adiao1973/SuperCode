@@ -11,6 +11,8 @@ rust-version = "1.88"
 
 [workspace.dependencies]
 supercode-core = { path = "crates/core" }
+tokio = { version = "1.53.1", features = ["rt", "rt-multi-thread", "macros", "process", "io-util", "time", "fs", "sync"] }
+tokio-util = "0.7.19"
 
 [profile.release]
 lto = "thin"

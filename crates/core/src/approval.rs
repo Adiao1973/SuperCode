@@ -264,6 +264,40 @@ impl ApprovalBroker {
         self.requests_tx.subscribe()
     }
 
+    /// fail-closed 解析变体：规则未命中的请求**直接选拒绝 option**，不进待决队列。
+    /// 供无审批 UI 的宿主（P1-2 桌面壳）使用。
+    ///
+    /// 注意：不要用追加通配 deny（`"*"`）实现兜底——求值是 deny 优先，
+    /// 通配 deny 会连 allow 规则一并压掉，全部请求被拒。
+    pub async fn resolve_fail_closed(
+        &self,
+        request: PermissionRequest,
+    ) -> Result<PermissionDecision> {
+        if let Some((pattern, effect)) = self.rules.evaluate(&request)
+            && let Some(decision) = self.rule_decision(&request, &pattern, effect)?
+        {
+            let _ = self.decisions_tx.send(DecisionRecord {
+                request,
+                source: DecisionSource::Rule { pattern, effect },
+                decision: decision.clone(),
+            });
+            return Ok(decision);
+        }
+        // 未命中 → 默认拒绝（留痕 pattern 标记为默认策略，落库 decided_by=rule:<default-deny>）
+        let decision = self
+            .rule_decision(&request, "<default-deny>", RuleEffect::Deny)?
+            .ok_or_else(|| CoreError::PermissionFailed("agent 未提供拒绝选项".into()))?;
+        let _ = self.decisions_tx.send(DecisionRecord {
+            request,
+            source: DecisionSource::Rule {
+                pattern: "<default-deny>".into(),
+                effect: RuleEffect::Deny,
+            },
+            decision: decision.clone(),
+        });
+        Ok(decision)
+    }
+
     /// 订阅裁决留痕（CLI 打印 / Phase 1 审批历史 UI / P0-8 落库）。
     pub fn subscribe_decisions(&self) -> broadcast::Receiver<DecisionRecord> {
         self.decisions_tx.subscribe()
@@ -518,5 +552,45 @@ mod tests {
 
         let resolved = resolver.await.unwrap().unwrap();
         assert_eq!(resolved.option_id, "reject-once");
+    }
+
+    /// P1-2 桌面壳场景：allow 命中放行、未命中直接拒绝（不进待决队列）
+    #[tokio::test]
+    async fn fail_closed_allow命中放行_未命中直接拒绝() {
+        // sample_request 带 command 字段 → 按 bash(git status) 语义匹配（裸模式只匹配工具名）
+        let broker = ApprovalBroker::with_rules(PermissionRules::new(
+            vec!["bash(git status)".into()],
+            vec![],
+        ));
+
+        // 命中 allow → 选 allow 选项
+        let allowed = broker.resolve_fail_closed(sample_request()).await.unwrap();
+        assert_eq!(allowed.option_id, "allow-once");
+
+        // 未命中 → 直接拒绝，且不产生待决请求
+        let mut requests = broker.subscribe();
+        let mut unmatched = sample_request();
+        unmatched.tool_name = "rm -rf /".into();
+        unmatched.raw_input = Some(serde_json::json!({"command": "rm -rf /"}));
+        let rejected = broker.resolve_fail_closed(unmatched).await.unwrap();
+        assert_eq!(rejected.option_id, "reject-once");
+        assert!(
+            requests.try_recv().is_err(),
+            "fail-closed 不应把未命中请求放入待决队列"
+        );
+    }
+
+    /// 用通配 deny 兜底是错误用法：deny 优先求值会压掉 allow 规则（P1-2 踩坑回归锁）
+    #[tokio::test]
+    async fn 通配deny兜底会压掉allow规则() {
+        let broker = ApprovalBroker::with_rules(PermissionRules::new(
+            vec!["git status".into()],
+            vec!["*".into()],
+        ));
+        let rejected = broker.resolve_fail_closed(sample_request()).await.unwrap();
+        assert_eq!(
+            rejected.option_id, "reject-once",
+            "deny(*) 优先于 allow(git status)——这正是不能用它做兜底的原因"
+        );
     }
 }
