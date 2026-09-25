@@ -1,0 +1,9 @@
+//! SuperCode 桌面壳（Tauri v2）。命令与事件管道自 P1-2 起接入 supercode-core。
+
+#[cfg_attr(mobile, tauri::mobile_entry_point)]
+pub fn run() {
+    tauri::Builder::default()
+        .plugin(tauri_plugin_opener::init())
+        .run(tauri::generate_context!())
+        .expect("error while running tauri application");
+}

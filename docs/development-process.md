@@ -13,7 +13,7 @@
 2. **小设计**：涉及接口 / 数据模型 / 协议行为变更 → **先更新 `docs/architecture.md` 对应章节**（文档先行），必要时补 ADR；纯内部实现可跳过。
 3. **实现**：TDD 优先——接口契约测试先写（driver 状态机、事件转换、审批队列这类逻辑必须有单测）；小步提交；实现严格对齐文档。
 4. **验证（闭环检验点）**：
-   - 自动：`just verify`（= `cargo fmt --check` + `cargo clippy --all-targets -- -D warnings` + `cargo test`）必须全绿；
+   - 自动：`just verify`（= 前端构建 + `cargo fmt --check` + `cargo clippy --all-targets -- -D warnings` + `cargo test`）必须全绿；
    - 手动：执行该任务在 roadmap 预写的**验收命令并核对预期输出**；涉及 UI 的用 `pnpm tauri dev` 人工核对；
    - **不过则回到③，禁止带病前进。**
 5. **闭环归档**：更新 `roadmap.md` 任务状态（有偏差写明原因）；接口变更同步回 `architecture.md`；重大取舍补 ADR；任务分支合回 `dev`。**循环结束时代码与文档一致、roadmap 反映真实进度——这就是闭环。**
@@ -77,10 +77,10 @@ scope: core | cli | desktop | docs | repo
 ## 7. 一键命令（justfile）
 
 ```
-just verify     # fmt --check + clippy --deny warnings + cargo test
+just verify     # 前端构建（tauri build.rs 依赖 dist/）+ fmt --check + clippy --deny warnings + cargo test
 just fix        # fmt + clippy --fix
 just smoke      # 需本机 opencode 的冒烟验收（对应 roadmap 当前 Phase 剧本）
-just dev        # Phase 1 起：pnpm tauri dev
+just dev        # Phase 1 起：pnpm tauri dev（apps/desktop）
 ```
 
 任何新增检查项先进 `just verify` 再进流程——闭环成本必须保持最低。

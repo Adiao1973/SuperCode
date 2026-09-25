@@ -1,7 +1,7 @@
 # SuperCode 架构设计文档
 
 > 本文档是 SuperCode 接口设计的**单一事实源**：任何接口 / 数据模型变更，先改本文档再改代码。
-> 版本：0.2（Phase 0 落地，对应 v0.1.0）· 变更记录见文末。
+> 版本：0.3（P1-1 桌面壳脚手架落地）· 变更记录见文末。
 
 ## 1. 项目概述
 
@@ -64,8 +64,9 @@ SuperCode/
 │   └── cli/                # supercode-cli：Phase 0 验证原型（bin）
 │       └── src/main.rs
 ├── apps/
-│   └── desktop/            # Phase 1：Tauri v2 + React 19（Step 0 仅占位 README）
+│   └── desktop/            # Phase 1 起：Tauri 壳（src-tauri 为 workspace 成员；React 19 + Tailwind v4 + shadcn/ui）
 ├── docs/                   # 本文档、roadmap、流程、ADR
+├── pnpm-workspace.yaml     # 前端 monorepo（apps/*）
 └── justfile                # just verify 等一键命令
 ```
 
@@ -432,4 +433,5 @@ P0-8 落地迁移 0001（六表）；运行期写入 sessions/messages/tool_call
 | 日期 | 版本 | 摘要 |
 |---|---|---|
 | 2026-09-24 | 0.1 | Step 0 初版：分层架构、AgentDriver/AgentEvent/ApprovalBroker/Registry 接口、事件管道、数据模型、进程与安全约定 |
+| 2026-09-25 | 0.3 | P1-1 脚手架落地：apps/desktop 为 Tauri v2 壳（crate `supercode-desktop` 并入 cargo workspace；pnpm-workspace 管理 apps/*）；前端 React 19 + Tailwind v4 + shadcn/ui（radix-nova 预设）；§5 事件管道与命令接入自 P1-2 起 |
 | 2026-09-24 | 0.2 | Phase 0 落地（v0.1.0）：§4.1 对齐 ACP v1 实际 schema（ThoughtChunk、Option 字段、ToolKind 全集）；§4.3 规则引擎 + 留痕流；§4.5 ProcessManager；§4.6 EventAggregator；§4.2 StartMode 与 trait 化节奏；§6 迁移 0001 六表 + SessionRecorder；§7 取消链路与 SDK 托管进程组 |

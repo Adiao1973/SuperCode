@@ -1,8 +1,7 @@
-# apps/desktop（占位）
+# Tauri + React + Typescript
 
-Tauri v2 + React 19 + shadcn/ui 桌面客户端，Phase 1 开工时由 P1-1 脚手架任务创建。
+This template should help get you started developing with Tauri, React and Typescript in Vite.
 
-技术栈与架构约束见：
+## Recommended IDE Setup
 
-- `docs/architecture.md` — 分层架构、事件管道（Rust 合帧 → Tauri Channel）、WebKit 红线
-- `docs/adr/0002-tauri-rust-stack.md`、`docs/adr/0003-react-shadcn-frontend.md` — 选型决策
+- [VS Code](https://code.visualstudio.com/) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
