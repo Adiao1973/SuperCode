@@ -14,6 +14,38 @@ import type {
   ToolStatus,
 } from "./events";
 
+/**
+ * diff 兜底合成：opencode 对新建文件（write）不发 Diff 块，
+ * 从 raw_input 重建（write: {filePath, content}；edit: {filePath, oldString, newString}）。
+ */
+function fallbackDiff(
+  toolKind: ToolKind,
+  rawInput: unknown,
+): DiffPayload | null {
+  if (!rawInput || typeof rawInput !== "object") {
+    return null;
+  }
+  const input = rawInput as Record<string, unknown>;
+  const path =
+    typeof input.filePath === "string"
+      ? input.filePath
+      : typeof input.path === "string"
+        ? input.path
+        : null;
+  if (!path) {
+    return null;
+  }
+  const oldString = typeof input.oldString === "string" ? input.oldString : null;
+  const newString = typeof input.newString === "string" ? input.newString : null;
+  if (oldString != null && newString != null) {
+    return { path, old_text: oldString, new_text: newString };
+  }
+  if (typeof input.content === "string" && toolKind === "edit") {
+    return { path, old_text: null, new_text: input.content };
+  }
+  return null;
+}
+
 export type StreamItem =
   | { key: string; kind: "thought"; id: string; text: string; active: boolean }
   | { key: string; kind: "message"; id: string; text: string; active: boolean }
@@ -98,7 +130,7 @@ function applyBatch(state: StreamState, batch: AgentEvent[]): StreamState {
             status: "pending",
             content: [],
             locations: [],
-            diff: ev.diff ?? null,
+            diff: ev.diff ?? fallbackDiff(ev.kind, ev.raw_input),
           },
         ];
         break;

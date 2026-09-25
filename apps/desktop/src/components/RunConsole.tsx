@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { cancelRun, runPrompt } from "@/lib/agent";
+import { unifiedPatch } from "@/lib/diff";
 import type { StreamItem } from "@/lib/stream";
 import type { SessionEntry, SessionsAction } from "@/lib/sessions";
 import type { DiffPayload } from "@/lib/events";
@@ -337,6 +338,7 @@ const ToolView = memo(function ToolView({
 /** edit 类工具的文件修改展示（默认折叠，点开渲染 unified diff） */
 const DiffBlock = memo(function DiffBlock({ diff }: { diff: DiffPayload }) {
   const [open, setOpen] = useState(false);
+  const patch = unifiedPatch(diff.path, diff.old_text, diff.new_text);
   return (
     <div className="mt-2">
       <button
@@ -346,18 +348,20 @@ const DiffBlock = memo(function DiffBlock({ diff }: { diff: DiffPayload }) {
       >
         {open ? <ChevronDown className="size-3" /> : <ChevronRight className="size-3" />}
         <span className="truncate">{diff.path}</span>
-        <span className="text-emerald-500">+{diff.new_text.split("\n").length}</span>
+        <span className="text-emerald-500">+{diff.new_text.replace(/\n$/, "").split("\n").length}</span>
         {diff.old_text != null && (
-          <span className="text-destructive">-{diff.old_text.split("\n").length}</span>
+          <span className="text-destructive">
+            -{diff.old_text.replace(/\n$/, "").split("\n").length}
+          </span>
         )}
       </button>
-      {open && (
+      {open && patch && (
         <div className="mt-1 overflow-hidden rounded border">
           <DiffView
             data={{
-              oldFile: { fileName: diff.path, content: diff.old_text ?? null },
+              oldFile: { fileName: diff.path, content: diff.old_text ?? "" },
               newFile: { fileName: diff.path, content: diff.new_text },
-              hunks: [],
+              hunks: [patch],
             }}
             diffViewMode={DiffModeEnum.Unified}
             diffViewTheme="dark"
