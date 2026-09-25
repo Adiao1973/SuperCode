@@ -1,7 +1,7 @@
 # SuperCode 架构设计文档
 
 > 本文档是 SuperCode 接口设计的**单一事实源**：任何接口 / 数据模型变更，先改本文档再改代码。
-> 版本：0.6（P1-4 会话视图落地）· 变更记录见文末。
+> 版本：0.7（P1-5 审批中心落地）· 变更记录见文末。
 
 ## 1. 项目概述
 
@@ -259,9 +259,12 @@ resolve 返回 Err，driver 层转为 ACP `cancelled` outcome，agent 收到"未
   我方规则承担）；deny → 首个 reject 类 option；agent 未提供所需类别时 fail-closed
   （allow 缺失降级为询问，deny 缺失报错拒绝）。
 
-**权限模式（v2 设计稿，P1-5 落地；决策记录见 ADR-0006）**：
-会话级 `PermissionMode { plan | ask | autoedit | full }` 作为未匹配请求的默认策略，
-规则库降级为高级例外层。裁决管线（对齐 ZCode `PermissionService.checkPermission` 位次）：
+**权限模式（P1-5 落地；决策记录见 ADR-0006）**：
+会话级 `PermissionMode { plan | ask | autoedit | full }`（serde snake_case）作为未匹配
+请求的默认策略，规则库降级为高级例外层。`PermissionRules` 增加 ask 列表，
+求值顺序 **deny > ask > allow**（ask 压过 allow——用户显式要求逐次确认的优先）。
+ApprovalBroker 持有可热切换的 mode（`set_mode`），裁决管线
+（对齐 ZCode `PermissionService.checkPermission` 位次）：
 
 ```
 1. deny 规则 → 拒绝（任何模式最硬）
@@ -270,8 +273,11 @@ resolve 返回 Err，driver 层转为 ACP `cancelled` outcome，agent 收到"未
 4. ask 规则 → 待决队列
 5. allow 规则 → 放行
 6. autoedit ∧ 请求推断为 edit/write 类 → 放行（bash 类不在此列）
-7. 兜底 → 待决队列；无审批 UI 宿主 → 拒绝（resolve_fail_closed）
+7. 兜底 → 待决队列（resolve）；无审批 UI 宿主 → 拒绝（resolve_fail_closed）
 ```
+
+模式与规则兜底的裁决同样留痕：`DecisionSource` 新增 `Mode { mode }` 变体、
+`RuleEffect` 扩展 `Ask`（ask 规则进队列不计裁决，应答后记 User）。
 
 **管辖边界（重要产品语义）**：模式与规则只裁决 agent **主动询问**的操作。
 opencode 对安全命令白名单（echo/ls 等）与新建文件 write 不发权限请求、直接放行——
@@ -391,10 +397,19 @@ supercode-desktop 对渲染层暴露的命令（invoke）；事件经 `tauri::ip
 
 | 命令 | 参数 | 返回 | 语义 |
 |---|---|---|---|
-| `run_prompt` | `prompt`、`cwd`、`allow: Vec<String>`、`deny: Vec<String>`、`on_events: Channel<Vec<AgentEvent>>` | `RunInfo { session_id }`（错误为 String） | 新会话一轮任务（StartMode::New）。宿主内部：driver events → tap（捕获 SessionStarted 得 session_id，oneshot 回传命令返回值）→ EventAggregator(16ms) → Channel 批量推送 |
+| `run_prompt` | `prompt`、`cwd`、`allow`、`deny`、`mode`、`on_events: Channel<Vec<AgentEvent>>` | `RunInfo { session_id }`（错误为 String） | 新会话一轮任务（StartMode::New）。宿主内部：driver events → tap（捕获 SessionStarted）→ EventAggregator(16ms) → Channel 批量推送；规则库（SQLite）与本次 draft 规则合并后建 ApprovalBroker（初始 mode） |
 | `cancel_run` | `session_id` | `()` | 触发协议级取消链（§7：session/cancel → Cancelled → CANCEL_GRACE 兜底） |
+| `set_permission_mode` | `session_id`、`mode` | `()` | 运行中热切换该会话的 PermissionMode（§4.3 管线） |
+| `respond_permission` | `request_id`、`option_id` | `()` | 审批中心应答待决请求（转发 broker.respond） |
+| `list_rules` / `add_rule` / `delete_rule` | — / `pattern`+`effect` / `id` | 规则列表 / `RuleEntry` / `()` | 规则库 CRUD（SQLite permission_rules 表，§6） |
 
-- **fail-closed 权限约定**：P1-2/P1-4 阶段无审批 UI，宿主用 `ApprovalBroker::resolve_fail_closed`——未匹配任何 allow 规则的权限请求直接选拒绝 option（不进待决队列）。P1-5 审批中心接管后改为用户应答。**不可**用追加通配 deny（`"*"`）实现兜底：规则求值 deny 优先，通配 deny 会连 allow 规则一并压掉。
+- **权限事件（Tauri 全局事件，非 Channel）**：每个运行的 broker 经转发任务把
+  `PendingPermission` / `DecisionRecord` 以 `permission-request` / `decision-record`
+  事件广播给前端（审批中心消费）；request_id → broker 的映射由宿主登记，
+  供 respond_permission 路由。
+- **fail-closed 权限约定**：`resolve_fail_closed` 保留给无审批 UI 宿主；桌面宿主
+  P1-5 起接审批中心，兜底走待决队列。**不可**用追加通配 deny（`"*"`）实现兜底：
+  规则求值 deny 优先，通配 deny 会连 allow 规则一并压掉。
 - **多会话并行（P1-3）**：`run_prompt` 可并发调用——每次运行独立 spawn agent 进程与合帧管道（互不共享状态）；Rust 侧 active run map 按 ACP session_id 管理取消与清理；前端以客户端会话键路由事件批到对应会话视图（列表 / 切换 / 取消）。
 - 运行结束（`run` 返回 StopReason 或出错）后宿主将 handle 移出 active map；结束本身不再发额外事件，以流内 `turn_completed` / `driver_error` 为准。
 
@@ -426,10 +441,15 @@ approvals(id TEXT PK, session_id TEXT, tool_call_id TEXT, tool_name TEXT,
 
 tasks(id TEXT PK, title TEXT, cwd TEXT, status TEXT, -- backlog|in_progress|review|done
       created_at TEXT, updated_at TEXT);             -- Phase 1 简版看板；session 关联经 sessions.task_id
+
+permission_rules(id TEXT PK, pattern TEXT NOT NULL,  -- 规则库（P1-5，全局持久）
+                 effect TEXT NOT NULL,               -- allow | deny | ask
+                 created_at TEXT);
 ```
 
 迁移管理：`sqlx migrate`（`crates/core/migrations/`），迁移文件只增不改。
-P0-8 落地迁移 0001（六表）；运行期写入 sessions/messages/tool_calls/approvals
+P0-8 落地迁移 0001（六表）；P1-5 落地迁移 0002（permission_rules 规则库）。
+运行期写入 sessions/messages/tool_calls/approvals
 （`SessionRecorder` 消费事件流：消息 chunk 在 TurnCompleted 时组装落库），tasks 表 Phase 1 使用。
 时间戳为 RFC3339 文本。`SUPERCODE_DB` 环境变量可覆盖库文件路径（测试/多环境用）。
 
@@ -469,6 +489,7 @@ P0-8 落地迁移 0001（六表）；运行期写入 sessions/messages/tool_call
 
 | 日期 | 版本 | 摘要 |
 |---|---|---|
+| 2026-09-25 | 0.7 | P1-5 审批中心落地：§4.3 模式化管线实现（PermissionMode 四档 + ask 规则 + DecisionSource::Mode）；§5.1 IPC 扩展（mode 参数/set_permission_mode/respond_permission/规则 CRUD/permission-request 与 decision-record 事件）；§6 新增 permission_rules 表（迁移 0002）；PermissionRequest 增加 kind 字段 |
 | 2026-09-25 | 0.6 | P1-4 会话视图落地：§4.1 diff 字段改为结构化 DiffPayload（ACP ToolCallContent::Diff 提取）；IPC 新增 read_text_file（write 新文件内容磁盘懒读）；前端 react-virtuoso + @pierre/diffs（依赖替换偏差见 roadmap） |
 | 2026-09-25 | 0.5 | P1-3 多会话管理落地：§5.1 多会话并行说明（客户端会话键路由、active run map 并发）；前端 sessions store + 会话列表/切换；IPC 契约不变（run_prompt 并发调用） |
 | 2026-09-25 | 0.4 | P1-2 事件管道落地：新增 §5.1 Tauri IPC 契约（run_prompt/cancel_run + Channel 批量推送）；§4.3 增补权限模式管线 v2 设计稿与管辖边界（ADR-0006，ZCode 源码研究结论），P1-5/P1-7 验收要点相应重写 |

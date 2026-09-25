@@ -5,6 +5,7 @@
  */
 
 import type { AgentEvent } from "./events";
+import type { PendingPermission } from "./permissions";
 import { beginRun, initialStream, streamReducer, type StreamState } from "./stream";
 
 /** 预授权规则默认值（每行一条） */
@@ -14,6 +15,8 @@ export interface SessionDraft {
   prompt: string;
   cwd: string;
   rulesText: string;
+  /** 会话级权限模式（ADR-0006），运行时传入 broker，可热切换 */
+  mode: string;
 }
 
 export interface SessionEntry {
@@ -26,6 +29,8 @@ export interface SessionEntry {
   stream: StreamState;
   /** run_prompt invoke 失败信息（区别于流内 driver_error） */
   invokeError: string | null;
+  /** 会话内联待决审批（P1-5：按 ACP session id 路由到对应会话） */
+  pendingApprovals: PendingPermission[];
 }
 
 export interface SessionsState {
@@ -42,7 +47,10 @@ export type SessionsAction =
   | { type: "batch"; key: string; batch: AgentEvent[] }
   | { type: "invokeError"; key: string; message: string | null }
   /** DEV 专用：注入合成事件（虚拟列表滚动压测，P1-4） */
-  | { type: "seed"; key: string };
+  | { type: "seed"; key: string }
+  /** 内联审批（P1-5）：待决请求按 ACP session id 路由；裁决后按 tool_call_id 移除 */
+  | { type: "approvalAdd"; acpSessionId: string; pending: PendingPermission }
+  | { type: "approvalRemoveByTool"; acpSessionId: string; toolCallId: string };
 
 let sessionSeq = 0;
 
@@ -52,9 +60,15 @@ function makeEntry(cwd?: string): SessionEntry {
     key: `s-${sessionSeq}`,
     acpSessionId: null,
     title: "新会话",
-    draft: { prompt: "", cwd: cwd ?? "/tmp/supercode-p13", rulesText: DEFAULT_RULES },
+    draft: {
+      prompt: "",
+      cwd: cwd ?? "/tmp/supercode-p13",
+      rulesText: DEFAULT_RULES,
+      mode: "ask",
+    },
     stream: initialStream,
     invokeError: null,
+    pendingApprovals: [],
   };
 }
 
@@ -123,6 +137,31 @@ export function sessionsReducer(
         invokeError: stream.running ? null : it.invokeError,
       }));
     }
+    case "approvalAdd":
+      // 注意按 ACP session id 匹配（事件携带的是 ACP id，非客户端 key）
+      return {
+        ...state,
+        items: state.items.map((it) =>
+          it.acpSessionId === action.acpSessionId &&
+          !it.pendingApprovals.some((p) => p.id === action.pending.id)
+            ? { ...it, pendingApprovals: [...it.pendingApprovals, action.pending] }
+            : it,
+        ),
+      };
+    case "approvalRemoveByTool":
+      return {
+        ...state,
+        items: state.items.map((it) =>
+          it.acpSessionId === action.acpSessionId
+            ? {
+                ...it,
+                pendingApprovals: it.pendingApprovals.filter(
+                  (p) => p.request.tool_call_id !== action.toolCallId,
+                ),
+              }
+            : it,
+        ),
+      };
     case "seed":
       return updateEntry(state, action.key, (it) => ({
         ...it,

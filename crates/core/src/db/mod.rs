@@ -11,8 +11,16 @@ use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
 use sqlx::{Row, SqlitePool};
 use uuid::Uuid;
 
-use crate::approval::DecisionRecord;
+use crate::approval::{DecisionRecord, RuleEffect};
 use crate::error::{CoreError, Result};
+
+/// 规则库条目（permission_rules 表；effect 序列化为 allow/deny/ask 文本）
+#[derive(Debug, Clone, PartialEq, serde::Serialize)]
+pub struct PermissionRuleEntry {
+    pub id: String,
+    pub pattern: String,
+    pub effect: RuleEffect,
+}
 
 /// 会话列表行。
 #[derive(Debug, Clone)]
@@ -194,9 +202,84 @@ impl Store {
         Ok(())
     }
 
+    /// 规则库：列出全部规则（P1-5）
+    pub async fn list_permission_rules(&self) -> Result<Vec<PermissionRuleEntry>> {
+        let rows = sqlx::query_as::<_, (String, String, String)>(
+            "SELECT id, pattern, effect FROM permission_rules ORDER BY created_at, id",
+        )
+        .fetch_all(&self.pool)
+        .await
+        .map_err(|e| CoreError::Db(e.to_string()))?;
+        Ok(rows
+            .into_iter()
+            .map(|(id, pattern, effect)| PermissionRuleEntry {
+                id,
+                pattern,
+                effect: effect.parse().unwrap_or(RuleEffect::Ask),
+            })
+            .collect())
+    }
+
+    /// 规则库：新增规则（pattern+effect 唯一，重复插入幂等返回既有 id）
+    pub async fn add_permission_rule(
+        &self,
+        pattern: &str,
+        effect: RuleEffect,
+    ) -> Result<PermissionRuleEntry> {
+        let id = Uuid::new_v4().to_string();
+        let effect_str = match effect {
+            RuleEffect::Allow => "allow",
+            RuleEffect::Deny => "deny",
+            RuleEffect::Ask => "ask",
+        };
+        let now = now_rfc3339();
+        let result = sqlx::query(
+            "INSERT OR IGNORE INTO permission_rules (id, pattern, effect, created_at) VALUES (?1, ?2, ?3, ?4)",
+        )
+        .bind(&id)
+        .bind(pattern)
+        .bind(effect_str)
+        .bind(&now)
+        .execute(&self.pool)
+        .await
+        .map_err(|e| CoreError::Db(e.to_string()))?;
+        if result.rows_affected() == 0 {
+            // 重复：取回既有条目
+            return sqlx::query_as::<_, (String, String, String)>(
+                "SELECT id, pattern, effect FROM permission_rules WHERE pattern = ?1 AND effect = ?2",
+            )
+            .bind(pattern)
+            .bind(effect_str)
+            .fetch_one(&self.pool)
+            .await
+            .map_err(|e| CoreError::Db(e.to_string()))
+            .map(|(id, pattern, effect)| PermissionRuleEntry {
+                id,
+                pattern,
+                effect: effect.parse().unwrap_or(RuleEffect::Ask),
+            });
+        }
+        Ok(PermissionRuleEntry {
+            id,
+            pattern: pattern.to_string(),
+            effect,
+        })
+    }
+
+    /// 规则库：删除规则
+    pub async fn delete_permission_rule(&self, id: &str) -> Result<()> {
+        sqlx::query("DELETE FROM permission_rules WHERE id = ?1")
+            .bind(id)
+            .execute(&self.pool)
+            .await
+            .map_err(|e| CoreError::Db(e.to_string()))?;
+        Ok(())
+    }
+
     pub async fn insert_approval(&self, session: Uuid, record: &DecisionRecord) -> Result<()> {
         let decided_by = match &record.source {
             crate::approval::DecisionSource::Rule { pattern, .. } => format!("rule:{pattern}"),
+            crate::approval::DecisionSource::Mode { mode } => format!("mode:{mode:?}"),
             crate::approval::DecisionSource::User => "user".to_string(),
         };
         let now = now_rfc3339();
@@ -346,6 +429,7 @@ mod tests {
                 session_id: "ses_x".into(),
                 tool_call_id: "call_1".into(),
                 tool_name: "git status".into(),
+                kind: None,
                 raw_input: None,
                 options: vec![PermissionOption {
                     option_id: "allow-once".into(),
@@ -380,5 +464,38 @@ mod tests {
             .await
             .unwrap();
         assert_eq!(decided_by, "rule:bash(git status)");
+    }
+
+    /// P1-5：规则库 CRUD——新增幂等、列表、删除
+    #[tokio::test]
+    async fn 规则库增删查幂等() {
+        let store = Store::open_in_memory().await.unwrap();
+
+        let first = store
+            .add_permission_rule("bash(git *)", RuleEffect::Allow)
+            .await
+            .unwrap();
+        assert_eq!(first.pattern, "bash(git *)");
+
+        // 重复插入幂等：返回既有条目
+        let again = store
+            .add_permission_rule("bash(git *)", RuleEffect::Allow)
+            .await
+            .unwrap();
+        assert_eq!(again.id, first.id);
+
+        // 同 pattern 不同 effect 是新条目
+        let denied = store
+            .add_permission_rule("bash(git *)", RuleEffect::Deny)
+            .await
+            .unwrap();
+        assert_ne!(denied.id, first.id);
+
+        assert_eq!(store.list_permission_rules().await.unwrap().len(), 2);
+
+        store.delete_permission_rule(&first.id).await.unwrap();
+        let rest = store.list_permission_rules().await.unwrap();
+        assert_eq!(rest.len(), 1);
+        assert_eq!(rest[0].effect, RuleEffect::Deny);
     }
 }

@@ -4211,6 +4211,7 @@ dependencies = [
  "tauri-plugin-opener",
  "tokio",
  "tokio-util",
+ "uuid",
 ]
 
 [[package]]

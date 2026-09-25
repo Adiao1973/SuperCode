@@ -110,8 +110,12 @@ function SessionListItem({
       </span>
       <span className="text-muted-foreground flex w-full items-center gap-2 pl-3.5 text-[10px]">
         {status.label}
-        {entry.acpSessionId && (
-          <code className="truncate">…{entry.acpSessionId.slice(-6)}</code>
+        {entry.pendingApprovals.length > 0 ? (
+          <span className="text-amber-400">{entry.pendingApprovals.length} 待审批</span>
+        ) : (
+          entry.acpSessionId && (
+            <code className="truncate">…{entry.acpSessionId.slice(-6)}</code>
+          )
         )}
       </span>
     </button>
