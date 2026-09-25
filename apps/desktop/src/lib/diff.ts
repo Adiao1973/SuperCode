@@ -87,17 +87,25 @@ export function unifiedPatch(
   const ctxEndOld = Math.min(oldLines.length, endOld + ctx);
   const ctxEndNew = Math.min(newLines.length, endNew + ctx);
 
+  // 中段编辑脚本；hunk 行数 = 上下文 + 对应侧的增/删行数
+  const ops = diffOps(oldLines.slice(start, endOld), newLines.slice(start, endNew));
+  const oldCount =
+    start - ctxStart + ops.filter((op) => op.type !== "+").length + (ctxEndOld - endOld);
+  const newCount =
+    start - ctxStart + ops.filter((op) => op.type !== "-").length + (ctxEndNew - endNew);
+
   const lines: string[] = [
     `diff --git a/${path} b/${path}`,
     oldText == null ? "--- /dev/null" : `--- a/${path}`,
     `+++ b/${path}`,
-    `@@ -${oldLines.length ? ctxStart + 1 : 0},${ctxEndOld - ctxStart} +${newLines.length ? ctxStart + 1 : 0},${ctxEndNew - ctxStart} @@`,
+    `@@ -${oldLines.length ? ctxStart + 1 : 0},${oldCount} +${newLines.length ? ctxStart + 1 : 0},${newCount} @@`,
   ];
   for (let k = ctxStart; k < start; k++) lines.push(` ${oldLines[k]}`);
-  for (const op of diffOps(oldLines.slice(start, endOld), newLines.slice(start, endNew))) {
+  for (const op of ops) {
     lines.push(`${op.type}${op.text}`);
   }
-  for (let k = start; k < ctxEndOld; k++) lines.push(` ${oldLines[k]}`);
+  // 后上下文从中段末尾（endOld）起——从 start 起会把中段行重复输出一遍
+  for (let k = endOld; k < ctxEndOld; k++) lines.push(` ${oldLines[k]}`);
   return lines.join("\n");
 }
 
