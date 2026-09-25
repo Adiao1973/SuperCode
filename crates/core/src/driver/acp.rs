@@ -340,6 +340,11 @@ fn convert_permission_request(request: &acp::RequestPermissionRequest) -> Permis
             .clone()
             .or_else(|| request.tool_call.fields.name.clone())
             .unwrap_or_else(|| "未知工具".into()),
+        kind: request
+            .tool_call
+            .fields
+            .kind
+            .map(|kind| format!("{kind:?}").to_lowercase()),
         raw_input: request.tool_call.fields.raw_input.clone(),
         options: request
             .options

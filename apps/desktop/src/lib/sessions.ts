@@ -5,6 +5,7 @@
  */
 
 import type { AgentEvent } from "./events";
+import type { PendingPermission } from "./permissions";
 import { beginRun, initialStream, streamReducer, type StreamState } from "./stream";
 
 /** 预授权规则默认值（每行一条） */
@@ -28,6 +29,8 @@ export interface SessionEntry {
   stream: StreamState;
   /** run_prompt invoke 失败信息（区别于流内 driver_error） */
   invokeError: string | null;
+  /** 会话内联待决审批（P1-5：按 ACP session id 路由到对应会话） */
+  pendingApprovals: PendingPermission[];
 }
 
 export interface SessionsState {
@@ -44,7 +47,10 @@ export type SessionsAction =
   | { type: "batch"; key: string; batch: AgentEvent[] }
   | { type: "invokeError"; key: string; message: string | null }
   /** DEV 专用：注入合成事件（虚拟列表滚动压测，P1-4） */
-  | { type: "seed"; key: string };
+  | { type: "seed"; key: string }
+  /** 内联审批（P1-5）：待决请求按 ACP session id 路由；裁决后按 tool_call_id 移除 */
+  | { type: "approvalAdd"; acpSessionId: string; pending: PendingPermission }
+  | { type: "approvalRemoveByTool"; acpSessionId: string; toolCallId: string };
 
 let sessionSeq = 0;
 
@@ -62,6 +68,7 @@ function makeEntry(cwd?: string): SessionEntry {
     },
     stream: initialStream,
     invokeError: null,
+    pendingApprovals: [],
   };
 }
 
@@ -130,6 +137,19 @@ export function sessionsReducer(
         invokeError: stream.running ? null : it.invokeError,
       }));
     }
+    case "approvalAdd":
+      return updateEntry(state, action.acpSessionId, (it) =>
+        it.pendingApprovals.some((p) => p.id === action.pending.id)
+          ? it
+          : { ...it, pendingApprovals: [...it.pendingApprovals, action.pending] },
+      );
+    case "approvalRemoveByTool":
+      return updateEntry(state, action.acpSessionId, (it) => ({
+        ...it,
+        pendingApprovals: it.pendingApprovals.filter(
+          (p) => p.request.tool_call_id !== action.toolCallId,
+        ),
+      }));
     case "seed":
       return updateEntry(state, action.key, (it) => ({
         ...it,

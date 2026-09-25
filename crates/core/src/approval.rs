@@ -92,6 +92,10 @@ impl PermissionMode {
 
 /// edit/write 类工具（AutoEdit 模式的放行范围；bash/execute 不在此列——ADR-0006）
 fn is_edit_class_request(request: &PermissionRequest) -> bool {
+    // ACP kind 是可靠标识（opencode 权限请求不带 name，title 常是路径/命令）
+    if request.kind.as_deref() == Some("edit") {
+        return true;
+    }
     let (tool, _) = infer_tool_and_subject(request);
     matches!(
         tool.to_lowercase().as_str(),
@@ -516,6 +520,7 @@ mod tests {
             session_id: "ses_1".into(),
             tool_call_id: "call_1".into(),
             tool_name: "git status".into(),
+            kind: None,
             raw_input: Some(serde_json::json!({"command": "git status"})),
             options: vec![
                 PermissionOption {
@@ -786,6 +791,7 @@ mod tests {
             session_id: "ses_1".into(),
             tool_call_id: "call_e1".into(),
             tool_name: "write".into(),
+            kind: Some("edit".into()),
             raw_input: Some(serde_json::json!({"filePath": "/tmp/a.txt", "content": "hi\n"})),
             options: vec![
                 PermissionOption {

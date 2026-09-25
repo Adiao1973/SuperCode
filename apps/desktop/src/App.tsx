@@ -33,9 +33,27 @@ function App() {
   );
   const activeNav = NAV_ITEMS.find((item) => item.id === nav) ?? NAV_ITEMS[0];
 
-  // 审批中心事件订阅（应用级一次）
+  // 审批事件订阅（应用级一次）：待决请求按 ACP session id 路由进对应会话（内联卡片）
   useEffect(() => {
     void permissionCenter.setup();
+    const offAdd = permissionCenter.onPendingAdded((pending) =>
+      dispatch({
+        type: "approvalAdd",
+        acpSessionId: pending.request.session_id,
+        pending,
+      }),
+    );
+    const offArrived = permissionCenter.onDecisionArrived((record) =>
+      dispatch({
+        type: "approvalRemoveByTool",
+        acpSessionId: record.request.session_id,
+        toolCallId: record.request.tool_call_id,
+      }),
+    );
+    return () => {
+      offAdd();
+      offArrived();
+    };
   }, []);
 
   // 全局快捷键：⌘N 新建会话、⌘1..8 切换会话（配合详情页 ⌘R 运行 / ⌘. 停止）

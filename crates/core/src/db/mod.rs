@@ -429,6 +429,7 @@ mod tests {
                 session_id: "ses_x".into(),
                 tool_call_id: "call_1".into(),
                 tool_name: "git status".into(),
+                kind: None,
                 raw_input: None,
                 options: vec![PermissionOption {
                     option_id: "allow-once".into(),

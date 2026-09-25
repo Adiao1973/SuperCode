@@ -15,6 +15,8 @@ export interface PermissionRequest {
   session_id: string;
   tool_call_id: string;
   tool_name: string;
+  /** 工具类别（ACP ToolKind：edit/execute/read/...） */
+  kind?: string | null;
   raw_input: unknown;
   options: PermissionOption[];
 }
@@ -41,6 +43,8 @@ class PermissionCenter {
   decisions: DecisionRecord[] = [];
   private pendingListeners = new Set<Listener<PendingPermission[]>>();
   private decisionListeners = new Set<Listener<DecisionRecord[]>>();
+  private pendingAddedListeners = new Set<Listener<PendingPermission>>();
+  private decisionArrivedListeners = new Set<Listener<DecisionRecord>>();
   private unlisteners: Array<Promise<UnlistenFn>> = [];
 
   /** 在应用启动时调用一次；幂等 */
@@ -52,6 +56,9 @@ class PermissionCenter {
       listen<PendingPermission>("permission-request", (event) => {
         this.pending = [...this.pending, event.payload];
         this.notifyPending();
+        for (const listener of this.pendingAddedListeners) {
+          listener(event.payload);
+        }
       }),
       listen<DecisionRecord>("decision-record", (event) => {
         // 待决应答/自动裁决后从队列移除对应项
@@ -61,6 +68,9 @@ class PermissionCenter {
         this.decisions = [event.payload, ...this.decisions].slice(0, 50);
         this.notifyPending();
         this.notifyDecisions();
+        for (const listener of this.decisionArrivedListeners) {
+          listener(event.payload);
+        }
       }),
     );
     await Promise.all(this.unlisteners);
@@ -75,6 +85,18 @@ class PermissionCenter {
     this.pendingListeners.add(listener);
     listener(this.pending);
     return () => this.pendingListeners.delete(listener);
+  }
+
+  /** 单条钩子：会话内联审批按 ACP session id 路由用（P1-5） */
+  onPendingAdded(listener: Listener<PendingPermission>): () => void {
+    this.pendingAddedListeners.add(listener);
+    return () => this.pendingAddedListeners.delete(listener);
+  }
+
+  /** 单条钩子：裁决到达（自动或用户应答）即通知 */
+  onDecisionArrived(listener: Listener<DecisionRecord>): () => void {
+    this.decisionArrivedListeners.add(listener);
+    return () => this.decisionArrivedListeners.delete(listener);
   }
 
   onDecisions(listener: Listener<DecisionRecord[]>): () => void {

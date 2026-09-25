@@ -17,6 +17,10 @@ pub struct PermissionRequest {
     pub tool_call_id: String,
     /// 展示用：工具名或标题（尽力而为，各协议字段不同）
     pub tool_name: String,
+    /// 工具类别（对齐 ACP ToolKind 字符串：edit/execute/read/...）。
+    /// 规则匹配与 AutoEdit 分类的依据——opencode 权限请求不携带 name，
+    /// title 常是路径/命令文本，kind 才是可靠的程序化标识。
+    pub kind: Option<String>,
     pub raw_input: Option<serde_json::Value>,
     /// agent 提供的可选项（option_id 是 agent 侧的不透明字符串，kind 才是语义）
     pub options: Vec<PermissionOption>,

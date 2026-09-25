@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
+import { PendingCard } from "@/components/PendingCard";
 import { cancelRun, readTextFile, runPrompt, setPermissionMode } from "@/lib/agent";
 import type { StreamItem } from "@/lib/stream";
 import type { SessionEntry, SessionsAction } from "@/lib/sessions";
@@ -249,6 +250,15 @@ export function RunConsole({ session, dispatch }: RunConsoleProps) {
           />
         )}
       </div>
+
+      {/* 内联待决审批（P1-5，ZCode 式：在会话流内直接应答） */}
+      {session.pendingApprovals.length > 0 && (
+        <div className="shrink-0 space-y-2 border-t border-amber-500/30 bg-amber-500/5 px-5 py-3">
+          {session.pendingApprovals.map((pending) => (
+            <PendingCard key={pending.id} pending={pending} />
+          ))}
+        </div>
+      )}
 
       {/* 状态条 */}
       <div className="text-muted-foreground flex h-8 shrink-0 items-center gap-3 border-t px-5 text-[11px]">
