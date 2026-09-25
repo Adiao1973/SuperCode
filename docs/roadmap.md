@@ -58,7 +58,7 @@
 
 | ID | 任务 | 验收要点（细化时补命令） | 状态 |
 |---|---|---|---|
-| P1-1 | Tauri v2 + React 19 + Tailwind + shadcn/ui 脚手架 | `pnpm tauri dev` 起窗；窗口渲染基础布局 | 待办 |
+| P1-1 | Tauri v2 + React 19 + Tailwind + shadcn/ui 脚手架 | `pnpm tauri dev` 起窗；窗口渲染基础布局 | ✅ 已验收（2026-09-25） |
 | P1-2 | 事件管道接通：Rust 合帧 → Tauri Channel → 前端 | UI 中跑通 P0-4 同款任务，消息流式渲染无明显卡顿（活动 chunk 重渲染纪律） | 待办 |
 | P1-3 | 多会话管理 UI（会话列表/新建/切换/取消） | 并行 2 个会话互不串台；取消生效 | 待办 |
 | P1-4 | 会话视图：消息流（@virtuoso.dev/message-list）+ 工具调用时间线 + diff 展示（@git-diff-view/react） | 长会话（200+ 消息）滚动流畅；edit 类工具显示 diff | 待办 |
