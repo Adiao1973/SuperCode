@@ -32,11 +32,26 @@ pub enum DecisionSource {
     User,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize)]
+#[serde(rename_all = "snake_case")]
 pub enum RuleEffect {
     Allow,
     Deny,
     Ask,
+}
+
+impl std::str::FromStr for RuleEffect {
+    type Err = CoreError;
+    fn from_str(value: &str) -> Result<Self> {
+        match value {
+            "allow" => Ok(Self::Allow),
+            "deny" => Ok(Self::Deny),
+            "ask" => Ok(Self::Ask),
+            other => Err(CoreError::PermissionFailed(format!(
+                "未知规则效果: {other}"
+            ))),
+        }
+    }
 }
 
 /// 权限模式（ADR-0006）：未匹配请求的默认策略，会话级可热切换。
