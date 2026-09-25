@@ -1,15 +1,13 @@
 /**
- * P1-2 事件管道验收控制台：驱动真实 opencode 会话，流式渲染 AgentEvent 批。
- * P1-3/P1-4 将演进为多会话管理 + 完整会话视图（虚拟列表/diff），此处刻意保持最小。
+ * 会话详情视图（P1-3 由单运行控制台改造）：绑定单个会话条目，
+ * 表单草稿与事件流都来自 sessions store；启动/停止走 Tauri 命令。
  */
-
 import {
   memo,
   useCallback,
   useEffect,
-  useReducer,
   useRef,
-  useState,
+  type Dispatch,
 } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -18,7 +16,10 @@ import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { cancelRun, runPrompt } from "@/lib/agent";
 import type { StreamItem } from "@/lib/stream";
-import { initialStream, streamReducer } from "@/lib/stream";
+import type {
+  SessionEntry,
+  SessionsAction,
+} from "@/lib/sessions";
 import type { ToolKind, ToolStatus } from "@/lib/events";
 import {
   CircleStop,
@@ -33,10 +34,6 @@ import {
   Trash2,
   Wrench,
 } from "lucide-react";
-
-const DEFAULT_PROMPT = "在当前目录创建 hello.txt 内容为 hi，然后读出来";
-const DEFAULT_CWD = "/tmp/supercode-p12";
-const DEFAULT_ALLOW = "read\nwrite\nedit\nbash(ls *)";
 
 const TOOL_ICONS: Record<ToolKind, typeof Wrench> = {
   read: FileText,
@@ -64,13 +61,13 @@ const STOP_LABELS: Record<string, string> = {
   refusal: "模型拒绝",
 };
 
-export function RunConsole() {
-  const [state, dispatch] = useReducer(streamReducer, initialStream);
-  const [prompt, setPrompt] = useState(DEFAULT_PROMPT);
-  const [cwd, setCwd] = useState(DEFAULT_CWD);
-  const [allowText, setAllowText] = useState(DEFAULT_ALLOW);
-  const [sessionId, setSessionId] = useState<string | null>(null);
-  const [invokeError, setInvokeError] = useState<string | null>(null);
+interface RunConsoleProps {
+  session: SessionEntry;
+  dispatch: Dispatch<SessionsAction>;
+}
+
+export function RunConsole({ session, dispatch }: RunConsoleProps) {
+  const { draft, stream } = session;
   const transcriptRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -78,45 +75,48 @@ export function RunConsole() {
     if (el) {
       el.scrollTop = el.scrollHeight;
     }
-  }, [state.items]);
+  }, [stream.items]);
 
   const start = useCallback(async () => {
-    setInvokeError(null);
-    setSessionId(null);
-    dispatch({ type: "begin" });
+    if (stream.running) {
+      return; // ⌘R 防重入：运行中不允许同一会话再起一轮
+    }
+    const key = session.key;
+    dispatch({ type: "begin", key });
     try {
-      const info = await runPrompt({
-        prompt,
-        cwd,
-        allow: allowText
+      await runPrompt({
+        prompt: draft.prompt,
+        cwd: draft.cwd,
+        allow: draft.rulesText
           .split("\n")
           .map((line) => line.trim())
           .filter(Boolean),
         deny: [],
-        onEvents: (batch) => dispatch({ type: "batch", batch }),
+        // 事件按客户端会话键路由；acpSessionId 由 session_started 事件带入 store
+        onEvents: (batch) => dispatch({ type: "batch", key, batch }),
       });
-      setSessionId(info.session_id);
     } catch (e) {
-      setInvokeError(String(e));
+      dispatch({ type: "invokeError", key, message: String(e) });
       dispatch({
         type: "batch",
+        key,
         batch: [{ type: "driver_error", message: String(e) }],
       });
     }
-  }, [prompt, cwd, allowText]);
+  }, [session.key, draft, stream.running, dispatch]);
 
   const stop = useCallback(async () => {
-    if (!sessionId) {
+    if (!session.acpSessionId) {
       return;
     }
     try {
-      await cancelRun(sessionId);
+      await cancelRun(session.acpSessionId);
     } catch (e) {
-      setInvokeError(String(e));
+      dispatch({ type: "invokeError", key: session.key, message: String(e) });
     }
-  }, [sessionId]);
+  }, [session.acpSessionId, session.key, dispatch]);
 
-  // Cmd/Ctrl+R 运行、Cmd/Ctrl+. 停止：焦点免疫的快捷键（验收脚本可驱动）
+  // Cmd/Ctrl+R 运行、Cmd/Ctrl+. 停止：焦点免疫（仅作用于当前活动会话）
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "r") {
@@ -134,37 +134,66 @@ export function RunConsole() {
 
   return (
     <div className="flex h-full flex-col">
-      {/* 运行控制（P1-3 演进为多会话管理） */}
+      {/* 运行控制 */}
       <div className="shrink-0 space-y-2.5 border-b px-5 py-3">
         <Textarea
-          value={prompt}
-          onChange={(e) => setPrompt(e.target.value)}
+          value={draft.prompt}
+          onChange={(e) =>
+            dispatch({
+              type: "patchDraft",
+              key: session.key,
+              patch: { prompt: e.target.value },
+            })
+          }
           rows={2}
           placeholder="任务提示词"
           className="resize-none font-mono text-[13px]"
+          autoFocus={stream.items.length === 0 && !stream.running}
         />
         <div className="flex gap-2">
           <Input
-            value={cwd}
-            onChange={(e) => setCwd(e.target.value)}
+            value={draft.cwd}
+            onChange={(e) =>
+              dispatch({
+                type: "patchDraft",
+                key: session.key,
+                patch: { cwd: e.target.value },
+              })
+            }
             className="w-64 font-mono text-xs"
             placeholder="工作目录"
           />
           {/* 规则必须多行：单行 Input 会被浏览器剥掉换行符，规则解析全废（P1-2 验收踩坑） */}
           <Textarea
-            value={allowText}
-            onChange={(e) => setAllowText(e.target.value)}
+            value={draft.rulesText}
+            onChange={(e) =>
+              dispatch({
+                type: "patchDraft",
+                key: session.key,
+                patch: { rulesText: e.target.value },
+              })
+            }
             rows={2}
             className="min-w-0 flex-1 resize-none py-2 font-mono text-xs leading-tight"
             placeholder="预授权规则（每行一条，如 write 或 bash(git *)）"
           />
-          {state.running ? (
-            <Button size="sm" variant="destructive" onClick={stop}>
+          {stream.running ? (
+            <Button
+              size="sm"
+              variant="destructive"
+              onClick={stop}
+              disabled={!session.acpSessionId}
+              title={session.acpSessionId ? undefined : "会话建立中…"}
+            >
               <CircleStop className="size-4" />
               停止
             </Button>
           ) : (
-            <Button size="sm" onClick={start} disabled={!prompt.trim() || !cwd.trim()}>
+            <Button
+              size="sm"
+              onClick={start}
+              disabled={!draft.prompt.trim() || !draft.cwd.trim()}
+            >
               <Play className="size-4" />
               运行
             </Button>
@@ -172,25 +201,28 @@ export function RunConsole() {
         </div>
         <p className="text-muted-foreground text-[11px]">
           fail-closed：未匹配预授权规则的权限请求自动拒绝（审批中心 P1-5 接管）
-          {sessionId && (
+          {session.acpSessionId && (
             <>
               {" · 会话 "}
-              <code className="text-foreground/70">{sessionId.slice(0, 8)}</code>
+              {/* opencode 会话 id 前缀是时间桶（多位相同），只展示尾部才有区分度 */}
+              <code className="text-foreground/70">…{session.acpSessionId.slice(-6)}</code>
             </>
           )}
-          {invokeError && <span className="text-destructive"> · {invokeError}</span>}
+          {session.invokeError && (
+            <span className="text-destructive"> · {session.invokeError}</span>
+          )}
         </p>
       </div>
 
       {/* 事件流时间线（合帧批 → 单次 dispatch → 仅活动 chunk 重渲染） */}
       <div ref={transcriptRef} className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
         <div className="mx-auto flex max-w-3xl flex-col gap-3">
-          {state.items.length === 0 && (
+          {stream.items.length === 0 && (
             <p className="text-muted-foreground py-8 text-center text-sm">
               点击「运行」驱动 opencode（ACP）执行任务，事件经 Rust 合帧 → Tauri Channel 到达这里。
             </p>
           )}
-          {state.items.map((item) => (
+          {stream.items.map((item) => (
             <StreamItemView key={item.key} item={item} />
           ))}
         </div>
@@ -198,18 +230,18 @@ export function RunConsole() {
 
       {/* 状态条 */}
       <div className="text-muted-foreground flex h-8 shrink-0 items-center gap-3 border-t px-5 text-[11px]">
-        {state.running ? (
+        {stream.running ? (
           <>
             <Loader2 className="text-primary size-3 animate-spin" />
             <span>运行中</span>
           </>
         ) : (
-          <span>{state.items.length > 0 ? "已结束" : "空闲"}</span>
+          <span>{stream.items.length > 0 ? "已结束" : "空闲"}</span>
         )}
-        {state.usage.used != null && (
-          <span>tokens {state.usage.used.toLocaleString()}</span>
+        {stream.usage.used != null && (
+          <span>tokens {stream.usage.used.toLocaleString()}</span>
         )}
-        {state.usage.cost != null && <span>${state.usage.cost.toFixed(4)}</span>}
+        {stream.usage.cost != null && <span>${stream.usage.cost.toFixed(4)}</span>}
       </div>
     </div>
   );
