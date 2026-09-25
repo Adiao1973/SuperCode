@@ -164,9 +164,10 @@ export function RunConsole({ session, dispatch }: RunConsoleProps) {
                 key: session.key,
                 patch: { mode: e.target.value },
               });
-              if (session.acpSessionId) {
-                void setPermissionMode(session.acpSessionId, e.target.value).catch(
-                  (err) => dispatch({ type: "invokeError", key: session.key, message: String(err) }),
+              // 热切换仅对运行中的会话有意义；空闲会话只改 draft（下次运行传入 broker）
+              if (session.acpSessionId && stream.running) {
+                void setPermissionMode(session.acpSessionId, e.target.value).catch((err) =>
+                  dispatch({ type: "invokeError", key: session.key, message: String(err) }),
                 );
               }
             }}
