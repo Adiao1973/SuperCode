@@ -15,6 +15,8 @@ pub struct SessionRecorder {
     agent_id: String,
     cwd: String,
     title: String,
+    /// 归属工作空间（ADR-0007）；resume 复用原行时保留原归属
+    workspace_id: String,
     /// 会话建立后待落库的用户提示词（SessionStarted 时随会话行一起写入；
     /// resume 时同样记录——它是本轮新的用户消息）
     pending_user_prompt: Option<String>,
@@ -30,6 +32,7 @@ impl SessionRecorder {
         cwd: &str,
         title: &str,
         user_prompt: &str,
+        workspace_id: &str,
     ) -> Self {
         Self {
             store,
@@ -37,6 +40,7 @@ impl SessionRecorder {
             agent_id: agent_id.to_string(),
             cwd: cwd.to_string(),
             title: title.to_string(),
+            workspace_id: workspace_id.to_string(),
             pending_user_prompt: Some(user_prompt.to_string()),
             pending_messages: HashMap::new(),
         }
@@ -54,6 +58,7 @@ impl SessionRecorder {
                         session_id,
                         &self.cwd,
                         &self.title,
+                        &self.workspace_id,
                     )
                     .await;
                 if result.is_ok()
@@ -149,7 +154,7 @@ impl SessionRecorder {
 
 #[cfg(test)]
 mod tests {
-    use super::super::Store;
+    use super::super::{DEFAULT_WORKSPACE, Store};
     use super::*;
     use crate::events::{ContentBlock, ToolKind, ToolStatus};
     use sqlx::Row;
@@ -163,8 +168,15 @@ mod tests {
             .await
             .unwrap();
         let sid = Uuid::new_v4();
-        let mut recorder =
-            SessionRecorder::new(store.clone(), sid, "opencode", "/tmp", "标题", "你好");
+        let mut recorder = SessionRecorder::new(
+            store.clone(),
+            sid,
+            "opencode",
+            "/tmp",
+            "标题",
+            "你好",
+            DEFAULT_WORKSPACE,
+        );
 
         recorder
             .handle_event(&AgentEvent::SessionStarted {
