@@ -89,13 +89,44 @@
 - **P1-7 实现**：core 新增 `envcheck` 模块（PATH 扫描 + `opencode --version` 5s 超时；全局 `~/.config/opencode` 尊重 XDG_CONFIG_HOME——macOS 上 opencode 也用 XDG 风格路径，不可用 dirs::config_dir()；JSONC 解析用 **json5**（新依赖：注释/尾逗号且字符串内 `//`——`$schema` URL——必须存活）；严格判定=有效 edit∧bash（项目覆盖全局）均 ∈ {ask, deny, custom}）。全程只读，不代改用户配置；"经 OPENCODE_CONFIG 注入托管配置"仍留待后续评估。IPC：`check_opencode_env`（§5.1）。
 - **P1-7 偏差**：真机联测确认全局配置仅有 model、无 permission → 判定宽松（与 P1-5 实证一致：本机一直靠项目级 opencode.jsonc 收紧）。
 
-## Phase 2 — 多 Agent 扩展（概要）
+## Phase 2 — 多 Agent 扩展
 
-- agent 注册表机制 + 设置 UI（新增 agent = 加配置）；接入 claude-code / codex 官方 ACP adapter（`npx -y @agentclientprotocol/*`）、`mimo acp`；Node 依赖探测引导。
-- StreamJsonDriver：接入 zcode（**受限支持**：`--mode yolo` 预授权，UI 明确标注"该 agent 无法外部审批"）。
-- git worktree 任务隔离：每任务独立 worktree + 分支、`.worktreeinclude` 复制、孤儿清扫（worktree 会话归属原项目空间，ADR-0007）。
-- 完整看板（dnd-kit 拖拽）+ xterm 终端嵌入（≥5.3.0）。
-- 里程碑：v0.3.0。
+**目标**：把单 agent（opencode）扩展为注册表驱动的多 agent 总控——新增 agent ≈ 加一条配置；
+接入 claude-code / codex / mimo；StreamJson 兜底 zcode；补 worktree 隔离与看板/终端体验。全部任务已细化。
+
+| ID | 任务 | 验收命令与预期 | 状态 |
+|---|---|---|---|
+| P2-1 | Agent 注册表机制（core）：`AgentDefinition` 扩展 driver_kind/capabilities/spawn；内置条目含 opencode/claude-code/codex/mimo/zcode；用户自定义 `~/.supercode/agents.json` 合并；`probe_installed` 批量探测 | `cargo test` 注册表单测绿（内置查找/自定义合并覆盖同 id/探测解析）；`supercode detect` 列出全部注册 agent 及安装状态（未安装显示 —） | ✅ 已验收 2026-09-28 |
+| P2-2 | 设置 UI：agent 管理页（列表 + 安装徽标/版本 + 自定义 agent CRUD + 安装引导可复制） | `pnpm tauri dev` 设置页可见全部注册 agent；未安装项给出可复制安装命令；新增自定义 agent 后出现在列表且重启保留 | 待办 |
+| P2-3 | claude-code 接入：`npx -y @agentclientprotocol/claude-agent-acp` 走 AcpDriver；Node/npx 依赖探测引导 | 真实任务跑通（流式消息 + 工具时间线 + 审批应答）；npx/Node 未装时给出可复制安装指引；续聊 session/load 生效 | 待办 |
+| P2-4 | codex 接入：`npx -y @agentclientprotocol/codex-acp` 走 AcpDriver | 同 P2-3 剧本在 codex 上通过（两 agent 并行会话互不串台） | 待办 |
+| P2-5 | mimo 接入：`mimo acp` 走 AcpDriver | 同 P2-3 剧本在 mimo 上通过 | 待办 |
+| P2-6 | StreamJsonDriver + zcode 受限支持：headless `--mode yolo` 预授权流解析；UI 标注"该 agent 无法外部审批" | zcode 任务跑通消息/工具事件；UI 可见受限标注；权限模式选择器对 zcode 置灰 | 待办 |
+| P2-7 | git worktree 任务隔离：每任务独立 worktree + 分支、`.worktreeinclude` 复制、孤儿清扫（worktree 会话归属原项目空间，ADR-0007） | 从项目空间任务一键建 worktree 会话；改动不影响主工作区；孤儿 worktree 可清扫；会话仍归原项目空间 | 待办 |
+| P2-8 | 完整看板：dnd-kit 拖拽跨列/跨空间移动任务 | 拖拽改变状态即时落库；重启保留；拖拽不破坏绑定会话引用 | 待办 |
+| P2-9 | xterm 终端嵌入（≥5.3.0，禁透明 canvas）：会话内嵌终端（cwd=会话 cwd） | 会话视图可开终端；输入输出正常；WebKit 无绿伪影；关终端不残留进程 | 待办 |
+| P2-10 | Phase 2 整体验收 + tag v0.3.0 合入 main | 验收剧本（P2-10 前预写进 docs/acceptance/phase2.md）逐条留痕；`just verify` 全绿；`git tag v0.3.0` | 待办 |
+
+**Phase 2 验收剧本**（P2-10 执行，输出存 `docs/acceptance/phase2.md`）：
+1. 注册表：设置页五 agent（opencode/claude-code/codex/mimo/zcode）安装状态正确；自定义 agent 增删生效；
+2. 三家具 ACP agent（至少 claude-code + 另一家）各自完成真实任务（写文件/读回），审批路径与 Phase 1 一致；
+3. 双 agent 并行会话互不串台；各自续聊上下文有效；
+4. zcode 受限标注可见，事件流正常；
+5. worktree 隔离剧本（建/改/清扫）；
+6. 看板拖拽与 xterm 终端人工核对；
+7. 重启后历史会话按空间归类、agent 归属正确。
+
+### Phase 2 验收与偏差记录
+
+- **P2-1 验收**：`just verify` 全绿（58 测试，registry 新增 7 项：五内置齐全/capabilities 标志/未知 id 报错/用户覆盖内置同 id/缺省 version_args 与 capabilities/坏文件静默忽略/探测缺失命令与首行解析）。`supercode detect` 实机输出：
+  ```
+  OpenCode 1.18.30 ✓
+  Claude Code —（npx -y @agentclientprotocol/claude-agent-acp）
+  Codex —（npx -y @agentclientprotocol/codex-acp）
+  MiMo —（mimo acp）
+  ZCode —（zcode -p --output-format stream-json --mode yolo）
+  ```
+- **P2-1 实现**：`AgentDefinition` serde 双向（内置常量 + `~/.supercode/agents.json`），`version_args`/`capabilities` 缺省友好；`AgentRegistry::load()` 合并用户条目（同 id 覆盖内置，坏文件静默不拖垮宿主）；`detect_version` 加 8s 超时（npx 冷启动可慢但不能卡死）。CLI `detect` 改走 `probe_installed` 全量列出；桌面端 `AgentDefinition::find` 便捷入口委托 `load()` 自动生效。
 
 ## Phase 3 — AI 指挥官与 Windows（概要）
 

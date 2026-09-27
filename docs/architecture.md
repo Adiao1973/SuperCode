@@ -291,31 +291,78 @@ SQLite approvals 表持久化在 P0-8 落地（表结构见 §6，decision_by = 
 ### 4.4 `AgentDefinition` 与 `AgentRegistry`
 
 ```rust
-/// 一个 agent 的接入声明。Phase 2 起，新增 agent = 在注册表加一条配置，AcpDriver 零改动。
-pub struct AgentDefinition {
-    pub id: String,               // "opencode" | "claude-code" | "codex" | ...
-    pub display_name: String,
-    pub driver_kind: DriverKind,  // Acp | StreamJson | Native
-    pub spawn: SpawnSpec,         // command + args + env（如 ["opencode","acp"]）
-    pub capabilities: Capabilities, // supports_load_session / supports_diff / ...
+/// 一个 agent 的接入声明。新增 agent = 在注册表加一条配置，AcpDriver 零改动。
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum DriverKind { Acp, StreamJson, Native }
+
+/// agent 能力位（UI 展示与功能开关；P2-1 先落字段，消费方随各接入任务展开）
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Capabilities {
+    pub supports_load_session: bool,  // 续聊 session/load
+    pub supports_diff: bool,          // 工具事件携带结构化 diff
+    pub supports_permission: bool,    // 可外部审批（zcode=false，受限支持）
 }
 
-pub struct AgentRegistry { /* 内置定义 + 用户自定义 (~/.supercode/agents.json) */ }
+/// 一个 agent 的接入声明（serde 双向：内置常量 + ~/.supercode/agents.json 用户自定义）。
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AgentDefinition {
+    pub id: String,               // "opencode" | "claude-code" | "codex" | "mimo" | "zcode" | 自定义
+    pub display_name: String,
+    pub driver_kind: DriverKind,  // Acp | StreamJson | Native
+    /// spawn 命令（shell-words 语法，如 "opencode acp"、"npx -y @agentclientprotocol/claude-agent-acp"）
+    pub command: String,
+    /// 版本探测命令参数（默认 `<program> --version`）
+    #[serde(default = "default_version_args")]
+    pub version_args: Vec<String>,
+    pub capabilities: Capabilities,
+}
+
+/// 注册表 = 内置定义 + 用户自定义；同 id 用户条目覆盖内置。
+pub struct AgentRegistry { /* entries: Vec<AgentDefinition> */ }
 impl AgentRegistry {
-    pub fn builtin() -> Self;                        // Phase 0：仅 opencode
-    pub async fn probe_installed(&self) -> Vec<(AgentDefinition, Option<String>)>; // 探测安装与版本
+    /// 内置注册表（P2-1 起五条齐备，见下表）
+    pub fn builtin() -> Self;
+    /// 从 `~/.supercode/agents.json` 读用户自定义（文件缺失/解析失败 → 空，不阻塞启动）；
+    /// 与 builtin 合并，同 id 用户覆盖内置。
+    pub fn load() -> Self;
+    /// 按 id 查找（load 后的合并视图）
+    pub fn find(&self, id: &str) -> Result<&AgentDefinition>;
+    /// 全部条目（内置顺序 + 用户新增）
+    pub fn entries(&self) -> &[AgentDefinition];
+    /// 批量探测安装与版本：`(definition, Option<version>)`
+    pub async fn probe_installed(&self) -> Vec<(AgentDefinition, Option<String>)>;
 }
 ```
 
-内置注册表（随 Phase 演进）：
+**用户自定义格式**（`~/.supercode/agents.json`，JSON 数组；只读合并，写入由设置 UI 负责）：
 
-| id | spawn | driver | 接入阶段 |
-|---|---|---|---|
-| opencode | `opencode acp` | Acp | Phase 0 |
-| claude-code | `npx -y @agentclientprotocol/claude-agent-acp` | Acp | Phase 2 |
-| codex | `npx -y @agentclientprotocol/codex-acp` | Acp | Phase 2 |
-| mimo | `mimo acp` | Acp | Phase 2 |
-| zcode | `zcode -p --output-format stream-json --mode yolo` | StreamJson | Phase 2（**受限支持**：无外部权限审批） |
+```jsonc
+[
+  {
+    "id": "my-agent",
+    "display_name": "My Agent",
+    "driver_kind": "acp",
+    "command": "my-agent --acp",
+    "version_args": ["--version"],
+    "capabilities": {
+      "supports_load_session": true,
+      "supports_diff": true,
+      "supports_permission": true
+    }
+  }
+]
+```
+
+内置注册表（P2-1 起五条齐备；接入阶段指该条目被宿主真实驱动的里程碑）：
+
+| id | command | driver_kind | supports_permission | 接入阶段 |
+|---|---|---|---|---|
+| opencode | `opencode acp` | Acp | ✓ | Phase 0 |
+| claude-code | `npx -y @agentclientprotocol/claude-agent-acp` | Acp | ✓ | P2-3 |
+| codex | `npx -y @agentclientprotocol/codex-acp` | Acp | ✓ | P2-4 |
+| mimo | `mimo acp` | Acp | ✓ | P2-5 |
+| zcode | `zcode -p --output-format stream-json --mode yolo` | StreamJson | ✗（受限支持：`--mode yolo` 预授权，UI 明确标注） | P2-6 |
 
 ### 4.5 进程管理器 `ProcessManager`（`proc` 模块）
 
@@ -549,6 +596,7 @@ P1-8 落地迁移 0003（workspaces + sessions.workspace_id，历史会话按 di
 
 | 日期 | 版本 | 摘要 |
 |---|---|---|
+| 2026-09-28 | 0.14 | P2-1 小设计：§4.4 AgentDefinition 落地形态（driver_kind/command/version_args/capabilities + serde 用户自定义）；AgentRegistry builtin/load/find/probe_installed；内置五条齐备（opencode/claude-code/codex/mimo/zcode） |
 | 2026-09-27 | 0.13 | P1-10 打包验收：版本号 v0.2.0 + just build 剧本；§4.7 增 GUI PATH 修正（launchd 不继承 shell PATH，探测与 spawn 双失效，宿主启动并入常见安装目录） |
 | 2026-09-27 | 0.12 | P1-9 简版任务看板：§5.1 IPC 增 list/create/update/delete_task（update 兼改状态与绑定会话）；tasks 表读写方法（绑定会话随 delete_session 解绑）；前端看板按空间分节四列 |
 | 2026-09-27 | 0.11 | P1-8 工作空间落地：§5.1 IPC 增 list/create/delete_workspace + run_prompt workspace_id + 历史行含 workspace_id；迁移 0003（workspaces 表 + sessions/tasks.workspace_id）与 Rust 回填（distinct cwd → project 空间，幂等） |
