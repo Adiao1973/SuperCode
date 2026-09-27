@@ -140,6 +140,8 @@ async fn run_prompt(
     let (raw_tx, raw_rx) = mpsc::channel::<AgentEvent>(256);
     let (frame_in_tx, frame_in_rx) = mpsc::channel::<AgentEvent>(256);
     let (frame_tx, frame_rx) = mpsc::channel::<Vec<AgentEvent>>(32);
+    // invoke 返回 RunInfo 后的晚失败兜底也要能推事件（见 done watcher）
+    let frame_in_tx_for_done = frame_in_tx.clone();
     let (session_tx, session_rx) = oneshot::channel::<String>();
     let (done_tx, mut done_rx) = oneshot::channel::<supercode_core::error::Result<()>>();
     let session_of_run = Arc::new(std::sync::Mutex::new(None::<String>));
@@ -277,6 +279,20 @@ async fn run_prompt(
             broker: broker.clone(),
         },
     );
+
+    // 晚失败兜底（P1-6 验收发现）：invoke 返回后无人消费 done——运行晚失败
+    // （如 agent 进程死亡）必须转成 DriverError 事件让前端结束运行态
+    tauri::async_runtime::spawn(async move {
+        if let Ok(Err(e)) = done_rx.await {
+            eprintln!("[p1-6] 运行晚失败：{e}");
+            let _ = frame_in_tx_for_done
+                .send(AgentEvent::DriverError {
+                    message: format!("运行失败：{e}"),
+                })
+                .await;
+        }
+    });
+
     Ok(RunInfo { session_id })
 }
 

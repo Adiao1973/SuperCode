@@ -142,6 +142,18 @@ export function RunConsole({ session, dispatch }: RunConsoleProps) {
     }
   }, [session.acpSessionId, session.key, dispatch]);
 
+  // 长时间无事件提示（P1-6 验收发现：模型限流时 opencode 无限重试，
+  // 前端只见"运行中"零反馈——45 秒无事件给一句解释；任何活动重置计时）
+  const [slowAgent, setSlowAgent] = useState(false);
+  useEffect(() => {
+    if (!stream.running) {
+      setSlowAgent(false);
+      return;
+    }
+    const timer = setTimeout(() => setSlowAgent(true), 45_000);
+    return () => clearTimeout(timer);
+  }, [stream.running, stream.items]);
+
   // Cmd/Ctrl+R 运行、Cmd/Ctrl+. 停止：焦点免疫（仅作用于当前活动会话）
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -297,6 +309,12 @@ export function RunConsole({ session, dispatch }: RunConsoleProps) {
             <PendingCard key={pending.id} pending={pending} />
           ))}
         </div>
+      )}
+
+      {slowAgent && stream.running && (
+        <p className="text-muted-foreground/80 shrink-0 border-t px-5 pt-2 text-center text-[11px]">
+          agent 已超过 45 秒无响应——可能是模型限流或网络问题，可点「停止」中止后稍后再试
+        </p>
       )}
 
       {/* 状态条 */}
