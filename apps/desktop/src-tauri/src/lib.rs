@@ -1,7 +1,7 @@
 //! SuperCode 桌面壳（Tauri v2）。
 //! P1-5：审批中心——权限模式热切换、待决请求转发应答、规则库 SQLite 持久化（§5.1）。
 
-use std::{collections::HashMap, sync::Arc, time::Duration};
+use std::{collections::HashMap, path::PathBuf, sync::Arc, time::Duration};
 
 use supercode_core::approval::{ApprovalBroker, PermissionMode, PermissionRules, RuleEffect};
 use supercode_core::db::{SessionRecorder, Store};
@@ -410,6 +410,16 @@ async fn list_session_messages(
         .collect())
 }
 
+/// opencode 环境探测（P1-7，architecture §4.7）：安装/版本 + 全局与项目配置解析 + 严格判定。
+/// 只读不改用户配置；引导文案在前端。
+#[tauri::command]
+async fn check_opencode_env(
+    cwd: Option<String>,
+) -> Result<supercode_core::envcheck::OpencodeEnvReport, String> {
+    let cwd = cwd.map(PathBuf::from);
+    Ok(supercode_core::envcheck::check(cwd.as_deref()).await)
+}
+
 /// 审批中心应答待决请求（应答成功即从待决映射移除）
 #[tauri::command]
 async fn respond_permission(
@@ -546,7 +556,8 @@ pub fn run() {
             delete_session,
             list_rules,
             add_rule,
-            delete_rule
+            delete_rule,
+            check_opencode_env
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
