@@ -22,8 +22,17 @@ pub struct PermissionRuleEntry {
     pub effect: RuleEffect,
 }
 
+/// 落库消息行（P1-6：历史会话消息渲染）。content_json 为拼接后的纯文本。
+#[derive(Debug, Clone, serde::Serialize)]
+pub struct MessageRow {
+    pub role: String,
+    pub text: String,
+    pub created_at: String,
+}
+
 /// 会话列表行。
 #[derive(Debug, Clone)]
+
 pub struct SessionRow {
     pub id: String,
     pub agent_id: String,
@@ -323,6 +332,40 @@ impl Store {
             .collect())
     }
 
+    /// 按 agent 侧会话 id 反查 SuperCode 会话 UUID（P1-6：resume 沿用原行，避免重复建行）
+    pub async fn find_session_by_agent(&self, agent_session_id: &str) -> Result<Option<Uuid>> {
+        let row = sqlx::query_scalar::<_, String>(
+            "SELECT id FROM sessions WHERE agent_session_id = ?1 ORDER BY created_at LIMIT 1",
+        )
+        .bind(agent_session_id)
+        .fetch_optional(&self.pool)
+        .await
+        .map_err(|e| CoreError::Db(e.to_string()))?;
+        Ok(row.and_then(|id| id.parse().ok()))
+    }
+
+    /// 按会话取落库消息（P1-6：历史渲染；按 agent_session_id 关联）
+    pub async fn list_messages(&self, agent_session_id: &str) -> Result<Vec<MessageRow>> {
+        let rows = sqlx::query_as::<_, (String, String, String)>(
+            "SELECT m.role, m.content_json, m.created_at FROM messages m
+             JOIN sessions s ON m.session_id = s.id
+             WHERE s.agent_session_id = ?1 ORDER BY m.created_at, m.rowid",
+        )
+        .bind(agent_session_id)
+        .fetch_all(&self.pool)
+        .await
+        .map_err(|e| CoreError::Db(e.to_string()))?;
+        Ok(rows
+            .into_iter()
+            .map(|(role, content_json, created_at)| MessageRow {
+                role,
+                // recorder 落库的是 ContentBlock 数组 JSON；历史渲染只取文本
+                text: extract_text_from_content_json(&content_json),
+                created_at,
+            })
+            .collect())
+    }
+
     pub async fn get_session(&self, id: Uuid) -> Result<Option<SessionRow>> {
         let row = sqlx::query(
             "SELECT id, agent_id, agent_session_id, cwd, title, status, updated_at
@@ -342,6 +385,22 @@ impl Store {
             updated_at: row.get("updated_at"),
         }))
     }
+}
+
+/// 从 ContentBlock 数组 JSON 提取文本（历史消息渲染用；解析失败回退原文）
+fn extract_text_from_content_json(content_json: &str) -> String {
+    serde_json::from_str::<serde_json::Value>(content_json)
+        .ok()
+        .and_then(|v| {
+            v.as_array().map(|blocks| {
+                blocks
+                    .iter()
+                    .filter_map(|b| b.get("text").and_then(|t| t.as_str()))
+                    .collect::<Vec<_>>()
+                    .join("")
+            })
+        })
+        .unwrap_or_else(|| content_json.to_string())
 }
 
 #[cfg(test)]
@@ -497,5 +556,37 @@ mod tests {
         let rest = store.list_permission_rules().await.unwrap();
         assert_eq!(rest.len(), 1);
         assert_eq!(rest[0].effect, RuleEffect::Deny);
+    }
+
+    /// P1-6：list_messages 按 agent_session_id 取落库消息（ContentBlock JSON → 文本）
+    #[tokio::test]
+    async fn 历史消息按agent会话id查询() {
+        let store = Store::open_in_memory().await.unwrap();
+        store
+            .upsert_agent("opencode", "OpenCode", "acp", None)
+            .await
+            .unwrap();
+        let sid = Uuid::new_v4();
+        store
+            .insert_session(sid, "opencode", "ses_hist_1", "/tmp", "历史会话")
+            .await
+            .unwrap();
+        store.insert_user_message(sid, "第一问").await.unwrap();
+        store.insert_agent_message(sid, "第一答").await.unwrap();
+
+        // 另一会话不应串入
+        let other = Uuid::new_v4();
+        store
+            .insert_session(other, "opencode", "ses_hist_2", "/tmp", "别的会话")
+            .await
+            .unwrap();
+        store.insert_user_message(other, "别的问题").await.unwrap();
+
+        let messages = store.list_messages("ses_hist_1").await.unwrap();
+        assert_eq!(messages.len(), 2);
+        assert_eq!(messages[0].role, "user");
+        assert_eq!(messages[0].text, "第一问");
+        assert_eq!(messages[1].role, "agent");
+        assert_eq!(messages[1].text, "第一答");
     }
 }

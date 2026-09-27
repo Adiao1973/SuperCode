@@ -4,13 +4,14 @@
 use std::{collections::HashMap, sync::Arc, time::Duration};
 
 use supercode_core::approval::{ApprovalBroker, PermissionMode, PermissionRules, RuleEffect};
-use supercode_core::db::Store;
+use supercode_core::db::{SessionRecorder, Store};
 use supercode_core::driver::{AcpDriver, PermissionHandler, StartMode};
 use supercode_core::events::{AgentEvent, EventAggregator};
 use supercode_core::registry;
 use tauri::{ipc::Channel, Emitter, Manager};
 use tokio::sync::{mpsc, oneshot};
 use tokio_util::sync::CancellationToken;
+use uuid::Uuid as SessionUuid;
 use uuid::Uuid;
 
 /// 帧周期：~16ms（§5 硬性架构约束，非优化项）
@@ -51,6 +52,7 @@ fn parse_mode(mode: &str) -> Result<PermissionMode, String> {
 }
 
 #[tauri::command]
+#[allow(clippy::too_many_arguments)] // Tauri IPC 参数展开，语义即数据面
 async fn run_prompt(
     app: tauri::AppHandle,
     prompt: String,
@@ -58,6 +60,8 @@ async fn run_prompt(
     allow: Vec<String>,
     deny: Vec<String>,
     mode: String,
+    // P1-6：Some → StartMode::Load 续聊既有会话（agent_session_id）
+    resume_session_id: Option<String>,
     on_events: Channel<Vec<AgentEvent>>,
 ) -> Result<RunInfo, String> {
     let def = registry::AgentDefinition::find("opencode").map_err(|e| e.to_string())?;
@@ -135,6 +139,32 @@ async fn run_prompt(
     let (done_tx, done_rx) = oneshot::channel::<supercode_core::error::Result<()>>();
     let session_of_run = Arc::new(std::sync::Mutex::new(None::<String>));
 
+    // P1-6 落库：resume 沿用原会话行（按 agent_session_id 反查），新跑生成新 UUID。
+    // insert_session OR IGNORE 幂等；本轮提示词作为新用户消息记录。
+    let recorder_store = state.store().await.clone();
+    let supercode_session = match &resume_session_id {
+        Some(agent_id) => match recorder_store.find_session_by_agent(agent_id).await {
+            Ok(Some(existing)) => existing,
+            Ok(None) => SessionUuid::new_v4(),
+            Err(e) => {
+                eprintln!("[p1-6] 会话反查失败，回退新行：{e}");
+                SessionUuid::new_v4()
+            }
+        },
+        None => SessionUuid::new_v4(),
+    };
+    let mut recorder = SessionRecorder::new(
+        recorder_store,
+        supercode_session,
+        "opencode",
+        &cwd,
+        &prompt.chars().take(24).collect::<String>(),
+        &prompt,
+    );
+    let start_mode = resume_session_id
+        .map(StartMode::Load)
+        .unwrap_or(StartMode::New);
+
     tauri::async_runtime::spawn(async move {
         let mut raw_rx = raw_rx;
         let mut session_tx = Some(session_tx);
@@ -145,6 +175,7 @@ async fn run_prompt(
             {
                 let _ = tx.send(session_id.clone());
             }
+            recorder.handle_event(&event).await;
             if frame_in_tx.send(event).await.is_err() {
                 break;
             }
@@ -172,7 +203,7 @@ async fn run_prompt(
         let result = driver
             .run(
                 std::path::PathBuf::from(cwd),
-                StartMode::New,
+                start_mode,
                 prompt,
                 raw_tx,
                 permissions,
@@ -251,6 +282,64 @@ async fn set_permission_mode(
         }
         None => Err(format!("会话 {session_id} 不在运行中")),
     }
+}
+
+/// 历史会话列表（P1-6：启动时注入前端）
+#[tauri::command]
+async fn list_history_sessions(app: tauri::AppHandle) -> Result<Vec<HistorySession>, String> {
+    let state = app.state::<AppState>();
+    let store = state.store().await;
+    let rows = store.list_sessions().await.map_err(|e| e.to_string())?;
+    Ok(rows
+        .into_iter()
+        .map(|row| HistorySession {
+            agent_session_id: row.agent_session_id,
+            cwd: row.cwd,
+            title: row.title,
+            status: row.status,
+            updated_at: row.updated_at,
+        })
+        .collect())
+}
+
+/// 历史会话 DTO（Tauri IPC 返回类型需本地 Serialize）
+#[derive(serde::Serialize)]
+struct HistorySession {
+    agent_session_id: String,
+    cwd: String,
+    title: String,
+    status: String,
+    updated_at: String,
+}
+
+/// 历史消息 DTO
+#[derive(serde::Serialize)]
+struct HistoryMessage {
+    role: String,
+    text: String,
+    created_at: String,
+}
+
+/// 单个会话的落库消息（P1-6：历史渲染）
+#[tauri::command]
+async fn list_session_messages(
+    app: tauri::AppHandle,
+    agent_session_id: String,
+) -> Result<Vec<HistoryMessage>, String> {
+    let state = app.state::<AppState>();
+    let store = state.store().await;
+    let rows = store
+        .list_messages(&agent_session_id)
+        .await
+        .map_err(|e| e.to_string())?;
+    Ok(rows
+        .into_iter()
+        .map(|row| HistoryMessage {
+            role: row.role,
+            text: row.text,
+            created_at: row.created_at,
+        })
+        .collect())
 }
 
 /// 审批中心应答待决请求（应答成功即从待决映射移除）
@@ -384,6 +473,8 @@ pub fn run() {
             read_text_file,
             set_permission_mode,
             respond_permission,
+            list_history_sessions,
+            list_session_messages,
             list_rules,
             add_rule,
             delete_rule

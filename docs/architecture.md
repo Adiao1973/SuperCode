@@ -397,9 +397,11 @@ supercode-desktop 对渲染层暴露的命令（invoke）；事件经 `tauri::ip
 
 | 命令 | 参数 | 返回 | 语义 |
 |---|---|---|---|
-| `run_prompt` | `prompt`、`cwd`、`allow`、`deny`、`mode`、`on_events: Channel<Vec<AgentEvent>>` | `RunInfo { session_id }`（错误为 String） | 新会话一轮任务（StartMode::New）。宿主内部：driver events → tap（捕获 SessionStarted）→ EventAggregator(16ms) → Channel 批量推送；规则库（SQLite）与本次 draft 规则合并后建 ApprovalBroker（初始 mode） |
+| `run_prompt` | `prompt`、`cwd`、`allow`、`deny`、`mode`、`resume_session_id: Option`（P1-6：Some → StartMode::Load 续聊）、`on_events: Channel<Vec<AgentEvent>>` | `RunInfo { session_id }`（错误为 String） | 一轮任务。宿主内部：driver events → tap（捕获 SessionStarted）→ EventAggregator(16ms) → Channel 批量推送；tap 同时喂 SessionRecorder（落库 sessions/messages，resume 复用原 agent_session_id，OR IGNORE 幂等）；规则库（SQLite）与本次 draft 规则合并后建 ApprovalBroker（初始 mode） |
 | `cancel_run` | `session_id` | `()` | 触发协议级取消链（§7：session/cancel → Cancelled → CANCEL_GRACE 兜底） |
 | `set_permission_mode` | `session_id`、`mode` | `()` | 运行中热切换该会话的 PermissionMode（§4.3 管线） |
+| `list_history_sessions` | — | `Vec<SessionRow>` | 历史会话列表（sessions 表，P1-6 启动时注入前端） |
+| `list_session_messages` | `agent_session_id` | `Vec<MessageRow>` | 单个会话的落库消息（P1-6 历史渲染） |
 | `respond_permission` | `request_id`、`option_id` | `()` | 审批中心应答待决请求（转发 broker.respond） |
 | `list_rules` / `add_rule` / `delete_rule` | — / `pattern`+`effect` / `id` | 规则列表 / `RuleEntry` / `()` | 规则库 CRUD（SQLite permission_rules 表，§6） |
 
