@@ -478,6 +478,82 @@ async fn delete_workspace(app: tauri::AppHandle, id: String) -> Result<(), Strin
     store.delete_workspace(&id).await.map_err(|e| e.to_string())
 }
 
+/// 任务条目 DTO（P1-9 简版看板）
+#[derive(serde::Serialize)]
+struct TaskDto {
+    id: String,
+    workspace_id: String,
+    title: String,
+    session_id: Option<String>,
+    status: String,
+}
+
+impl From<supercode_core::db::TaskEntry> for TaskDto {
+    fn from(t: supercode_core::db::TaskEntry) -> Self {
+        Self {
+            id: t.id,
+            workspace_id: t.workspace_id,
+            title: t.title,
+            session_id: t.session_id,
+            status: t.status,
+        }
+    }
+}
+
+#[tauri::command]
+async fn list_tasks(app: tauri::AppHandle) -> Result<Vec<TaskDto>, String> {
+    let state = app.state::<AppState>();
+    let store = state.store().await;
+    store
+        .list_tasks()
+        .await
+        .map(|rows| rows.into_iter().map(Into::into).collect())
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+async fn create_task(
+    app: tauri::AppHandle,
+    title: String,
+    workspace_id: String,
+) -> Result<TaskDto, String> {
+    let title = title.trim().to_string();
+    if title.is_empty() {
+        return Err("任务标题不能为空".into());
+    }
+    let state = app.state::<AppState>();
+    let store = state.store().await;
+    store
+        .create_task(&workspace_id, &title)
+        .await
+        .map(Into::into)
+        .map_err(|e| e.to_string())
+}
+
+/// 更新任务：status 四态之一；session_id 空串=解绑（IPC 无法传 SQL NULL 的约定）
+#[tauri::command]
+async fn update_task(
+    app: tauri::AppHandle,
+    id: String,
+    status: Option<String>,
+    session_id: Option<String>,
+) -> Result<TaskDto, String> {
+    let state = app.state::<AppState>();
+    let store = state.store().await;
+    store
+        .update_task(&id, status.as_deref(), session_id.as_deref())
+        .await
+        .map(Into::into)
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+async fn delete_task(app: tauri::AppHandle, id: String) -> Result<(), String> {
+    let state = app.state::<AppState>();
+    let store = state.store().await;
+    store.delete_task(&id).await.map_err(|e| e.to_string())
+}
+
 /// opencode 环境探测（P1-7，architecture §4.7）：安装/版本 + 全局与项目配置解析 + 严格判定。
 /// 只读不改用户配置；引导文案在前端。
 #[tauri::command]
@@ -628,7 +704,11 @@ pub fn run() {
             check_opencode_env,
             list_workspaces,
             create_workspace,
-            delete_workspace
+            delete_workspace,
+            list_tasks,
+            create_task,
+            update_task,
+            delete_task
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
