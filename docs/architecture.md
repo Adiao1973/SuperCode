@@ -412,6 +412,11 @@ pub async fn check(cwd: Option<&Path>) -> OpencodeEnvReport;
 ```
 
 - **安装探测**：PATH 逐目录扫描 `opencode` 可执行文件（不引 `which` crate）；命中后 `opencode --version`（5s 超时）取版本。
+- **GUI PATH 修正（P1-10）**：Finder/Dock 启动的 .app 不继承用户 shell PATH（launchd 只给
+  `/usr/bin:/bin:/usr/sbin:/sbin`）——Homebrew（`/opt/homebrew/bin`、`/usr/local/bin`）与
+  官方安装脚本（`~/.opencode/bin`、`~/.local/bin`）装的 agent 对打包应用不可见，探测与
+  driver spawn（PATH 查找）双失效。桌面宿主启动早期调用 `augment_gui_path()` 把上述
+  目录并入进程 PATH（幂等、只增不改序），此后所有子进程继承修正后的 PATH。
 - **配置发现**：全局 `$XDG_CONFIG_HOME/opencode` 或 `~/.config/opencode` 下 `opencode.jsonc` → `opencode.json`；项目 `<cwd>/` 同名序。JSONC 解析用 `json5`（注释/尾逗号，字符串内 `//` 安全——`$schema` URL 必须存活）。
 - **严格判定**：`permission.edit` 与 `permission.bash` 的有效级别（项目覆盖全局）都 ∈ {ask, deny, custom} 才算严格；字符串值直接映射，对象值取 `"*"` 键递归，无 `"*"` 记 Custom。任一为 NotConfigured/allow 即宽松——opencode 默认放行 bash/edit 且对安全命令、新建文件不发询问（ADR-0006 管辖边界）。
 
@@ -544,6 +549,7 @@ P1-8 落地迁移 0003（workspaces + sessions.workspace_id，历史会话按 di
 
 | 日期 | 版本 | 摘要 |
 |---|---|---|
+| 2026-09-27 | 0.13 | P1-10 打包验收：版本号 v0.2.0 + just build 剧本；§4.7 增 GUI PATH 修正（launchd 不继承 shell PATH，探测与 spawn 双失效，宿主启动并入常见安装目录） |
 | 2026-09-27 | 0.12 | P1-9 简版任务看板：§5.1 IPC 增 list/create/update/delete_task（update 兼改状态与绑定会话）；tasks 表读写方法（绑定会话随 delete_session 解绑）；前端看板按空间分节四列 |
 | 2026-09-27 | 0.11 | P1-8 工作空间落地：§5.1 IPC 增 list/create/delete_workspace + run_prompt workspace_id + 历史行含 workspace_id；迁移 0003（workspaces 表 + sessions/tasks.workspace_id）与 Rust 回填（distinct cwd → project 空间，幂等） |
 | 2026-09-27 | 0.10 | 工作空间模型定稿（ADR-0007）：§6 新增 workspaces 表 + sessions/tasks 归属空间（迁移 0003 规划，历史按 distinct cwd 回填；默认空间承载非项目任务）；IPC 契约行随 P1-8 小设计补充 |
