@@ -682,6 +682,10 @@ async fn read_text_file(path: String) -> Result<String, String> {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    // GUI PATH 修正（P1-10，§4.7）：Finder/Dock 启动的 .app 只拿 launchd 的
+    // 最小 PATH——Homebrew/官方脚本装的 opencode 不可见（探测与 spawn 双失效）。
+    // 必须在任何探测/子进程 spawn 之前执行；终端启动时为幂等空操作。
+    supercode_core::envcheck::augment_gui_path();
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .manage(AppState {

@@ -16,6 +16,10 @@ verify:
 dev:
     cd apps/desktop && pnpm tauri dev
 
+# 桌面端打包：产出 .app 与 dmg（P1-10 整体验收用）
+build:
+    cd apps/desktop && pnpm tauri build
+
 # 自动修复格式与部分 clippy 问题
 fix:
     cargo fmt
