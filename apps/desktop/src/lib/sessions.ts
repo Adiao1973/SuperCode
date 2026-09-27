@@ -129,7 +129,8 @@ export function sessionsReducer(
             },
       );
     case "historyLoaded": {
-      const items: StreamState["items"] = action.messages.map((message, i) => ({
+      // 幂等：StrictMode 双触发 effect 时不能叠加——先移除旧 hist- 条目再前置
+      const hist: StreamState["items"] = action.messages.map((message, i) => ({
         key: `hist-${i}`,
         kind: message.role === "user" ? "user_message" : "message",
         id: `hist-${i}`,
@@ -138,7 +139,10 @@ export function sessionsReducer(
       }));
       return updateEntry(state, action.key, (it) => ({
         ...it,
-        stream: { ...it.stream, items: [...items, ...it.stream.items] },
+        stream: {
+          ...it.stream,
+          items: [...hist, ...it.stream.items.filter((item) => !item.key.startsWith("hist-"))],
+        },
       }));
     }
     case "hydrate": {

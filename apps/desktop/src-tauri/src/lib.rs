@@ -143,6 +143,9 @@ async fn run_prompt(
     let (session_tx, session_rx) = oneshot::channel::<String>();
     let (done_tx, mut done_rx) = oneshot::channel::<supercode_core::error::Result<()>>();
     let session_of_run = Arc::new(std::sync::Mutex::new(None::<String>));
+    let cancel = CancellationToken::new();
+    let cancel_for_run = cancel.clone();
+    let cancel_for_tap = cancel.clone();
 
     // P1-6 落库：resume 沿用原会话行（按 agent_session_id 反查），新跑生成新 UUID。
     // insert_session OR IGNORE 幂等；本轮提示词作为新用户消息记录。
@@ -180,18 +183,25 @@ async fn run_prompt(
     tauri::async_runtime::spawn(async move {
         let mut raw_rx = raw_rx;
         let mut session_tx = Some(session_tx);
+        let mut frontend_dead = false;
         while let Some(event) = raw_rx.recv().await {
-            // driver 契约：SessionStarted 是首个事件；此后不再捕获
+            // SessionStarted 捕获必须先于一切可能失败的转发（invoke 依赖它返回）
             if let (Some(tx), AgentEvent::SessionStarted { session_id }) =
                 (session_tx.take(), &event)
             {
                 let _ = tx.send(session_id.clone());
             }
+            // 落库通道失效仅丢持久化，不中断捕获与转发
             if rec_tx.send(event.clone()).await.is_err() {
-                break; // 落库任务已退出（理论不发生）
+                eprintln!("[p1-6] recorder 通道失效，事件持久化中断");
             }
-            if frame_in_tx.send(event).await.is_err() {
-                break;
+            // 前端管道失效（页面重载等）：终止孤儿运行（否则 agent 跑完整轮白烧
+            // token，且 SessionStarted 丢失导致 invoke 误报"未返回会话信息"），
+            // 循环保持排空以完成收尾
+            if frame_in_tx.send(event).await.is_err() && !frontend_dead {
+                frontend_dead = true;
+                eprintln!("[p1-6] 前端通道失效，终止本次运行");
+                cancel_for_tap.cancel();
             }
         }
     });
@@ -208,8 +218,6 @@ async fn run_prompt(
         }
     });
 
-    let cancel = CancellationToken::new();
-    let cancel_for_run = cancel.clone();
     let driver = AcpDriver::new(def.command);
     let cleanup_session = session_of_run.clone();
     let app_for_cleanup = app.clone();
