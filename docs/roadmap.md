@@ -63,7 +63,7 @@
 | P1-7 | opencode 安装探测与引导 + 严格模式引导（检测/建议收紧 opencode `permission` 配置，补客户端管辖边界外的白名单缺口，ADR-0006；含默认模型检查） | 未安装时给出可复制安装指引；严格模式引导可见可复制 | ✅ 已验收 2026-09-27 |
 | P1-8 | 工作空间模型（ADR-0007）：项目空间=项目根路径 + 默认空间（不绑项目，普通聊天/电脑操作类任务）；会话按空间分组（迁移 0003，历史按 distinct cwd 回填归类） | 重启后历史会话按项目自动归类；新会话选空间后 cwd 预填（默认空间 cwd 自由）；删除空间不删会话（移入默认空间） | ✅ 已验收 2026-09-27 |
 | P1-9 | 简版任务看板（任务=标题+空间+绑定会话+状态，按空间组织） | 任务创建→指派会话→状态流转闭环 | ✅ 已验收 2026-09-27 |
-| P1-10 | Phase 1 整体验收 + tag v0.2.0 合入 main | 验收剧本（P1-10 前预写进 docs/acceptance/phase1.md）+ 打包出 .app 可运行 | 待办 |
+| P1-10 | Phase 1 整体验收 + tag v0.2.0 合入 main | 验收剧本（P1-10 前预写进 docs/acceptance/phase1.md）+ 打包出 .app 可运行 | ✅ 已验收 2026-09-28 |
 
 ### Phase 1 验收与偏差记录
 
@@ -78,6 +78,7 @@
 - **P1-6 验收**：事件流接入 SessionRecorder 落库；重启后 hydrate 历史会话 + 懒加载落库消息；续聊 session/load 恢复上下文（暗号问答验证）；跑完一轮自动标记可续聊；会话删除（级联 + 二次确认 + 运行中保护，用户提议追加）。
 - **P1-6 修复**：① resume 轮清空流（重放事件即历史渲染源，避免三源叠加重复）；② session_rx 关闭与 done_rx 就绪的 select 随机分支 → 确定性取 done 真实结果；③ 默认 cwd 不存在 → run_prompt 自动 create_dir_all；④ recorder 独立任务 + 文件库 WAL/4 连接（DB 写不再阻塞事件转发）；⑤ 运行晚失败静默死亡 → done watcher 转 DriverError + 45 秒慢响应提示。
 - **P1-6 环境偏差（与 P0-4 同类）**：验收期间 GLM 编程计划触发 5 小时用量上限（opencode 无限重试、零事件），限额重置后恢复。
+- **P1-10 验收**：剧本①-⑤全过（verify 50 测试全绿；.app/.dmg 打包产出；端到端真实任务与重启恢复用户实机确认；GUI PATH 与图标两项偏差见上下两条记录）。发布顺序按用户指定：文档（README v0.2.0 + 验收记录）→ dev 打 tag v0.2.0 → 合回 main。Phase 1 至此完结。
 - **P1-10 图标（用户要求替换 Tauri 默认图标）**：「指挥官终端」——发光 `>_` 提示符（青→靛→紫渐变，总控/运行的符号）+ 深空靛紫渐变 squircle + 右上互联节点（多 agent 编排隐喻）。`tools/gen_icon.py` 脚本生成（numpy/PIL 2x 超采样，可复现可调参）→ `pnpm tauri icon` 产全尺寸（PNG/ICO/ICNS）。踩坑：PIL `Image.composite(stroke, out, mask)` 参数序——mask=255 区域取第一参数，误用把整层内容换成描边致 alpha 归零（全黑假象）；另 CDN 按路径缓存旧图造成两轮评审误报，换新文件名复核通过。
 - **P1-10 偏差（打包验收发现）**：GUI 启动的 .app 不继承 shell PATH（launchctl getenv PATH 为空，仅 /usr/bin:/bin:/usr/sbin:/sbin）——/opt/homebrew/bin 下的 opencode 对打包应用不可见，探测与 driver spawn（PATH 查找）双失效；just dev 自终端启动继承 shell PATH 故此前未暴露。修复：envcheck 增 augment_gui_path()（常见安装目录 /opt/homebrew/bin、/usr/local/bin、/opt/local/bin、~/.opencode/bin、~/.local/bin 并入进程 PATH，幂等只增不改序；Rust 2024 set_var unsafe——约定宿主 run() 首行、线程 spawn 前调用），桌面宿主已接入 + merge 纯函数单测。与 P0-4/P1-6 环境偏差同类：环境层问题由产品侧兜底。
 - **P1-9 验收**：看板按空间分节四列（backlog/in_progress/review/done）；任务创建→绑定会话（点击短 id 跳转回会话视图）→‹›按钮状态流转→删除闭环；绑定是引用不是从属——删除会话级联解绑（任务保留，事务内完成，单测锁定）；重启任务与状态保留（SQLite）。dnd-kit 拖拽按规划留待 Phase 2 完整看板。IPC：list/create/update/delete_task（update_task 空串 session_id=解绑约定，IPC 无法传 SQL NULL）。
@@ -108,6 +109,6 @@
 | 里程碑 | 内容 | 出口条件 | 状态 |
 |---|---|---|---|
 | v0.1.0 | Phase 0：opencode 链路 CLI 原型 | Phase 0 验收剧本全过 | ✅ 2026-09-24 达成（docs/acceptance/phase0.md） |
-| v0.2.0 | Phase 1：桌面 MVP | 可打包运行的 .app，验收剧本全过 | 进行中 |
+| v0.2.0 | Phase 1：桌面 MVP | 可打包运行的 .app，验收剧本全过 | ✅ 已发布 2026-09-28 |
 | v0.3.0 | Phase 2：多 agent + worktree | 三家以上 agent 并行可用 | — |
 | v1.0.0 | Phase 3：AI 指挥官 + Windows | 双平台安装包 + 指挥官闭环 | — |
