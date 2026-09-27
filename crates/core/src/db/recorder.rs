@@ -332,7 +332,8 @@ mod tests {
         );
 
         // 重放的工具调用不得落库
-        let tool_count: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM tool_calls WHERE id = 'old_call'")
+        let tool_count: i64 =
+            sqlx::query_scalar("SELECT COUNT(*) FROM tool_calls WHERE id = 'old_call'")
                 .fetch_one(&store.pool)
                 .await
                 .unwrap();
