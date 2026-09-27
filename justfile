@@ -12,6 +12,10 @@ verify:
     cargo clippy --all-targets -- -D warnings
     cargo test
 
+# 桌面端开发模式（tauri dev watcher：Rust 变更自动重编译，前端 HMR）
+dev:
+    cd apps/desktop && pnpm tauri dev
+
 # 自动修复格式与部分 clippy 问题
 fix:
     cargo fmt

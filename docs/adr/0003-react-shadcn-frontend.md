@@ -10,6 +10,10 @@ Tauri 前端层选型，候选：React 19、Svelte 5、Vue 3、Solid、Preact。
 
 **React 19 + React Compiler + Tailwind + shadcn/ui**，配 `@virtuoso.dev/message-list`（消息流虚拟列表）、`@git-diff-view/react`（diff）、`@xterm/xterm`（≥5.3.0）、`dnd-kit`（看板拖拽）、Zustand + TanStack Query。
 
+> **P1-4 实施偏差（2026-09-25）**：`@virtuoso.dev/message-list` 实为商业许可（trial 模式）
+> → 换用同作者 MIT 的 **react-virtuoso**；`@git-diff-view/react` 0.1.7 行号列布局缺陷
+> → 换用 **@pierre/diffs**（Apache-2.0，ZCode 同款）。其余依赖不变。详见 roadmap P1-4 偏差记录。
+
 ## 理由
 
 - **成品库密度决定开发速度**：与本项目 UI 形态一致的 Vibe Kanban 即此栈，其组件选型可整体照抄；消息流/diff/终端/拖拽在 React 生态全部有成熟轮子，Svelte/Vue 侧存在缺口（如无 virtuoso 等价物）。
