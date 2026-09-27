@@ -465,8 +465,14 @@ supercode-desktop 对渲染层暴露的命令（invoke）；事件经 `tauri::ip
 agents(id TEXT PK, display_name TEXT, driver_kind TEXT, spawn_json TEXT,
        capabilities_json TEXT, installed_version TEXT NULL, updated_at TEXT);
 
+workspaces(id TEXT PK,          -- 工作空间（ADR-0007，P1-8 落地）
+           name TEXT, path TEXT UNIQUE NULL,    -- project 空间=项目根绝对路径；默认空间 path 为空
+           kind TEXT,           -- project | default（默认空间全局单例）
+           created_at TEXT);
+
 sessions(id TEXT PK,            -- SuperCode 侧 UUID
          agent_id TEXT REFERENCES agents(id),
+         workspace_id TEXT REFERENCES workspaces(id),  -- 会话归属空间（历史按 distinct cwd 回填）
          agent_session_id TEXT, -- agent 侧会话标识（ACP sessionId 等），恢复用
          cwd TEXT, title TEXT, status TEXT,   -- active|completed|failed|cancelled
          created_at TEXT, updated_at TEXT);
@@ -483,8 +489,9 @@ approvals(id TEXT PK, session_id TEXT, tool_call_id TEXT, tool_name TEXT,
           request_json TEXT, decision TEXT, decided_by TEXT,  -- rule:<id> | user
           created_at TEXT, decided_at TEXT);
 
-tasks(id TEXT PK, title TEXT, cwd TEXT, status TEXT, -- backlog|in_progress|review|done
-      created_at TEXT, updated_at TEXT);             -- Phase 1 简版看板；session 关联经 sessions.task_id
+tasks(id TEXT PK, workspace_id TEXT REFERENCES workspaces(id),
+      title TEXT, cwd TEXT NULL, status TEXT,       -- backlog|in_progress|review|done；cwd 缺省取空间路径
+      created_at TEXT, updated_at TEXT);             -- P1-9 简版看板（按空间组织）；session 关联经 sessions.task_id
 
 permission_rules(id TEXT PK, pattern TEXT NOT NULL,  -- 规则库（P1-5，全局持久）
                  effect TEXT NOT NULL,               -- allow | deny | ask
@@ -492,7 +499,9 @@ permission_rules(id TEXT PK, pattern TEXT NOT NULL,  -- 规则库（P1-5，全�
 ```
 
 迁移管理：`sqlx migrate`（`crates/core/migrations/`），迁移文件只增不改。
-P0-8 落地迁移 0001（六表）；P1-5 落地迁移 0002（permission_rules 规则库）。
+P0-8 落地迁移 0001（六表）；P1-5 落地迁移 0002（permission_rules 规则库）；
+P1-8 落地迁移 0003（workspaces + sessions.workspace_id，历史会话按 distinct cwd
+回填为 project 空间并归类；删除空间不删会话，会话移入默认空间——ADR-0007）。
 运行期写入 sessions/messages/tool_calls/approvals
 （`SessionRecorder` 消费事件流：消息 chunk 在 TurnCompleted 时组装落库），tasks 表 Phase 1 使用。
 时间戳为 RFC3339 文本。`SUPERCODE_DB` 环境变量可覆盖库文件路径（测试/多环境用）。
@@ -533,6 +542,7 @@ P0-8 落地迁移 0001（六表）；P1-5 落地迁移 0002（permission_rules �
 
 | 日期 | 版本 | 摘要 |
 |---|---|---|
+| 2026-09-27 | 0.10 | 工作空间模型定稿（ADR-0007）：§6 新增 workspaces 表 + sessions/tasks 归属空间（迁移 0003 规划，历史按 distinct cwd 回填；默认空间承载非项目任务）；IPC 契约行随 P1-8 小设计补充 |
 | 2026-09-27 | 0.9 | P1-7 环境探测落地：新增 §4.7 envcheck 模块（安装探测 + JSONC 配置解析 + 严格判定）；§5.1 IPC 新增 check_opencode_env；新依赖 json5（opencode 配置为 JSONC，注释/尾逗号解析，纯 Rust 无 unsafe） |
 | 2026-09-27 | 0.8 | P1-6 持久化与恢复落地：§5.1 IPC 扩展（resume_session_id/list_history_sessions/list_session_messages/delete_session）；Store 增 list_messages/find_session_by_agent/delete_session_by_agent（级联）+ 文件库 WAL 多连接；run_prompt 接 SessionRecorder；晚失败 done watcher |
 | 2026-09-25 | 0.7 | P1-5 审批中心落地：§4.3 模式化管线实现（PermissionMode 四档 + ask 规则 + DecisionSource::Mode）；§5.1 IPC 扩展（mode 参数/set_permission_mode/respond_permission/规则 CRUD/permission-request 与 decision-record 事件）；§6 新增 permission_rules 表（迁移 0002）；PermissionRequest 增加 kind 字段 |
