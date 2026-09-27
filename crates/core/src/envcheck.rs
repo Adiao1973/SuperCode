@@ -187,6 +187,51 @@ fn path_var() -> std::ffi::OsString {
     std::env::var_os("PATH").unwrap_or_default()
 }
 
+/// GUI 宿主（Finder/Dock 启动的 .app）不继承 shell PATH——launchd 只给
+/// /usr/bin:/bin:/usr/sbin:/sbin。返回 agent CLI 的常见安装目录（绝对路径 +
+/// 相对 home 的），供并入 PATH（§4.7 GUI PATH 修正）。
+pub fn common_agent_bin_dirs() -> Vec<PathBuf> {
+    let mut dirs = vec![
+        PathBuf::from("/opt/homebrew/bin"), // Homebrew Apple Silicon
+        PathBuf::from("/usr/local/bin"),    // Homebrew Intel / 手动安装
+        PathBuf::from("/opt/local/bin"),    // MacPorts
+    ];
+    if let Some(home) = dirs::home_dir() {
+        dirs.push(home.join(".opencode/bin")); // opencode 官方安装脚本
+        dirs.push(home.join(".local/bin"));
+    }
+    dirs
+}
+
+/// 把 extra 中缺失的目录追加到 current PATH 尾部（已有目录与原顺序不动，幂等）。
+/// 纯函数便于单测；返回新 PATH 值。
+pub fn merge_into_path(current: &OsStr, extra: &[PathBuf]) -> std::ffi::OsString {
+    let existing: Vec<PathBuf> = std::env::split_paths(current).collect();
+    let mut merged = existing.clone();
+    for dir in extra {
+        if !merged.contains(dir) {
+            merged.push(dir.clone());
+        }
+    }
+    std::env::join_paths(merged).unwrap_or_else(|_| current.to_os_string())
+}
+
+/// 宿主启动早期调用：把常见 agent 安装目录并入进程 PATH（影响本进程与全部子进程）。
+/// 幂等；终端启动（PATH 已含这些目录）时为空操作。
+///
+/// # Safety 约定
+/// 必须在宿主 spawn 任何线程/tokio runtime 之前调用（桌面宿主 `run()` 首行）——
+/// `set_var` 在多线程下是未定义行为，启动早期单线程阶段调用是安全的。
+pub fn augment_gui_path() {
+    let extra = common_agent_bin_dirs();
+    let current = path_var();
+    let merged = merge_into_path(&current, &extra);
+    if merged != current {
+        // 仅扩展本进程环境变量，不写任何外部状态；见函数级 Safety 约定
+        unsafe { std::env::set_var("PATH", merged) };
+    }
+}
+
 /// `<version>`（首行，容忍 `opencode x.y.z` 等前缀形态）。
 async fn probe_version(bin: &Path) -> Result<String, String> {
     let output = timeout(
@@ -412,6 +457,29 @@ mod tests {
         assert!(read_config(&path).await.is_err());
         let config = read_config(&ok).await.unwrap();
         assert_eq!(permission_level(&config, "edit"), PermissionLevel::Ask);
+    }
+
+    /// GUI PATH 修正（P1-10）：launchd 环境下常见安装目录并入（幂等、不改原顺序）
+    #[test]
+    fn merge_into_path_appends_missing_only() {
+        use std::ffi::OsStr;
+        let base = OsStr::new("/usr/bin:/bin");
+        let extra = vec![
+            PathBuf::from("/opt/homebrew/bin"),
+            PathBuf::from("/usr/local/bin"),
+        ];
+        let merged = merge_into_path(base, &extra);
+        assert_eq!(
+            merged,
+            std::ffi::OsString::from("/usr/bin:/bin:/opt/homebrew/bin:/usr/local/bin")
+        );
+
+        // 幂等：已在 PATH 中的目录不重复追加
+        let again = merge_into_path(&merged, &extra);
+        assert_eq!(again, merged);
+
+        // 空.extra 不动原值
+        assert_eq!(merge_into_path(base, &[]), base.to_os_string());
     }
 
     /// 真机联测（cargo test -- --ignored）：不进 CI，仅本地核对真实环境解析链路。
