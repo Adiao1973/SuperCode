@@ -49,6 +49,8 @@ function fallbackDiff(
 export type StreamItem =
   | { key: string; kind: "thought"; id: string; text: string; active: boolean }
   | { key: string; kind: "message"; id: string; text: string; active: boolean }
+  /** 历史会话的用户消息（P1-6：从落库记录渲染） */
+  | { key: string; kind: "user_message"; id: string; text: string }
   | {
       key: string;
       kind: "tool";

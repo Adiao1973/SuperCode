@@ -5,6 +5,7 @@
  */
 
 import type { AgentEvent } from "./events";
+import type { HistoryMessage, HistorySession } from "./agent";
 import type { PendingPermission } from "./permissions";
 import { beginRun, initialStream, streamReducer, type StreamState } from "./stream";
 
@@ -31,6 +32,8 @@ export interface SessionEntry {
   invokeError: string | null;
   /** 会话内联待决审批（P1-5：按 ACP session id 路由到对应会话） */
   pendingApprovals: PendingPermission[];
+  /** 可续聊：历史加载的会话或跑完过一轮的会话（运行 = session/load 恢复上下文） */
+  resumable: boolean;
 }
 
 export interface SessionsState {
@@ -42,15 +45,19 @@ export type SessionsAction =
   | { type: "new"; cwd?: string }
   | { type: "activate"; key: string }
   | { type: "patchDraft"; key: string; patch: Partial<SessionDraft> }
-  /** 开跑：清空事件流并置 running（P1-3 重构时曾遗漏导致按钮/列表状态失灵） */
-  | { type: "begin"; key: string }
   | { type: "batch"; key: string; batch: AgentEvent[] }
   | { type: "invokeError"; key: string; message: string | null }
   /** DEV 专用：注入合成事件（虚拟列表滚动压测，P1-4） */
   | { type: "seed"; key: string }
   /** 内联审批（P1-5）：待决请求按 ACP session id 路由；裁决后按 tool_call_id 移除 */
   | { type: "approvalAdd"; acpSessionId: string; pending: PendingPermission }
-  | { type: "approvalRemoveByTool"; acpSessionId: string; toolCallId: string };
+  | { type: "approvalRemoveByTool"; acpSessionId: string; toolCallId: string }
+  /** 续聊开跑（P1-6）：保留事件流与 acpSessionId，只置 running */
+  | { type: "begin"; key: string; resume: boolean }
+  /** 历史消息加载（P1-6）：落库消息填充 items */
+  | { type: "historyLoaded"; key: string; messages: HistoryMessage[] }
+  /** 历史会话注入（P1-6：启动时） */
+  | { type: "hydrate"; sessions: HistorySession[] };
 
 let sessionSeq = 0;
 
@@ -69,6 +76,7 @@ function makeEntry(cwd?: string): SessionEntry {
     stream: initialStream,
     invokeError: null,
     pendingApprovals: [],
+    resumable: false,
   };
 }
 
@@ -106,14 +114,51 @@ export function sessionsReducer(
         draft: { ...it.draft, ...action.patch },
       }));
     case "begin":
+      return updateEntry(state, action.key, (it) =>
+        action.resume
+          ? // 续聊：保留历史流与 acpSessionId，只置 running（session/load 沿用原 id）
+            { ...it, stream: { ...it.stream, running: true }, invokeError: null }
+          : // 新跑：旧 id 必须清（残留会让 cancel_run 打到已结束会话），流重置
+            {
+              ...it,
+              acpSessionId: null,
+              resumable: false,
+              stream: beginRun(),
+              invokeError: null,
+            },
+      );
+    case "historyLoaded": {
+      const items: StreamState["items"] = action.messages.map((message, i) => ({
+        key: `hist-${i}`,
+        kind: message.role === "user" ? "user_message" : "message",
+        id: `hist-${i}`,
+        text: message.text,
+        active: false,
+      }));
       return updateEntry(state, action.key, (it) => ({
         ...it,
-        // 旧运行的 acpSessionId 必须清掉：新运行拿到新 id，
-        // 残留旧 id 会让 cancel_run 打到已结束的会话上（"不在运行中"）
-        acpSessionId: null,
-        stream: beginRun(),
-        invokeError: null,
+        stream: { ...it.stream, items: [...items, ...it.stream.items] },
       }));
+    }
+    case "hydrate": {
+      // 历史会话注入列表头部（最近在前）；已存在的 acpSessionId 跳过
+      const existing = new Set(
+        state.items.map((it) => it.acpSessionId).filter(Boolean),
+      );
+      const hydrated = action.sessions
+        .filter((session) => !existing.has(session.agent_session_id))
+        .map((session): SessionEntry => ({
+          key: `h-${session.agent_session_id.slice(-12)}`,
+          acpSessionId: session.agent_session_id,
+          title: session.title || "历史会话",
+          draft: { prompt: "", cwd: session.cwd, rulesText: DEFAULT_RULES, mode: "ask" },
+          stream: initialStream,
+          invokeError: null,
+          pendingApprovals: [],
+          resumable: true,
+        }));
+      return { ...state, items: [...hydrated, ...state.items] };
+    }
     case "batch": {
       const entry = state.items.find((it) => it.key === action.key);
       if (!entry) {
@@ -134,6 +179,8 @@ export function sessionsReducer(
         title,
         acpSessionId,
         stream,
+        // P1-6：一轮跑完（或出错）后该会话可续聊——下一轮 session/load 恢复上下文
+        resumable: !stream.running && acpSessionId != null ? true : it.resumable,
         invokeError: stream.running ? null : it.invokeError,
       }));
     }

@@ -12,7 +12,13 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { PendingCard } from "@/components/PendingCard";
-import { cancelRun, readTextFile, runPrompt, setPermissionMode } from "@/lib/agent";
+import {
+  cancelRun,
+  listSessionMessages,
+  readTextFile,
+  runPrompt,
+  setPermissionMode,
+} from "@/lib/agent";
 import type { StreamItem } from "@/lib/stream";
 import type { SessionEntry, SessionsAction } from "@/lib/sessions";
 import type { DiffPayload } from "@/lib/events";
@@ -73,7 +79,9 @@ export function RunConsole({ session, dispatch }: RunConsoleProps) {
       return; // ⌘R 防重入：运行中不允许同一会话再起一轮
     }
     const key = session.key;
-    dispatch({ type: "begin", key });
+    // P1-6：resumable 会话（历史加载或跑完过一轮）→ session/load 续聊，沿用原上下文
+    const resume = session.resumable && session.acpSessionId != null;
+    dispatch({ type: "begin", key, resume });
     try {
       await runPrompt({
         prompt: draft.prompt,
@@ -84,6 +92,7 @@ export function RunConsole({ session, dispatch }: RunConsoleProps) {
           .filter(Boolean),
         deny: [],
         mode: draft.mode,
+        resumeSessionId: resume ? session.acpSessionId : null,
         // 事件按客户端会话键路由；acpSessionId 由 session_started 事件带入 store
         onEvents: (batch) => dispatch({ type: "batch", key, batch }),
       });
@@ -96,6 +105,31 @@ export function RunConsole({ session, dispatch }: RunConsoleProps) {
       });
     }
   }, [session.key, draft, stream.running, dispatch]);
+
+  // P1-6：历史会话首次进入时加载落库消息
+  useEffect(() => {
+    if (
+      session.resumable &&
+      session.acpSessionId &&
+      session.stream.items.length === 0 &&
+      !session.stream.running
+    ) {
+      void listSessionMessages(session.acpSessionId)
+        .then((messages) =>
+          dispatch({ type: "historyLoaded", key: session.key, messages }),
+        )
+        .catch((e) =>
+          dispatch({ type: "invokeError", key: session.key, message: String(e) }),
+        );
+    }
+  }, [
+    session.resumable,
+    session.acpSessionId,
+    session.stream.items.length,
+    session.stream.running,
+    session.key,
+    dispatch,
+  ]);
 
   const stop = useCallback(async () => {
     if (!session.acpSessionId) {
@@ -294,6 +328,14 @@ const StreamItemView = memo(function StreamItemView({ item }: { item: StreamItem
           {item.text}
           {item.active && <span className="text-primary animate-pulse">▍</span>}
         </p>
+      );
+    case "user_message":
+      return (
+        <div className="flex justify-end">
+          <p className="bg-primary/10 text-foreground max-w-[85%] rounded-lg px-3 py-1.5 text-sm whitespace-pre-wrap">
+            {item.text}
+          </p>
+        </div>
       );
     case "tool":
       return <ToolView item={item} />;

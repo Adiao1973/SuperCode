@@ -16,6 +16,8 @@ export function runPrompt(options: {
   allow: string[];
   deny: string[];
   mode: string;
+  /** 续聊既有会话的 agent_session_id（P1-6：session/load 恢复上下文） */
+  resumeSessionId?: string | null;
   onEvents: (batch: AgentEvent[]) => void;
 }): Promise<RunInfo> {
   const channel = new Channel<AgentEvent[]>();
@@ -26,8 +28,31 @@ export function runPrompt(options: {
     allow: options.allow,
     deny: options.deny,
     mode: options.mode,
+    resumeSessionId: options.resumeSessionId ?? null,
     onEvents: channel,
   });
+}
+
+export interface HistorySession {
+  agent_session_id: string;
+  cwd: string;
+  title: string;
+  status: string;
+  updated_at: string;
+}
+
+export function listHistorySessions(): Promise<HistorySession[]> {
+  return invoke("list_history_sessions");
+}
+
+export interface HistoryMessage {
+  role: string;
+  text: string;
+  created_at: string;
+}
+
+export function listSessionMessages(agentSessionId: string): Promise<HistoryMessage[]> {
+  return invoke("list_session_messages", { agentSessionId });
 }
 
 export function cancelRun(sessionId: string): Promise<void> {
