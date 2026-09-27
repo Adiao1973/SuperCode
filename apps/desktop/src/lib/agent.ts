@@ -55,6 +55,11 @@ export function listSessionMessages(agentSessionId: string): Promise<HistoryMess
   return invoke("list_session_messages", { agentSessionId });
 }
 
+/** 删除会话（SuperCode 侧级联删除；运行中会被拒绝） */
+export function deleteSession(agentSessionId: string): Promise<void> {
+  return invoke("delete_session", { agentSessionId });
+}
+
 export function cancelRun(sessionId: string): Promise<void> {
   return invoke("cancel_run", { sessionId });
 }

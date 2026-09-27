@@ -336,6 +336,24 @@ async fn list_history_sessions(app: tauri::AppHandle) -> Result<Vec<HistorySessi
         .collect())
 }
 
+/// 删除会话（P1-6：SuperCode 侧级联删除；运行中禁止）
+#[tauri::command]
+async fn delete_session(app: tauri::AppHandle, agent_session_id: String) -> Result<(), String> {
+    let state = app.state::<AppState>();
+    {
+        let runs = state.runs.lock().await;
+        if runs.contains_key(&agent_session_id) {
+            return Err("会话运行中，请先停止再删除".into());
+        }
+    }
+    let store = state.store().await;
+    let _ = store
+        .delete_session_by_agent(&agent_session_id)
+        .await
+        .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
 /// 历史会话 DTO（Tauri IPC 返回类型需本地 Serialize）
 #[derive(serde::Serialize)]
 struct HistorySession {
@@ -509,6 +527,7 @@ pub fn run() {
             respond_permission,
             list_history_sessions,
             list_session_messages,
+            delete_session,
             list_rules,
             add_rule,
             delete_rule

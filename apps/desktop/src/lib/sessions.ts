@@ -52,6 +52,8 @@ export type SessionsAction =
   /** 内联审批（P1-5）：待决请求按 ACP session id 路由；裁决后按 tool_call_id 移除 */
   | { type: "approvalAdd"; acpSessionId: string; pending: PendingPermission }
   | { type: "approvalRemoveByTool"; acpSessionId: string; toolCallId: string }
+  /** 从列表移除会话（P1-6 删除功能；活跃会话自动切换） */
+  | { type: "remove"; key: string }
   /** 续聊开跑（P1-6）：保留事件流与 acpSessionId，只置 running */
   | { type: "begin"; key: string; resume: boolean }
   /** 历史消息加载（P1-6）：落库消息填充 items */
@@ -214,6 +216,12 @@ export function sessionsReducer(
             : it,
         ),
       };
+    case "remove": {
+      const items = state.items.filter((it) => it.key !== action.key);
+      const activeKey =
+        state.activeKey === action.key ? (items[0]?.key ?? null) : state.activeKey;
+      return { items, activeKey };
+    }
     case "seed":
       return updateEntry(state, action.key, (it) => ({
         ...it,

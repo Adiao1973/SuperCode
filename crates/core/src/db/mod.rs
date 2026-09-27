@@ -340,6 +340,34 @@ impl Store {
             .collect())
     }
 
+    /// 删除会话及其全部子记录（P1-6：messages/tool_calls/approvals 级联，
+    /// FK 未启用需手动级联）。返回是否删除了会话行。
+    pub async fn delete_session_by_agent(&self, agent_session_id: &str) -> Result<bool> {
+        let mut tx = self
+            .pool
+            .begin()
+            .await
+            .map_err(|e| CoreError::Db(e.to_string()))?;
+        for table in ["messages", "tool_calls", "approvals"] {
+            sqlx::query(&format!(
+                "DELETE FROM {table} WHERE session_id IN (SELECT id FROM sessions WHERE agent_session_id = ?1)"
+            ))
+            .bind(agent_session_id)
+            .execute(&mut *tx)
+            .await
+            .map_err(|e| CoreError::Db(e.to_string()))?;
+        }
+        let result = sqlx::query("DELETE FROM sessions WHERE agent_session_id = ?1")
+            .bind(agent_session_id)
+            .execute(&mut *tx)
+            .await
+            .map_err(|e| CoreError::Db(e.to_string()))?;
+        tx.commit()
+            .await
+            .map_err(|e| CoreError::Db(e.to_string()))?;
+        Ok(result.rows_affected() > 0)
+    }
+
     /// 按 agent 侧会话 id 反查 SuperCode 会话 UUID（P1-6：resume 沿用原行，避免重复建行）
     pub async fn find_session_by_agent(&self, agent_session_id: &str) -> Result<Option<Uuid>> {
         let row = sqlx::query_scalar::<_, String>(
@@ -564,6 +592,28 @@ mod tests {
         let rest = store.list_permission_rules().await.unwrap();
         assert_eq!(rest.len(), 1);
         assert_eq!(rest[0].effect, RuleEffect::Deny);
+    }
+
+    /// P1-6：会话删除级联（sessions + messages 子记录一并清除）
+    #[tokio::test]
+    async fn 会话删除级联子记录() {
+        let store = Store::open_in_memory().await.unwrap();
+        store
+            .upsert_agent("opencode", "OpenCode", "acp", None)
+            .await
+            .unwrap();
+        let sid = Uuid::new_v4();
+        store
+            .insert_session(sid, "opencode", "ses_del_1", "/tmp", "待删")
+            .await
+            .unwrap();
+        store.insert_user_message(sid, "问题").await.unwrap();
+        store.insert_agent_message(sid, "回答").await.unwrap();
+
+        assert!(store.delete_session_by_agent("ses_del_1").await.unwrap());
+        assert!(!store.delete_session_by_agent("ses_del_1").await.unwrap());
+        assert_eq!(store.list_messages("ses_del_1").await.unwrap().len(), 0);
+        assert!(store.get_session(sid).await.unwrap().is_none());
     }
 
     /// P1-6：list_messages 按 agent_session_id 取落库消息（ContentBlock JSON → 文本）
