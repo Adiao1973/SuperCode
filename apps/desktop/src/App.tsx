@@ -1,6 +1,7 @@
 import { useEffect, useReducer, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { ApprovalsView } from "@/components/ApprovalsView";
+import { KanbanView } from "@/components/KanbanView";
 import { SessionsWorkspace } from "@/components/SessionsWorkspace";
 import { SettingsView } from "@/components/SettingsView";
 import { listHistorySessions } from "@/lib/agent";
@@ -142,7 +143,7 @@ function App() {
             {nav === "sessions"
               ? `多会话 · ${activeNav.hint}`
               : nav === "kanban"
-                ? `待接入 · ${activeNav.hint}`
+                ? `按空间组织 · ${activeNav.hint}`
                 : activeNav.hint}
           </Badge>
         </header>
@@ -150,10 +151,20 @@ function App() {
         {nav === "approvals" && <ApprovalsView />}
         {nav === "settings" && <SettingsView />}
         {nav === "kanban" && (
-          <div className="text-muted-foreground flex flex-1 flex-col items-center justify-center gap-2 text-sm">
-            <activeNav.icon className="size-8 opacity-40" />
-            {activeNav.label}视图将在 {activeNav.hint} 接入
-          </div>
+          <KanbanView
+            bindableSessions={sessions.items.map((it) => ({
+              key: it.key,
+              title: it.title,
+              acpSessionId: it.acpSessionId,
+            }))}
+            onOpenSession={(agentSessionId) => {
+              const target = sessions.items.find((it) => it.acpSessionId === agentSessionId);
+              if (target) {
+                setNav("sessions");
+                dispatch({ type: "activate", key: target.key });
+              }
+            }}
+          />
         )}
       </main>
     </div>

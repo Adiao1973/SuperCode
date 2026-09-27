@@ -58,6 +58,20 @@ pub struct WorkspaceEntry {
     pub kind: String, // project | default
 }
 
+/// 任务状态流转序（P1-9 简版看板）：backlog → in_progress → review → done。
+pub const TASK_STATUSES: [&str; 4] = ["backlog", "in_progress", "review", "done"];
+
+/// 任务条目（tasks 表，P1-9 简版看板：标题+空间+绑定会话+状态）。
+#[derive(Debug, Clone, PartialEq, serde::Serialize)]
+pub struct TaskEntry {
+    pub id: String,
+    pub workspace_id: String,
+    pub title: String,
+    /// 绑定的 agent 会话（指派给某个会话执行；None=未指派）
+    pub session_id: Option<String>,
+    pub status: String, // TASK_STATUSES 之一
+}
+
 #[derive(Clone)]
 pub struct Store {
     pool: SqlitePool,
@@ -510,6 +524,139 @@ impl Store {
         Ok(moved)
     }
 
+    // ---------- 任务（P1-9 简版看板） ----------
+
+    /// 创建任务：挂在指定空间下，初始 backlog；cwd 缺省取空间路径（schema NOT NULL 兜底）。
+    pub async fn create_task(&self, workspace_id: &str, title: &str) -> Result<TaskEntry> {
+        let id = Uuid::new_v4().to_string();
+        let now = now_rfc3339();
+        sqlx::query(
+            "INSERT INTO tasks (id, workspace_id, title, cwd, status, created_at, updated_at)
+             VALUES (?1, ?2, ?3, COALESCE((SELECT path FROM workspaces WHERE id = ?2), ''), 'backlog', ?4, ?4)",
+        )
+        .bind(&id)
+        .bind(workspace_id)
+        .bind(title)
+        .bind(&now)
+        .execute(&self.pool)
+        .await
+        .map_err(|e| CoreError::Db(e.to_string()))?;
+        Ok(TaskEntry {
+            id,
+            workspace_id: workspace_id.to_string(),
+            title: title.to_string(),
+            session_id: None,
+            status: "backlog".into(),
+        })
+    }
+
+    /// 任务列表（按创建先后；前端按空间分节展示）。
+    pub async fn list_tasks(&self) -> Result<Vec<TaskEntry>> {
+        let rows = sqlx::query_as::<_, (String, String, String, Option<String>, String)>(
+            "SELECT id, workspace_id, title, session_id, status FROM tasks ORDER BY created_at ASC",
+        )
+        .fetch_all(&self.pool)
+        .await
+        .map_err(|e| CoreError::Db(e.to_string()))?;
+        Ok(rows
+            .into_iter()
+            .map(|(id, workspace_id, title, session_id, status)| TaskEntry {
+                id,
+                workspace_id,
+                title,
+                session_id,
+                status,
+            })
+            .collect())
+    }
+
+    /// 更新任务：status 必须是四态之一；session_id 传 Some("") 视为解绑（前端无法传 SQL NULL 的约定）。
+    /// 返回更新后的条目；任务不存在报错。
+    pub async fn update_task(
+        &self,
+        id: &str,
+        status: Option<&str>,
+        session_id: Option<&str>,
+    ) -> Result<TaskEntry> {
+        if let Some(status) = status
+            && !TASK_STATUSES.contains(&status)
+        {
+            return Err(CoreError::Db(format!("非法任务状态：{status}")));
+        }
+        let result = sqlx::query("UPDATE tasks SET updated_at = ?2 WHERE id = ?1")
+            .bind(id)
+            .bind(now_rfc3339())
+            .execute(&self.pool)
+            .await
+            .map_err(|e| CoreError::Db(e.to_string()))?;
+        if result.rows_affected() == 0 {
+            return Err(CoreError::Db(format!("任务不存在：{id}")));
+        }
+        if let Some(status) = status {
+            sqlx::query("UPDATE tasks SET status = ?2 WHERE id = ?1")
+                .bind(id)
+                .bind(status)
+                .execute(&self.pool)
+                .await
+                .map_err(|e| CoreError::Db(e.to_string()))?;
+        }
+        if let Some(session) = session_id {
+            let bound = if session.is_empty() {
+                None
+            } else {
+                Some(session)
+            };
+            sqlx::query("UPDATE tasks SET session_id = ?2 WHERE id = ?1")
+                .bind(id)
+                .bind(bound)
+                .execute(&self.pool)
+                .await
+                .map_err(|e| CoreError::Db(e.to_string()))?;
+        }
+        self.get_task(id)
+            .await?
+            .ok_or_else(|| CoreError::Db(format!("任务不存在：{id}")))
+    }
+
+    pub async fn get_task(&self, id: &str) -> Result<Option<TaskEntry>> {
+        sqlx::query_as::<_, (String, String, String, Option<String>, String)>(
+            "SELECT id, workspace_id, title, session_id, status FROM tasks WHERE id = ?1",
+        )
+        .bind(id)
+        .fetch_optional(&self.pool)
+        .await
+        .map_err(|e| CoreError::Db(e.to_string()))
+        .map(|opt| {
+            opt.map(|(id, workspace_id, title, session_id, status)| TaskEntry {
+                id,
+                workspace_id,
+                title,
+                session_id,
+                status,
+            })
+        })
+    }
+
+    pub async fn delete_task(&self, id: &str) -> Result<()> {
+        sqlx::query("DELETE FROM tasks WHERE id = ?1")
+            .bind(id)
+            .execute(&self.pool)
+            .await
+            .map_err(|e| CoreError::Db(e.to_string()))?;
+        Ok(())
+    }
+
+    /// 会话被删时解绑引用它的任务（P1-9：绑定是引用不是从属，随 delete_session 级联）。
+    pub async fn unbind_task_session(&self, agent_session_id: &str) -> Result<()> {
+        sqlx::query("UPDATE tasks SET session_id = NULL, updated_at = ?2 WHERE session_id = ?1")
+            .bind(agent_session_id)
+            .bind(now_rfc3339())
+            .execute(&self.pool)
+            .await
+            .map_err(|e| CoreError::Db(e.to_string()))?;
+        Ok(())
+    }
+
     /// 删除会话及其全部子记录（P1-6：messages/tool_calls/approvals 级联，
     /// FK 未启用需手动级联）。返回是否删除了会话行。
     pub async fn delete_session_by_agent(&self, agent_session_id: &str) -> Result<bool> {
@@ -527,6 +674,13 @@ impl Store {
             .await
             .map_err(|e| CoreError::Db(e.to_string()))?;
         }
+        // 绑定该会话的任务解绑（P1-9：绑定是引用不是从属）
+        sqlx::query("UPDATE tasks SET session_id = NULL, updated_at = ?2 WHERE session_id = ?1")
+            .bind(agent_session_id)
+            .bind(now_rfc3339())
+            .execute(&mut *tx)
+            .await
+            .map_err(|e| CoreError::Db(e.to_string()))?;
         let result = sqlx::query("DELETE FROM sessions WHERE agent_session_id = ?1")
             .bind(agent_session_id)
             .execute(&mut *tx)
@@ -962,5 +1116,71 @@ mod tests {
             store.delete_workspace(DEFAULT_WORKSPACE).await.is_err(),
             "默认空间不可删"
         );
+    }
+
+    /// 任务闭环（P1-9）：创建 backlog → 绑会话 → 流转状态 → 会话删除时解绑
+    #[tokio::test]
+    async fn 任务创建绑定流转与级联解绑() {
+        let store = Store::open_in_memory().await.unwrap();
+        store
+            .upsert_agent("opencode", "OpenCode", "acp", None)
+            .await
+            .unwrap();
+        let ws = store.create_workspace("/repo/kanban").await.unwrap();
+
+        // 创建：初始 backlog、挂空间、无绑定
+        let task = store.create_task(&ws.id, "修复登录页崩溃").await.unwrap();
+        assert_eq!(task.status, "backlog");
+        assert_eq!(task.workspace_id, ws.id);
+        assert_eq!(task.session_id, None);
+
+        // 建会话并绑定
+        store
+            .insert_session(
+                Uuid::new_v4(),
+                "opencode",
+                "ses_task_1",
+                "/repo/kanban",
+                "任务会话",
+                &ws.id,
+            )
+            .await
+            .unwrap();
+        let task = store
+            .update_task(&task.id, None, Some("ses_task_1"))
+            .await
+            .unwrap();
+        assert_eq!(task.session_id.as_deref(), Some("ses_task_1"));
+
+        // 状态流转 + 非法状态拒绝
+        let task = store
+            .update_task(&task.id, Some("in_progress"), None)
+            .await
+            .unwrap();
+        assert_eq!(task.status, "in_progress");
+        assert!(
+            store
+                .update_task(&task.id, Some("paused"), None)
+                .await
+                .is_err()
+        );
+
+        // 解绑约定：空串 = NULL
+        let task = store.update_task(&task.id, None, Some("")).await.unwrap();
+        assert_eq!(task.session_id, None);
+
+        // 重绑后删会话：任务保留、绑定被级联解绑
+        store
+            .update_task(&task.id, None, Some("ses_task_1"))
+            .await
+            .unwrap();
+        assert!(store.delete_session_by_agent("ses_task_1").await.unwrap());
+        let task = store.get_task(&task.id).await.unwrap().unwrap();
+        assert_eq!(task.session_id, None, "会话删除后任务应解绑而非删除");
+        assert_eq!(task.status, "in_progress", "状态不受会话删除影响");
+
+        // 删除任务
+        store.delete_task(&task.id).await.unwrap();
+        assert!(store.get_task(&task.id).await.unwrap().is_none());
     }
 }

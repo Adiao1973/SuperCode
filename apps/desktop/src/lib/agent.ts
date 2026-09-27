@@ -58,6 +58,40 @@ export function deleteWorkspace(id: string): Promise<void> {
   return invoke("delete_workspace", { id });
 }
 
+/** 任务条目（P1-9 简版看板：标题+空间+绑定会话+状态） */
+export interface TaskEntry {
+  id: string;
+  workspace_id: string;
+  title: string;
+  /** 绑定的 agent 会话 id（None=未指派） */
+  session_id: string | null;
+  status: "backlog" | "in_progress" | "review" | "done";
+}
+
+export function listTasks(): Promise<TaskEntry[]> {
+  return invoke("list_tasks");
+}
+
+export function createTask(title: string, workspaceId: string): Promise<TaskEntry> {
+  return invoke("create_task", { title, workspaceId });
+}
+
+/** 更新任务：session_id 空串=解绑（IPC 无法传 SQL NULL 的约定） */
+export function updateTask(
+  id: string,
+  patch: { status?: TaskEntry["status"]; sessionId?: string },
+): Promise<TaskEntry> {
+  return invoke("update_task", {
+    id,
+    status: patch.status ?? null,
+    sessionId: patch.sessionId ?? null,
+  });
+}
+
+export function deleteTask(id: string): Promise<void> {
+  return invoke("delete_task", { id });
+}
+
 export interface HistorySession {
   agent_session_id: string;
   cwd: string;
