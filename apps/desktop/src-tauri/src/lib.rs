@@ -193,11 +193,14 @@ async fn run_prompt(
         let mut session_tx = Some(session_tx);
         let mut frontend_dead = false;
         while let Some(event) = raw_rx.recv().await {
-            // SessionStarted 捕获必须先于一切可能失败的转发（invoke 依赖它返回）
-            if let (Some(tx), AgentEvent::SessionStarted { session_id }) =
-                (session_tx.take(), &event)
-            {
-                let _ = tx.send(session_id.clone());
+            // SessionStarted 捕获必须先于一切可能失败的转发（invoke 依赖它返回）。
+            // 只能在事件匹配时 take——续聊时重放事件先于 session/load 响应到达，
+            // 先 take 后匹配会把 oneshot sender 丢在非匹配事件上，RunInfo 永远
+            // 等不到（轮末误报"agent 未返回会话信息"，超 30s 还会误触建立超时取消）。
+            if let AgentEvent::SessionStarted { session_id } = &event {
+                if let Some(tx) = session_tx.take() {
+                    let _ = tx.send(session_id.clone());
+                }
             }
             // 落库通道失效仅丢持久化，不中断捕获与转发
             if rec_tx.send(event.clone()).await.is_err() {
