@@ -66,10 +66,15 @@ async fn run_prompt(
 ) -> Result<RunInfo, String> {
     let def = registry::AgentDefinition::find("opencode").map_err(|e| e.to_string())?;
     let permission_mode = parse_mode(&mode)?;
+    // 默认目录可能不存在（新用户首跑）：自动创建，避免 agent 侧会话建立失败
+    std::fs::create_dir_all(&cwd).map_err(|e| format!("创建工作目录失败：{e}"))?;
 
     // 规则库（SQLite 持久）∪ 本次 draft 规则，合成 broker 规则集
     let state = app.state::<AppState>();
     let store = state.store().await;
+    let _ = store
+        .upsert_agent("opencode", "OpenCode", "acp", None)
+        .await;
     let mut rules = PermissionRules::new(allow, deny);
     for entry in store
         .list_permission_rules()
@@ -136,11 +141,12 @@ async fn run_prompt(
     let (frame_in_tx, frame_in_rx) = mpsc::channel::<AgentEvent>(256);
     let (frame_tx, frame_rx) = mpsc::channel::<Vec<AgentEvent>>(32);
     let (session_tx, session_rx) = oneshot::channel::<String>();
-    let (done_tx, done_rx) = oneshot::channel::<supercode_core::error::Result<()>>();
+    let (done_tx, mut done_rx) = oneshot::channel::<supercode_core::error::Result<()>>();
     let session_of_run = Arc::new(std::sync::Mutex::new(None::<String>));
 
     // P1-6 落库：resume 沿用原会话行（按 agent_session_id 反查），新跑生成新 UUID。
     // insert_session OR IGNORE 幂等；本轮提示词作为新用户消息记录。
+    // recorder 跑在独立任务（有界通道缓冲）——逐事件 DB 写不得阻塞事件转发（§5 管线）
     let recorder_store = state.store().await.clone();
     let supercode_session = match &resume_session_id {
         Some(agent_id) => match recorder_store.find_session_by_agent(agent_id).await {
@@ -164,6 +170,12 @@ async fn run_prompt(
     let start_mode = resume_session_id
         .map(StartMode::Load)
         .unwrap_or(StartMode::New);
+    let (rec_tx, mut rec_rx) = mpsc::channel::<AgentEvent>(512);
+    tauri::async_runtime::spawn(async move {
+        while let Some(event) = rec_rx.recv().await {
+            recorder.handle_event(&event).await;
+        }
+    });
 
     tauri::async_runtime::spawn(async move {
         let mut raw_rx = raw_rx;
@@ -175,7 +187,9 @@ async fn run_prompt(
             {
                 let _ = tx.send(session_id.clone());
             }
-            recorder.handle_event(&event).await;
+            if rec_tx.send(event.clone()).await.is_err() {
+                break; // 落库任务已退出（理论不发生）
+            }
             if frame_in_tx.send(event).await.is_err() {
                 break;
             }
@@ -221,11 +235,23 @@ async fn run_prompt(
 
     // session_id 就绪即返回；若运行先于会话建立失败，立即把错误抛回调用方
     let session_id = tokio::select! {
-        id = session_rx => id.map_err(|_| "事件流在会话建立前关闭".to_string())?,
-        done = done_rx => {
+        id = session_rx => match id {
+            Ok(id) => id,
+            // 事件流关闭：driver.run 已返回——取真实结果而非笼统报错
+            Err(_) => {
+                cancel.cancel();
+                return match done_rx.await {
+                    Ok(Ok(())) => Err("会话建立失败：agent 未返回会话信息".into()),
+                    Ok(Err(e)) => Err(format!("会话建立失败：{e}")),
+                    Err(_) => Err("事件流在会话建立前关闭".into()),
+                };
+            }
+        },
+        done = &mut done_rx => {
+            cancel.cancel();
             return match done {
                 Ok(Ok(())) => Err("运行在会话建立前即结束".into()),
-                Ok(Err(e)) => Err(e.to_string()),
+                Ok(Err(e)) => Err(format!("会话建立失败：{e}")),
                 Err(_) => Err("运行任务异常退出".into()),
             };
         }

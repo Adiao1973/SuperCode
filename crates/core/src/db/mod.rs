@@ -72,9 +72,11 @@ impl Store {
         if let Some(parent) = path.parent() {
             std::fs::create_dir_all(parent)?;
         }
+        // 文件库：WAL + 4 连接（recorder 逐事件写入与规则/查询并发，单连接会阻塞事件转发）
         let options = SqliteConnectOptions::new()
             .filename(path)
-            .create_if_missing(true);
+            .create_if_missing(true)
+            .journal_mode(sqlx::sqlite::SqliteJournalMode::Wal);
         Self::connect(options).await
     }
 
@@ -84,9 +86,15 @@ impl Store {
     }
 
     async fn connect(options: SqliteConnectOptions) -> Result<Self> {
-        // 单连接：:memory: 库每个连接独立，多连接会"丢表"；CLI 场景吞吐足够
+        // :memory: 库每个连接独立（多连接"丢表"）必须单连接；
+        // 文件库 WAL 下并发安全，多连接避免 recorder 写入阻塞查询
+        let max = if options.get_filename().as_os_str() == ":memory:" {
+            1
+        } else {
+            4
+        };
         let pool = SqlitePoolOptions::new()
-            .max_connections(1)
+            .max_connections(max)
             .connect_with(options)
             .await
             .map_err(|e| CoreError::Db(e.to_string()))?;

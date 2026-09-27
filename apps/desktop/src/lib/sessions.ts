@@ -116,8 +116,9 @@ export function sessionsReducer(
     case "begin":
       return updateEntry(state, action.key, (it) =>
         action.resume
-          ? // 续聊：保留历史流与 acpSessionId，只置 running（session/load 沿用原 id）
-            { ...it, stream: { ...it.stream, running: true }, invokeError: null }
+          ? // 续聊：保留 acpSessionId，流清空——session/load 会重放完整历史，
+            // 重放事件即渲染源（与落库预览叠加会重复，P1-6 验收实证）
+            { ...it, resumable: false, stream: beginRun(), invokeError: null }
           : // 新跑：旧 id 必须清（残留会让 cancel_run 打到已结束会话），流重置
             {
               ...it,

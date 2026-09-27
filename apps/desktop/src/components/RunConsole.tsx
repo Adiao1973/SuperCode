@@ -268,7 +268,11 @@ export function RunConsole({ session, dispatch }: RunConsoleProps) {
       <div ref={scrollRef} className="min-h-0 flex-1">
         {stream.items.length === 0 ? (
           <p className="text-muted-foreground py-8 text-center text-sm">
-            点击「运行」驱动 opencode（ACP）执行任务，事件经 Rust 合帧 → Tauri Channel 到达这里。
+            {stream.running
+              ? "正在恢复上下文 / 等待 agent 响应…"
+              : session.resumable
+                ? "输入新提示词继续此会话（将恢复上下文），或查看下方历史。"
+                : "点击「运行」驱动 opencode（ACP）执行任务，事件经 Rust 合帧 → Tauri Channel 到达这里。"}
           </p>
         ) : (
           <Virtuoso
