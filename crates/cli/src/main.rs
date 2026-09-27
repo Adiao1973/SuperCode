@@ -112,10 +112,11 @@ enum Target {
 }
 
 async fn cmd_detect() -> ExitCode {
-    for def in registry::builtin() {
-        match def.detect_version().await {
+    let reg = registry::AgentRegistry::load();
+    for (def, version) in reg.probe_installed().await {
+        match version {
             Some(version) => println!("{} {version} ✓", def.display_name),
-            None => println!("{} 未安装 ✗（{}）", def.display_name, def.command),
+            None => println!("{} —（{}）", def.display_name, def.command),
         }
     }
     ExitCode::SUCCESS
