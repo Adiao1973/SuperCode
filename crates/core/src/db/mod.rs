@@ -41,6 +41,21 @@ pub struct SessionRow {
     pub title: String,
     pub status: String,
     pub updated_at: String,
+    /// 归属工作空间（ADR-0007）；历史 NULL 行经 COALESCE 读作默认空间
+    pub workspace_id: String,
+}
+
+/// 默认空间的固定 id：不绑项目的会话（普通聊天/电脑操作）归属于此。
+pub const DEFAULT_WORKSPACE: &str = "default";
+
+/// 工作空间条目（workspaces 表，ADR-0007）。
+#[derive(Debug, Clone, PartialEq, serde::Serialize)]
+pub struct WorkspaceEntry {
+    pub id: String,
+    pub name: String,
+    /// project 空间=项目根绝对路径（UNIQUE）；默认空间为 None
+    pub path: Option<String>,
+    pub kind: String, // project | default
 }
 
 #[derive(Clone)]
@@ -102,7 +117,11 @@ impl Store {
             .run(&pool)
             .await
             .map_err(|e| CoreError::Db(e.to_string()))?;
-        Ok(Self { pool })
+        let store = Self { pool };
+        // 工作空间（ADR-0007）：默认空间恒在 + 历史会话按 distinct cwd 回填归类（幂等）
+        store.ensure_default_workspace().await?;
+        store.backfill_session_workspaces().await?;
+        Ok(store)
     }
 
     pub async fn upsert_agent(
@@ -129,6 +148,7 @@ impl Store {
     }
 
     /// 落库会话行（INSERT OR IGNORE：resume 时行已存在则保留原建档信息）。
+    /// workspace_id：归属工作空间（ADR-0007），resume 复用原行时保留原归属。
     pub async fn insert_session(
         &self,
         id: Uuid,
@@ -136,11 +156,12 @@ impl Store {
         agent_session_id: &str,
         cwd: &str,
         title: &str,
+        workspace_id: &str,
     ) -> Result<()> {
         let now = now_rfc3339();
         sqlx::query(
-            "INSERT OR IGNORE INTO sessions (id, agent_id, agent_session_id, cwd, title, status, created_at, updated_at)
-             VALUES (?1, ?2, ?3, ?4, ?5, 'active', ?6, ?6)",
+            "INSERT OR IGNORE INTO sessions (id, agent_id, agent_session_id, cwd, title, status, created_at, updated_at, workspace_id)
+             VALUES (?1, ?2, ?3, ?4, ?5, 'active', ?6, ?6, ?7)",
         )
         .bind(id.to_string())
         .bind(agent_id)
@@ -148,6 +169,7 @@ impl Store {
         .bind(cwd)
         .bind(title)
         .bind(&now)
+        .bind(workspace_id)
         .execute(&self.pool)
         .await
         .map_err(|e| CoreError::Db(e.to_string()))?;
@@ -320,7 +342,8 @@ impl Store {
 
     pub async fn list_sessions(&self) -> Result<Vec<SessionRow>> {
         let rows = sqlx::query(
-            "SELECT id, agent_id, agent_session_id, cwd, title, status, updated_at
+            "SELECT id, agent_id, agent_session_id, cwd, title, status, updated_at,
+                    COALESCE(workspace_id, 'default') AS workspace_id
              FROM sessions ORDER BY updated_at DESC LIMIT 100",
         )
         .fetch_all(&self.pool)
@@ -336,8 +359,155 @@ impl Store {
                 title: row.get("title"),
                 status: row.get("status"),
                 updated_at: row.get("updated_at"),
+                workspace_id: row.get("workspace_id"),
             })
             .collect())
+    }
+
+    /// 空间列表（ADR-0007）：project 空间按创建先后，默认空间恒排最后。
+    pub async fn list_workspaces(&self) -> Result<Vec<WorkspaceEntry>> {
+        let rows = sqlx::query(
+            "SELECT id, name, path, kind FROM workspaces
+             ORDER BY CASE WHEN kind = 'default' THEN 1 ELSE 0 END, created_at ASC",
+        )
+        .fetch_all(&self.pool)
+        .await
+        .map_err(|e| CoreError::Db(e.to_string()))?;
+        Ok(rows
+            .into_iter()
+            .map(|row| WorkspaceEntry {
+                id: row.get("id"),
+                name: row.get("name"),
+                path: row.get("path"),
+                kind: row.get("kind"),
+            })
+            .collect())
+    }
+
+    /// 按路径取 project 空间（create_workspace 幂等的读侧）。
+    async fn find_workspace_by_path(&self, path: &str) -> Result<Option<WorkspaceEntry>> {
+        sqlx::query_as::<_, (String, String, Option<String>, String)>(
+            "SELECT id, name, path, kind FROM workspaces WHERE path = ?1",
+        )
+        .bind(path)
+        .fetch_optional(&self.pool)
+        .await
+        .map_err(|e| CoreError::Db(e.to_string()))
+        .map(|opt| {
+            opt.map(|(id, name, path, kind)| WorkspaceEntry {
+                id,
+                name,
+                path,
+                kind,
+            })
+        })
+    }
+
+    /// 项目根绝对路径 → 空间名（目录名；根目录等无文件名时退化为路径本身）。
+    fn workspace_name_for(path: &str) -> String {
+        std::path::Path::new(path)
+            .file_name()
+            .map(|name| name.to_string_lossy().into_owned())
+            .filter(|name| !name.is_empty())
+            .unwrap_or_else(|| path.to_string())
+    }
+
+    /// get-or-create project 空间（path UNIQUE 幂等；重复创建返回既有条目）。
+    pub async fn create_workspace(&self, path: &str) -> Result<WorkspaceEntry> {
+        if let Some(existing) = self.find_workspace_by_path(path).await? {
+            return Ok(existing);
+        }
+        let id = Uuid::new_v4().to_string();
+        let name = Self::workspace_name_for(path);
+        let result = sqlx::query(
+            "INSERT INTO workspaces (id, name, path, kind, created_at) VALUES (?1, ?2, ?3, 'project', ?4)
+             ON CONFLICT(path) DO NOTHING",
+        )
+        .bind(&id)
+        .bind(&name)
+        .bind(path)
+        .bind(now_rfc3339())
+        .execute(&self.pool)
+        .await
+        .map_err(|e| CoreError::Db(e.to_string()))?;
+        if result.rows_affected() == 0 {
+            // 并发/重复：回读既有行
+            return self
+                .find_workspace_by_path(path)
+                .await?
+                .ok_or_else(|| CoreError::Db("工作空间创建后不可见".into()));
+        }
+        Ok(WorkspaceEntry {
+            id,
+            name,
+            path: Some(path.to_string()),
+            kind: "project".into(),
+        })
+    }
+
+    /// 删除 project 空间：会话移入默认空间（不级联删，ADR-0007）；默认空间不可删。
+    pub async fn delete_workspace(&self, id: &str) -> Result<()> {
+        if id == DEFAULT_WORKSPACE {
+            return Err(CoreError::Db("默认空间不可删除".into()));
+        }
+        let mut tx = self
+            .pool
+            .begin()
+            .await
+            .map_err(|e| CoreError::Db(e.to_string()))?;
+        sqlx::query("UPDATE sessions SET workspace_id = ?2 WHERE workspace_id = ?1")
+            .bind(id)
+            .bind(DEFAULT_WORKSPACE)
+            .execute(&mut *tx)
+            .await
+            .map_err(|e| CoreError::Db(e.to_string()))?;
+        sqlx::query("DELETE FROM workspaces WHERE id = ?1 AND kind = 'project'")
+            .bind(id)
+            .execute(&mut *tx)
+            .await
+            .map_err(|e| CoreError::Db(e.to_string()))?;
+        tx.commit()
+            .await
+            .map_err(|e| CoreError::Db(e.to_string()))?;
+        Ok(())
+    }
+
+    /// 默认空间单例：缺失即补（固定 id `default`，幂等）。
+    pub async fn ensure_default_workspace(&self) -> Result<()> {
+        sqlx::query(
+            "INSERT OR IGNORE INTO workspaces (id, name, path, kind, created_at)
+             VALUES (?1, '默认空间', NULL, 'default', ?2)",
+        )
+        .bind(DEFAULT_WORKSPACE)
+        .bind(now_rfc3339())
+        .execute(&self.pool)
+        .await
+        .map_err(|e| CoreError::Db(e.to_string()))?;
+        Ok(())
+    }
+
+    /// 历史回填（ADR-0007）：workspace_id 为 NULL 的会话按 distinct cwd
+    /// get-or-create project 空间并归类。幂等（以 NULL 为游标）；返回归类会话数。
+    pub async fn backfill_session_workspaces(&self) -> Result<usize> {
+        let cwds: Vec<String> =
+            sqlx::query_scalar("SELECT DISTINCT cwd FROM sessions WHERE workspace_id IS NULL")
+                .fetch_all(&self.pool)
+                .await
+                .map_err(|e| CoreError::Db(e.to_string()))?;
+        let mut moved = 0usize;
+        for cwd in cwds {
+            let workspace = self.create_workspace(&cwd).await?;
+            let result = sqlx::query(
+                "UPDATE sessions SET workspace_id = ?2 WHERE cwd = ?1 AND workspace_id IS NULL",
+            )
+            .bind(&cwd)
+            .bind(&workspace.id)
+            .execute(&self.pool)
+            .await
+            .map_err(|e| CoreError::Db(e.to_string()))?;
+            moved += result.rows_affected() as usize;
+        }
+        Ok(moved)
     }
 
     /// 删除会话及其全部子记录（P1-6：messages/tool_calls/approvals 级联，
@@ -404,7 +574,8 @@ impl Store {
 
     pub async fn get_session(&self, id: Uuid) -> Result<Option<SessionRow>> {
         let row = sqlx::query(
-            "SELECT id, agent_id, agent_session_id, cwd, title, status, updated_at
+            "SELECT id, agent_id, agent_session_id, cwd, title, status, updated_at,
+                    COALESCE(workspace_id, 'default') AS workspace_id
              FROM sessions WHERE id = ?1",
         )
         .bind(id.to_string())
@@ -419,6 +590,7 @@ impl Store {
             title: row.get("title"),
             status: row.get("status"),
             updated_at: row.get("updated_at"),
+            workspace_id: row.get("workspace_id"),
         }))
     }
 }
@@ -459,6 +631,7 @@ mod tests {
                 "ses_agent_x",
                 "/tmp/demo",
                 "测试会话标题",
+                DEFAULT_WORKSPACE,
             )
             .await
             .unwrap();
@@ -499,7 +672,7 @@ mod tests {
             .unwrap();
         let sid = Uuid::new_v4();
         store
-            .insert_session(sid, "opencode", "ses_x", "/tmp", "t")
+            .insert_session(sid, "opencode", "ses_x", "/tmp", "t", DEFAULT_WORKSPACE)
             .await
             .unwrap();
 
@@ -604,7 +777,14 @@ mod tests {
             .unwrap();
         let sid = Uuid::new_v4();
         store
-            .insert_session(sid, "opencode", "ses_del_1", "/tmp", "待删")
+            .insert_session(
+                sid,
+                "opencode",
+                "ses_del_1",
+                "/tmp",
+                "待删",
+                DEFAULT_WORKSPACE,
+            )
             .await
             .unwrap();
         store.insert_user_message(sid, "问题").await.unwrap();
@@ -626,7 +806,14 @@ mod tests {
             .unwrap();
         let sid = Uuid::new_v4();
         store
-            .insert_session(sid, "opencode", "ses_hist_1", "/tmp", "历史会话")
+            .insert_session(
+                sid,
+                "opencode",
+                "ses_hist_1",
+                "/tmp",
+                "历史会话",
+                DEFAULT_WORKSPACE,
+            )
             .await
             .unwrap();
         store.insert_user_message(sid, "第一问").await.unwrap();
@@ -635,7 +822,14 @@ mod tests {
         // 另一会话不应串入
         let other = Uuid::new_v4();
         store
-            .insert_session(other, "opencode", "ses_hist_2", "/tmp", "别的会话")
+            .insert_session(
+                other,
+                "opencode",
+                "ses_hist_2",
+                "/tmp",
+                "别的会话",
+                DEFAULT_WORKSPACE,
+            )
             .await
             .unwrap();
         store.insert_user_message(other, "别的问题").await.unwrap();
@@ -646,5 +840,127 @@ mod tests {
         assert_eq!(messages[0].text, "第一问");
         assert_eq!(messages[1].role, "agent");
         assert_eq!(messages[1].text, "第一答");
+    }
+
+    /// 打开库即有默认空间单例（ADR-0007）
+    #[tokio::test]
+    async fn 默认空间恒在且排最后() {
+        let store = Store::open_in_memory().await.unwrap();
+        let spaces = store.list_workspaces().await.unwrap();
+        assert_eq!(spaces.len(), 1);
+        assert_eq!(spaces[0].id, DEFAULT_WORKSPACE);
+        assert_eq!(spaces[0].kind, "default");
+        assert_eq!(spaces[0].path, None);
+
+        // 项目空间创建后排前面（created_at 序），默认空间恒最后
+        store.create_workspace("/tmp/ws-a").await.unwrap();
+        let spaces = store.list_workspaces().await.unwrap();
+        assert_eq!(spaces.len(), 2);
+        assert_eq!(spaces[0].path.as_deref(), Some("/tmp/ws-a"));
+        assert_eq!(spaces[1].id, DEFAULT_WORKSPACE);
+    }
+
+    /// 历史会话按 distinct cwd 回填为 project 空间（ADR-0007 零损失归类），且幂等
+    #[tokio::test]
+    async fn 历史会话按cwd回填归类() {
+        let store = Store::open_in_memory().await.unwrap();
+        store
+            .upsert_agent("opencode", "OpenCode", "acp", None)
+            .await
+            .unwrap();
+
+        // 模拟迁移前旧数据：workspace_id 为 NULL 的会话行（同 cwd 两会话 + 另一 cwd 一会话）
+        for (agent_id, cwd) in [
+            ("ses_old_1", "/repo/alpha"),
+            ("ses_old_2", "/repo/alpha"),
+            ("ses_old_3", "/repo/beta/"),
+        ] {
+            sqlx::query(
+                "INSERT INTO sessions (id, agent_id, agent_session_id, cwd, title, status, created_at, updated_at)
+                 VALUES (?1, 'opencode', ?2, ?3, '旧会话', 'completed', ?4, ?4)",
+            )
+            .bind(Uuid::new_v4().to_string())
+            .bind(agent_id)
+            .bind(cwd)
+            .bind(now_rfc3339())
+            .execute(&store.pool)
+            .await
+            .unwrap();
+        }
+
+        let moved = store.backfill_session_workspaces().await.unwrap();
+        assert_eq!(moved, 3);
+
+        // distinct cwd → 两个空间；目录名即空间名（尾斜杠容忍）
+        let spaces = store.list_workspaces().await.unwrap();
+        let projects: Vec<_> = spaces.iter().filter(|w| w.kind == "project").collect();
+        assert_eq!(projects.len(), 2);
+        assert!(
+            projects
+                .iter()
+                .any(|w| w.name == "alpha" && w.path.as_deref() == Some("/repo/alpha"))
+        );
+        assert!(
+            projects
+                .iter()
+                .any(|w| w.name == "beta" && w.path.as_deref() == Some("/repo/beta/"))
+        );
+
+        // 会话全部绑定，且同 cwd 同空间
+        let sessions = store.list_sessions().await.unwrap();
+        assert!(sessions.iter().all(|s| s.workspace_id != DEFAULT_WORKSPACE));
+        let s1 = sessions
+            .iter()
+            .find(|s| s.agent_session_id == "ses_old_1")
+            .unwrap();
+        let s2 = sessions
+            .iter()
+            .find(|s| s.agent_session_id == "ses_old_2")
+            .unwrap();
+        assert_eq!(s1.workspace_id, s2.workspace_id);
+
+        // 幂等：二次回填零改动
+        assert_eq!(store.backfill_session_workspaces().await.unwrap(), 0);
+    }
+
+    /// create_workspace 按 path UNIQUE 幂等；删除空间移会话入默认空间、默认空间不可删
+    #[tokio::test]
+    async fn 空间创建幂等与删除迁移() {
+        let store = Store::open_in_memory().await.unwrap();
+        store
+            .upsert_agent("opencode", "OpenCode", "acp", None)
+            .await
+            .unwrap();
+
+        let ws = store.create_workspace("/repo/gamma").await.unwrap();
+        assert_eq!(ws.name, "gamma");
+        let again = store.create_workspace("/repo/gamma").await.unwrap();
+        assert_eq!(ws.id, again.id, "同路径重复创建应返回既有空间");
+
+        let sid = Uuid::new_v4();
+        store
+            .insert_session(
+                sid,
+                "opencode",
+                "ses_ws_1",
+                "/repo/gamma/sub",
+                "子目录会话",
+                &ws.id,
+            )
+            .await
+            .unwrap();
+
+        store.delete_workspace(&ws.id).await.unwrap();
+        let sessions = store.list_sessions().await.unwrap();
+        assert_eq!(
+            sessions[0].workspace_id, DEFAULT_WORKSPACE,
+            "删空间后会话移入默认空间"
+        );
+        assert_eq!(store.list_workspaces().await.unwrap().len(), 1);
+
+        assert!(
+            store.delete_workspace(DEFAULT_WORKSPACE).await.is_err(),
+            "默认空间不可删"
+        );
     }
 }

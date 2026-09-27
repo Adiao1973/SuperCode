@@ -18,7 +18,7 @@ import {
 /** 导航项：id 对应 Phase 1 各视图，hint 标注接入任务号 */
 const NAV_ITEMS = [
   { id: "sessions", label: "会话", icon: MessageSquare, hint: "P1-3" },
-  { id: "kanban", label: "任务看板", icon: LayoutGrid, hint: "P1-8" },
+  { id: "kanban", label: "任务看板", icon: LayoutGrid, hint: "P1-9" },
   { id: "approvals", label: "审批中心", icon: ShieldCheck, hint: "P1-5" },
   { id: "settings", label: "设置", icon: Settings, hint: "P1-5" },
 ] as const;
@@ -129,7 +129,7 @@ function App() {
           <div className="border-t py-3" />
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <span className="size-2 rounded-full bg-emerald-500" />
-            opencode · 待接入（P1-7）
+            opencode · 已接入（环境面板见设置）
           </div>
         </div>
       </aside>

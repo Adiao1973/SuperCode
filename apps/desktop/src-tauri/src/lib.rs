@@ -62,6 +62,8 @@ async fn run_prompt(
     mode: String,
     // P1-6：Some → StartMode::Load 续聊既有会话（agent_session_id）
     resume_session_id: Option<String>,
+    // P1-8：会话归属工作空间（ADR-0007）；None → 默认空间
+    workspace_id: Option<String>,
     on_events: Channel<Vec<AgentEvent>>,
 ) -> Result<RunInfo, String> {
     let def = registry::AgentDefinition::find("opencode").map_err(|e| e.to_string())?;
@@ -171,6 +173,10 @@ async fn run_prompt(
         &cwd,
         &prompt.chars().take(24).collect::<String>(),
         &prompt,
+        workspace_id
+            .as_deref()
+            .filter(|id| !id.is_empty())
+            .unwrap_or(supercode_core::db::DEFAULT_WORKSPACE),
     );
     let start_mode = resume_session_id
         .map(StartMode::Load)
@@ -187,11 +193,14 @@ async fn run_prompt(
         let mut session_tx = Some(session_tx);
         let mut frontend_dead = false;
         while let Some(event) = raw_rx.recv().await {
-            // SessionStarted 捕获必须先于一切可能失败的转发（invoke 依赖它返回）
-            if let (Some(tx), AgentEvent::SessionStarted { session_id }) =
-                (session_tx.take(), &event)
-            {
-                let _ = tx.send(session_id.clone());
+            // SessionStarted 捕获必须先于一切可能失败的转发（invoke 依赖它返回）。
+            // 只能在事件匹配时 take——续聊时重放事件先于 session/load 响应到达，
+            // 先 take 后匹配会把 oneshot sender 丢在非匹配事件上，RunInfo 永远
+            // 等不到（轮末误报"agent 未返回会话信息"，超 30s 还会误触建立超时取消）。
+            if let AgentEvent::SessionStarted { session_id } = &event {
+                if let Some(tx) = session_tx.take() {
+                    let _ = tx.send(session_id.clone());
+                }
             }
             // 落库通道失效仅丢持久化，不中断捕获与转发
             if rec_tx.send(event.clone()).await.is_err() {
@@ -348,6 +357,7 @@ async fn list_history_sessions(app: tauri::AppHandle) -> Result<Vec<HistorySessi
             title: row.title,
             status: row.status,
             updated_at: row.updated_at,
+            workspace_id: row.workspace_id,
         })
         .collect())
 }
@@ -378,6 +388,7 @@ struct HistorySession {
     title: String,
     status: String,
     updated_at: String,
+    workspace_id: String,
 }
 
 /// 历史消息 DTO
@@ -408,6 +419,63 @@ async fn list_session_messages(
             created_at: row.created_at,
         })
         .collect())
+}
+
+/// 空间列表（P1-8，ADR-0007；本地 DTO：外部类型不满足 IpcResponse）
+#[derive(serde::Serialize)]
+struct WorkspaceDto {
+    id: String,
+    name: String,
+    path: Option<String>,
+    kind: String,
+}
+
+#[tauri::command]
+async fn list_workspaces(app: tauri::AppHandle) -> Result<Vec<WorkspaceDto>, String> {
+    let state = app.state::<AppState>();
+    let store = state.store().await;
+    let rows = store.list_workspaces().await.map_err(|e| e.to_string())?;
+    Ok(rows
+        .into_iter()
+        .map(|w| WorkspaceDto {
+            id: w.id,
+            name: w.name,
+            path: w.path,
+            kind: w.kind,
+        })
+        .collect())
+}
+
+/// 新建（或返回既有）项目空间：要求目录已存在，name 取目录名
+#[tauri::command]
+async fn create_workspace(app: tauri::AppHandle, path: String) -> Result<WorkspaceDto, String> {
+    let trimmed = path.trim().to_string();
+    if trimmed.is_empty() {
+        return Err("路径不能为空".into());
+    }
+    if !std::path::Path::new(&trimmed).is_dir() {
+        return Err(format!("目录不存在：{trimmed}"));
+    }
+    let state = app.state::<AppState>();
+    let store = state.store().await;
+    let w = store
+        .create_workspace(&trimmed)
+        .await
+        .map_err(|e| e.to_string())?;
+    Ok(WorkspaceDto {
+        id: w.id,
+        name: w.name,
+        path: w.path,
+        kind: w.kind,
+    })
+}
+
+/// 删除 project 空间：会话移入默认空间，不级联删（ADR-0007）
+#[tauri::command]
+async fn delete_workspace(app: tauri::AppHandle, id: String) -> Result<(), String> {
+    let state = app.state::<AppState>();
+    let store = state.store().await;
+    store.delete_workspace(&id).await.map_err(|e| e.to_string())
 }
 
 /// opencode 环境探测（P1-7，architecture §4.7）：安装/版本 + 全局与项目配置解析 + 严格判定。
@@ -557,7 +625,10 @@ pub fn run() {
             list_rules,
             add_rule,
             delete_rule,
-            check_opencode_env
+            check_opencode_env,
+            list_workspaces,
+            create_workspace,
+            delete_workspace
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
