@@ -79,6 +79,7 @@
 - **P1-6 修复**：① resume 轮清空流（重放事件即历史渲染源，避免三源叠加重复）；② session_rx 关闭与 done_rx 就绪的 select 随机分支 → 确定性取 done 真实结果；③ 默认 cwd 不存在 → run_prompt 自动 create_dir_all；④ recorder 独立任务 + 文件库 WAL/4 连接（DB 写不再阻塞事件转发）；⑤ 运行晚失败静默死亡 → done watcher 转 DriverError + 45 秒慢响应提示。
 - **P1-6 环境偏差（与 P0-4 同类）**：验收期间 GLM 编程计划触发 5 小时用量上限（opencode 无限重试、零事件），限额重置后恢复。
 - **P1-8 设计前置（2026-09-27）**：会话组织调研定案——ZCode（任务按 workspace 组织）/ Codex（resume 按当前目录列历史）/ Claude Code（历史按项目目录落盘）/ DeepSeek Harness 生态（工作区=一等实体）四家一致按项目分组，采纳工作空间模型（ADR-0007）；原 P1-8 看板顺延为 P1-9、整体验收顺延为 P1-10。
+- **P1-8 修复（验收中发现，与工作空间无关的历史潜伏缺陷）**：① tap 捕获 `(session_tx.take(), &event)` 先 take 后匹配——续聊时重放事件先于 session/load 响应到达，oneshot sender 被丢在重放事件上，RunInfo 永远等不到：轮末误报"agent 未返回会话信息"、超 30s 还会误触建立超时自动取消（"已取消"表象）。修复为仅匹配时 take。② recorder 把重放历史 chunk 累积进本轮 pending，TurnCompleted 时误写为新一轮 agent 消息（DB 实证：暗号会话每轮续聊都多出一条重放的"你好！我是 opencode"，P1-6 期间"重复内容"的 DB 侧根源）。修复：SessionStarted 之前的事件只渲染不落库 + 回归单测；存量 11 条污染行已清理。
 - **P1-7 验收**：设置页「opencode 环境」面板（安装徽标+路径 / 默认模型检查 / 全局严格判定，三引导片段始终可见可复制）+ 运行框 cwd 联检（防抖 400ms：宽松→琥珀警告+可复制收紧片段+重新检测，收紧→绿色 ✓；未安装→红色安装指引）。剧本 A/B 实机通过；未安装路径由单测覆盖（不卸载本机 opencode）。
 - **P1-7 实现**：core 新增 `envcheck` 模块（PATH 扫描 + `opencode --version` 5s 超时；全局 `~/.config/opencode` 尊重 XDG_CONFIG_HOME——macOS 上 opencode 也用 XDG 风格路径，不可用 dirs::config_dir()；JSONC 解析用 **json5**（新依赖：注释/尾逗号且字符串内 `//`——`$schema` URL——必须存活）；严格判定=有效 edit∧bash（项目覆盖全局）均 ∈ {ask, deny, custom}）。全程只读，不代改用户配置；"经 OPENCODE_CONFIG 注入托管配置"仍留待后续评估。IPC：`check_opencode_env`（§5.1）。
 - **P1-7 偏差**：真机联测确认全局配置仅有 model、无 permission → 判定宽松（与 P1-5 实证一致：本机一直靠项目级 opencode.jsonc 收紧）。
