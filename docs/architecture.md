@@ -375,6 +375,46 @@ impl EventAggregator {
 
 输出为**批次**（`Vec<AgentEvent>`）：桌面宿主把整批经 Tauri Channel 一次推送；CLI 宿主逐条打印。
 
+### 4.7 环境探测 `envcheck` 模块（P1-7）
+
+只产**事实**，引导文案由前端负责；读操作，绝不代改用户配置（"自动写入托管配置"留待后续评估，见 ADR-0006 实证记录）。
+
+```rust
+/// opencode 权限条目的解析结果。NotConfigured 按 opencode 默认语义 = allow。
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum PermissionLevel {
+    NotConfigured,            // 配置存在但未写该键（opencode 默认放行）
+    Allow, Ask, Deny,
+    Custom,                   // pattern 对象且无 "*" 通配——用户显式配置，不判定宽松
+    Unparseable,              // 值形态不可识别（非字符串/对象）
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct OpencodeEnvReport {
+    pub installed: bool,
+    pub version: Option<String>,
+    pub bin_path: Option<String>,
+    pub probe_error: Option<String>,      // 探测失败原因（找不到/超时）
+    pub global_config_path: Option<String>,   // ~/.config/opencode/opencode.json(c)
+    pub global_model: Option<String>,     // P0-4：缺省时 acp 回退免费模型（限流）
+    pub global_edit: PermissionLevel,
+    pub global_bash: PermissionLevel,
+    pub project_config_path: Option<String>,  // <cwd>/opencode.json(c)，cwd=None 时为 None
+    pub project_edit: PermissionLevel,
+    pub project_bash: PermissionLevel,
+    pub strict: bool,                     // 有效 edit∧bash 均 ∈ {ask, deny, custom}
+    pub config_error: Option<String>,     // 配置存在但 JSONC 解析失败
+}
+
+/// cwd=Some 时附检项目级配置；有效级别项目覆盖全局。
+pub async fn check(cwd: Option<&Path>) -> OpencodeEnvReport;
+```
+
+- **安装探测**：PATH 逐目录扫描 `opencode` 可执行文件（不引 `which` crate）；命中后 `opencode --version`（5s 超时）取版本。
+- **配置发现**：全局 `$XDG_CONFIG_HOME/opencode` 或 `~/.config/opencode` 下 `opencode.jsonc` → `opencode.json`；项目 `<cwd>/` 同名序。JSONC 解析用 `json5`（注释/尾逗号，字符串内 `//` 安全——`$schema` URL 必须存活）。
+- **严格判定**：`permission.edit` 与 `permission.bash` 的有效级别（项目覆盖全局）都 ∈ {ask, deny, custom} 才算严格；字符串值直接映射，对象值取 `"*"` 键递归，无 `"*"` 记 Custom。任一为 NotConfigured/allow 即宽松——opencode 默认放行 bash/edit 且对安全命令、新建文件不发询问（ADR-0006 管辖边界）。
+
 ## 5. 事件管道（性能架构约束，非优化项）
 
 Tauri 的 `tauri://` 页面**不支持 SSE/EventSource**；且 agent 事件可达每秒几十条。因此：
@@ -405,6 +445,7 @@ supercode-desktop 对渲染层暴露的命令（invoke）；事件经 `tauri::ip
 | `respond_permission` | `request_id`、`option_id` | `()` | 审批中心应答待决请求（转发 broker.respond） |
 | `list_rules` / `add_rule` / `delete_rule` | — / `pattern`+`effect` / `id` | 规则列表 / `RuleEntry` / `()` | 规则库 CRUD（SQLite permission_rules 表，§6） |
 | `delete_session` | `agent_session_id` | `()` | 删除会话（SuperCode 侧级联删除 messages/tool_calls/approvals；运行中拒绝；P1-6） |
+| `check_opencode_env` | `cwd: Option`（P1-7：Some 时附检 `<cwd>` 项目级配置） | `OpencodeEnvReport`（§4.7） | opencode 环境探测：安装/版本、全局与项目配置的 permission/model 解析、严格判定。只读不改配置；引导文案在前端（设置页区块 + 运行框 cwd 联检） |
 
 - **权限事件（Tauri 全局事件，非 Channel）**：每个运行的 broker 经转发任务把
   `PendingPermission` / `DecisionRecord` 以 `permission-request` / `decision-record`
@@ -492,6 +533,7 @@ P0-8 落地迁移 0001（六表）；P1-5 落地迁移 0002（permission_rules �
 
 | 日期 | 版本 | 摘要 |
 |---|---|---|
+| 2026-09-27 | 0.9 | P1-7 环境探测落地：新增 §4.7 envcheck 模块（安装探测 + JSONC 配置解析 + 严格判定）；§5.1 IPC 新增 check_opencode_env；新依赖 json5（opencode 配置为 JSONC，注释/尾逗号解析，纯 Rust 无 unsafe） |
 | 2026-09-27 | 0.8 | P1-6 持久化与恢复落地：§5.1 IPC 扩展（resume_session_id/list_history_sessions/list_session_messages/delete_session）；Store 增 list_messages/find_session_by_agent/delete_session_by_agent（级联）+ 文件库 WAL 多连接；run_prompt 接 SessionRecorder；晚失败 done watcher |
 | 2026-09-25 | 0.7 | P1-5 审批中心落地：§4.3 模式化管线实现（PermissionMode 四档 + ask 规则 + DecisionSource::Mode）；§5.1 IPC 扩展（mode 参数/set_permission_mode/respond_permission/规则 CRUD/permission-request 与 decision-record 事件）；§6 新增 permission_rules 表（迁移 0002）；PermissionRequest 增加 kind 字段 |
 | 2026-09-25 | 0.6 | P1-4 会话视图落地：§4.1 diff 字段改为结构化 DiffPayload（ACP ToolCallContent::Diff 提取）；IPC 新增 read_text_file（write 新文件内容磁盘懒读）；前端 react-virtuoso + @pierre/diffs（依赖替换偏差见 roadmap） |
