@@ -98,6 +98,7 @@ mod tests {
             title: None,
             kind: ToolKind::Execute,
             raw_input: Some(serde_json::json!({"command": "git status"})),
+            diff: None,
         }
     }
 

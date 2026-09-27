@@ -1,7 +1,7 @@
 # SuperCode 架构设计文档
 
 > 本文档是 SuperCode 接口设计的**单一事实源**：任何接口 / 数据模型变更，先改本文档再改代码。
-> 版本：0.2（Phase 0 落地，对应 v0.1.0）· 变更记录见文末。
+> 版本：0.8（P1-6 持久化与恢复落地）· 变更记录见文末。
 
 ## 1. 项目概述
 
@@ -64,8 +64,9 @@ SuperCode/
 │   └── cli/                # supercode-cli：Phase 0 验证原型（bin）
 │       └── src/main.rs
 ├── apps/
-│   └── desktop/            # Phase 1：Tauri v2 + React 19（Step 0 仅占位 README）
+│   └── desktop/            # Phase 1 起：Tauri 壳（src-tauri 为 workspace 成员；React 19 + Tailwind v4 + shadcn/ui）
 ├── docs/                   # 本文档、roadmap、流程、ADR
+├── pnpm-workspace.yaml     # 前端 monorepo（apps/*）
 └── justfile                # just verify 等一键命令
 ```
 
@@ -96,6 +97,7 @@ pub enum AgentEvent {
         title: Option<String>,
         kind: ToolKind,          // Read | Edit | Delete | Move | Search | Execute | Fetch | Other
         raw_input: Option<serde_json::Value>,
+        diff: Option<DiffPayload>,   // ACP ToolCallContent::Diff 映射（opencode edit 类工具）
     },
     /// 工具调用状态更新（status 可选：update 可能只带 content/locations）
     ToolCallUpdate {
@@ -103,7 +105,7 @@ pub enum AgentEvent {
         status: Option<ToolStatus>,  // Pending | InProgress | Completed | Failed
         content: Vec<ContentBlock>,
         locations: Vec<FileLocation>,
-        diff: Option<String>,        // ACP v1 无独立 diff 字段，StreamJson 等 driver 填充
+        diff: Option<DiffPayload>,   // 有值时覆盖同 id 工具此前的 diff
     },
     /// agent 生成的计划（plan 模式）
     Plan { entries: Vec<PlanEntry> },
@@ -122,6 +124,10 @@ pub enum AgentEvent {
 pub enum ToolKind { Read, Edit, Delete, Move, Search, Execute, Fetch, Other } // 对齐 ACP v1
 pub enum ToolStatus { Pending, InProgress, Completed, Failed }
 pub enum ContentBlock { Text { text }, Image { data, mime_type }, ResourceLink { uri } } // tag="type"
+/// 结构化文件修改（对齐 ACP ToolCallContent::Diff{path, oldText, newText}）：
+/// driver 从工具事件的 content 块中提取；old_text=None 表示新建文件。
+/// diff 算法与渲染是前端职责（@git-diff-view/react 接收原始新旧内容）。
+pub struct DiffPayload { pub path: String, pub old_text: Option<String>, pub new_text: String }
 pub struct FileLocation { pub path: PathBuf, pub line: Option<u32> } // 对齐 ACP ToolCallLocation
 pub struct PlanEntry { pub content: String, pub status: PlanEntryStatus }
 pub enum PlanEntryStatus { Pending, InProgress, Completed, Cancelled }
@@ -253,6 +259,31 @@ resolve 返回 Err，driver 层转为 ACP `cancelled` outcome，agent 收到"未
   我方规则承担）；deny → 首个 reject 类 option；agent 未提供所需类别时 fail-closed
   （allow 缺失降级为询问，deny 缺失报错拒绝）。
 
+**权限模式（P1-5 落地；决策记录见 ADR-0006）**：
+会话级 `PermissionMode { plan | ask | autoedit | full }`（serde snake_case）作为未匹配
+请求的默认策略，规则库降级为高级例外层。`PermissionRules` 增加 ask 列表，
+求值顺序 **deny > ask > allow**（ask 压过 allow——用户显式要求逐次确认的优先）。
+ApprovalBroker 持有可热切换的 mode（`set_mode`），裁决管线
+（对齐 ZCode `PermissionService.checkPermission` 位次）：
+
+```
+1. deny 规则 → 拒绝（任何模式最硬）
+2. plan 模式 → 拒绝（allow 规则不再考察——计划模式保证只读）
+3. full 模式 → 放行
+4. ask 规则 → 待决队列
+5. allow 规则 → 放行
+6. autoedit ∧ 请求推断为 edit/write 类 → 放行（bash 类不在此列）
+7. 兜底 → 待决队列（resolve）；无审批 UI 宿主 → 拒绝（resolve_fail_closed）
+```
+
+模式与规则兜底的裁决同样留痕：`DecisionSource` 新增 `Mode { mode }` 变体、
+`RuleEffect` 扩展 `Ask`（ask 规则进队列不计裁决，应答后记 User）。
+
+**管辖边界（重要产品语义）**：模式与规则只裁决 agent **主动询问**的操作。
+opencode 对安全命令白名单（echo/ls 等）与新建文件 write 不发权限请求、直接放行——
+这部分须由 P1-7 的严格模式引导（收紧 opencode `permission` 配置）纳入询问范围，
+SuperCode 侧无法拦截。
+
 **裁决留痕**：broker 广播 `DecisionRecord { request, source: Rule{pattern,effect} | User,
 decision }`（`subscribe_decisions()`）——CLI 打印、Phase 1 审批历史 UI 消费；
 SQLite approvals 表持久化在 P0-8 落地（表结构见 §6，decision_by = rule:<pattern>）。
@@ -344,6 +375,51 @@ impl EventAggregator {
 
 输出为**批次**（`Vec<AgentEvent>`）：桌面宿主把整批经 Tauri Channel 一次推送；CLI 宿主逐条打印。
 
+### 4.7 环境探测 `envcheck` 模块（P1-7）
+
+只产**事实**，引导文案由前端负责；读操作，绝不代改用户配置（"自动写入托管配置"留待后续评估，见 ADR-0006 实证记录）。
+
+```rust
+/// opencode 权限条目的解析结果。NotConfigured 按 opencode 默认语义 = allow。
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum PermissionLevel {
+    NotConfigured,            // 配置存在但未写该键（opencode 默认放行）
+    Allow, Ask, Deny,
+    Custom,                   // pattern 对象且无 "*" 通配——用户显式配置，不判定宽松
+    Unparseable,              // 值形态不可识别（非字符串/对象）
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct OpencodeEnvReport {
+    pub installed: bool,
+    pub version: Option<String>,
+    pub bin_path: Option<String>,
+    pub probe_error: Option<String>,      // 探测失败原因（找不到/超时）
+    pub global_config_path: Option<String>,   // ~/.config/opencode/opencode.json(c)
+    pub global_model: Option<String>,     // P0-4：缺省时 acp 回退免费模型（限流）
+    pub global_edit: PermissionLevel,
+    pub global_bash: PermissionLevel,
+    pub project_config_path: Option<String>,  // <cwd>/opencode.json(c)，cwd=None 时为 None
+    pub project_edit: PermissionLevel,
+    pub project_bash: PermissionLevel,
+    pub strict: bool,                     // 有效 edit∧bash 均 ∈ {ask, deny, custom}
+    pub config_error: Option<String>,     // 配置存在但 JSONC 解析失败
+}
+
+/// cwd=Some 时附检项目级配置；有效级别项目覆盖全局。
+pub async fn check(cwd: Option<&Path>) -> OpencodeEnvReport;
+```
+
+- **安装探测**：PATH 逐目录扫描 `opencode` 可执行文件（不引 `which` crate）；命中后 `opencode --version`（5s 超时）取版本。
+- **GUI PATH 修正（P1-10）**：Finder/Dock 启动的 .app 不继承用户 shell PATH（launchd 只给
+  `/usr/bin:/bin:/usr/sbin:/sbin`）——Homebrew（`/opt/homebrew/bin`、`/usr/local/bin`）与
+  官方安装脚本（`~/.opencode/bin`、`~/.local/bin`）装的 agent 对打包应用不可见，探测与
+  driver spawn（PATH 查找）双失效。桌面宿主启动早期调用 `augment_gui_path()` 把上述
+  目录并入进程 PATH（幂等、只增不改序），此后所有子进程继承修正后的 PATH。
+- **配置发现**：全局 `$XDG_CONFIG_HOME/opencode` 或 `~/.config/opencode` 下 `opencode.jsonc` → `opencode.json`；项目 `<cwd>/` 同名序。JSONC 解析用 `json5`（注释/尾逗号，字符串内 `//` 安全——`$schema` URL 必须存活）。
+- **严格判定**：`permission.edit` 与 `permission.bash` 的有效级别（项目覆盖全局）都 ∈ {ask, deny, custom} 才算严格；字符串值直接映射，对象值取 `"*"` 键递归，无 `"*"` 记 Custom。任一为 NotConfigured/allow 即宽松——opencode 默认放行 bash/edit 且对安全命令、新建文件不发询问（ADR-0006 管辖边界）。
+
 ## 5. 事件管道（性能架构约束，非优化项）
 
 Tauri 的 `tauri://` 页面**不支持 SSE/EventSource**；且 agent 事件可达每秒几十条。因此：
@@ -360,6 +436,34 @@ driver ──AgentEvent──► events::Aggregator（Rust 侧）
 - 前端纪律：已完成的 message/chunk 必须 memo 化，只有活动中的 chunk 触发重渲染。
 - 该层为**硬性架构约束**，任何"先直连后面再优化"的 shortcuts 都不允许。
 
+### 5.1 Tauri IPC 契约（P1-2 起，桌面宿主命令面）
+
+supercode-desktop 对渲染层暴露的命令（invoke）；事件经 `tauri::ipc::Channel` 批量推送，载荷为 `Vec<AgentEvent>`（JSON 序列化沿用 §4.1 的 `tag=type, snake_case`，前端 TS 类型与其镜像）：
+
+| 命令 | 参数 | 返回 | 语义 |
+|---|---|---|---|
+| `run_prompt` | `prompt`、`cwd`、`allow`、`deny`、`mode`、`resume_session_id: Option`（P1-6：Some → StartMode::Load 续聊）、`workspace_id: Option`（P1-8：会话归属空间，None → 默认空间）、`on_events: Channel<Vec<AgentEvent>>` | `RunInfo { session_id }`（错误为 String） | 一轮任务。宿主内部：driver events → tap（捕获 SessionStarted）→ EventAggregator(16ms) → Channel 批量推送；tap 同时喂 SessionRecorder（落库 sessions/messages，resume 复用原 agent_session_id，OR IGNORE 幂等）；规则库（SQLite）与本次 draft 规则合并后建 ApprovalBroker（初始 mode） |
+| `cancel_run` | `session_id` | `()` | 触发协议级取消链（§7：session/cancel → Cancelled → CANCEL_GRACE 兜底） |
+| `set_permission_mode` | `session_id`、`mode` | `()` | 运行中热切换该会话的 PermissionMode（§4.3 管线） |
+| `list_history_sessions` | — | `Vec<SessionRow>`（P1-8 起含 `workspace_id`） | 历史会话列表（sessions 表，P1-6 启动时注入前端；按空间分组展示） |
+| `list_session_messages` | `agent_session_id` | `Vec<MessageRow>` | 单个会话的落库消息（P1-6 历史渲染） |
+| `respond_permission` | `request_id`、`option_id` | `()` | 审批中心应答待决请求（转发 broker.respond） |
+| `list_rules` / `add_rule` / `delete_rule` | — / `pattern`+`effect` / `id` | 规则列表 / `RuleEntry` / `()` | 规则库 CRUD（SQLite permission_rules 表，§6） |
+| `delete_session` | `agent_session_id` | `()` | 删除会话（SuperCode 侧级联删除 messages/tool_calls/approvals；运行中拒绝；P1-6） |
+| `check_opencode_env` | `cwd: Option`（P1-7：Some 时附检 `<cwd>` 项目级配置） | `OpencodeEnvReport`（§4.7） | opencode 环境探测：安装/版本、全局与项目配置的 permission/model 解析、严格判定。只读不改配置；引导文案在前端（设置页区块 + 运行框 cwd 联检） |
+| `list_workspaces` / `create_workspace` / `delete_workspace` | — / `path` / `id` | 空间列表 / `Workspace` / `()`（P1-8，ADR-0007） | 工作空间 CRUD：默认空间单例（kind=default）恒在排最后，project 空间按项目根绝对路径 UNIQUE 去重（name 取目录名）；删除仅限 project 空间，会话移入默认空间不级联删 |
+| `list_tasks` / `create_task` / `update_task` / `delete_task` | — / `title`+`workspace_id` / `id`+`status?`/`session_id?` / `id` | 任务列表 / `TaskEntry` / `TaskEntry` / `()`（P1-9 简版看板） | 任务=标题+空间+绑定会话+状态（backlog\|in_progress\|review\|done）；绑定会话随 delete_session 级联解绑；看板按空间分节四列展示（拖拽升级在 Phase 2） |
+
+- **权限事件（Tauri 全局事件，非 Channel）**：每个运行的 broker 经转发任务把
+  `PendingPermission` / `DecisionRecord` 以 `permission-request` / `decision-record`
+  事件广播给前端（审批中心消费）；request_id → broker 的映射由宿主登记，
+  供 respond_permission 路由。
+- **fail-closed 权限约定**：`resolve_fail_closed` 保留给无审批 UI 宿主；桌面宿主
+  P1-5 起接审批中心，兜底走待决队列。**不可**用追加通配 deny（`"*"`）实现兜底：
+  规则求值 deny 优先，通配 deny 会连 allow 规则一并压掉。
+- **多会话并行（P1-3）**：`run_prompt` 可并发调用——每次运行独立 spawn agent 进程与合帧管道（互不共享状态）；Rust 侧 active run map 按 ACP session_id 管理取消与清理；前端以客户端会话键路由事件批到对应会话视图（列表 / 切换 / 取消）。
+- 运行结束（`run` 返回 StopReason 或出错）后宿主将 handle 移出 active map；结束本身不再发额外事件，以流内 `turn_completed` / `driver_error` 为准。
+
 ## 6. 数据模型（SQLite，sqlx）
 
 库文件：`~/Library/Application Support/<bundle-id>/supercode.db`（`dirs` crate 定位；开发期可用 `SUPERCODE_DB` 覆盖）。
@@ -368,8 +472,14 @@ driver ──AgentEvent──► events::Aggregator（Rust 侧）
 agents(id TEXT PK, display_name TEXT, driver_kind TEXT, spawn_json TEXT,
        capabilities_json TEXT, installed_version TEXT NULL, updated_at TEXT);
 
+workspaces(id TEXT PK,          -- 工作空间（ADR-0007，P1-8 落地）
+           name TEXT, path TEXT UNIQUE NULL,    -- project 空间=项目根绝对路径；默认空间 path 为空
+           kind TEXT,           -- project | default（默认空间全局单例）
+           created_at TEXT);
+
 sessions(id TEXT PK,            -- SuperCode 侧 UUID
          agent_id TEXT REFERENCES agents(id),
+         workspace_id TEXT REFERENCES workspaces(id),  -- 会话归属空间（历史按 distinct cwd 回填）
          agent_session_id TEXT, -- agent 侧会话标识（ACP sessionId 等），恢复用
          cwd TEXT, title TEXT, status TEXT,   -- active|completed|failed|cancelled
          created_at TEXT, updated_at TEXT);
@@ -386,12 +496,20 @@ approvals(id TEXT PK, session_id TEXT, tool_call_id TEXT, tool_name TEXT,
           request_json TEXT, decision TEXT, decided_by TEXT,  -- rule:<id> | user
           created_at TEXT, decided_at TEXT);
 
-tasks(id TEXT PK, title TEXT, cwd TEXT, status TEXT, -- backlog|in_progress|review|done
-      created_at TEXT, updated_at TEXT);             -- Phase 1 简版看板；session 关联经 sessions.task_id
+tasks(id TEXT PK, workspace_id TEXT REFERENCES workspaces(id),
+      title TEXT, cwd TEXT NULL, status TEXT,       -- backlog|in_progress|review|done；cwd 缺省取空间路径
+      created_at TEXT, updated_at TEXT);             -- P1-9 简版看板（按空间组织）；session 关联经 sessions.task_id
+
+permission_rules(id TEXT PK, pattern TEXT NOT NULL,  -- 规则库（P1-5，全局持久）
+                 effect TEXT NOT NULL,               -- allow | deny | ask
+                 created_at TEXT);
 ```
 
 迁移管理：`sqlx migrate`（`crates/core/migrations/`），迁移文件只增不改。
-P0-8 落地迁移 0001（六表）；运行期写入 sessions/messages/tool_calls/approvals
+P0-8 落地迁移 0001（六表）；P1-5 落地迁移 0002（permission_rules 规则库）；
+P1-8 落地迁移 0003（workspaces + sessions.workspace_id，历史会话按 distinct cwd
+回填为 project 空间并归类；删除空间不删会话，会话移入默认空间——ADR-0007）。
+运行期写入 sessions/messages/tool_calls/approvals
 （`SessionRecorder` 消费事件流：消息 chunk 在 TurnCompleted 时组装落库），tasks 表 Phase 1 使用。
 时间戳为 RFC3339 文本。`SUPERCODE_DB` 环境变量可覆盖库文件路径（测试/多环境用）。
 
@@ -431,5 +549,16 @@ P0-8 落地迁移 0001（六表）；运行期写入 sessions/messages/tool_call
 
 | 日期 | 版本 | 摘要 |
 |---|---|---|
+| 2026-09-27 | 0.13 | P1-10 打包验收：版本号 v0.2.0 + just build 剧本；§4.7 增 GUI PATH 修正（launchd 不继承 shell PATH，探测与 spawn 双失效，宿主启动并入常见安装目录） |
+| 2026-09-27 | 0.12 | P1-9 简版任务看板：§5.1 IPC 增 list/create/update/delete_task（update 兼改状态与绑定会话）；tasks 表读写方法（绑定会话随 delete_session 解绑）；前端看板按空间分节四列 |
+| 2026-09-27 | 0.11 | P1-8 工作空间落地：§5.1 IPC 增 list/create/delete_workspace + run_prompt workspace_id + 历史行含 workspace_id；迁移 0003（workspaces 表 + sessions/tasks.workspace_id）与 Rust 回填（distinct cwd → project 空间，幂等） |
+| 2026-09-27 | 0.10 | 工作空间模型定稿（ADR-0007）：§6 新增 workspaces 表 + sessions/tasks 归属空间（迁移 0003 规划，历史按 distinct cwd 回填；默认空间承载非项目任务）；IPC 契约行随 P1-8 小设计补充 |
+| 2026-09-27 | 0.9 | P1-7 环境探测落地：新增 §4.7 envcheck 模块（安装探测 + JSONC 配置解析 + 严格判定）；§5.1 IPC 新增 check_opencode_env；新依赖 json5（opencode 配置为 JSONC，注释/尾逗号解析，纯 Rust 无 unsafe） |
+| 2026-09-27 | 0.8 | P1-6 持久化与恢复落地：§5.1 IPC 扩展（resume_session_id/list_history_sessions/list_session_messages/delete_session）；Store 增 list_messages/find_session_by_agent/delete_session_by_agent（级联）+ 文件库 WAL 多连接；run_prompt 接 SessionRecorder；晚失败 done watcher |
+| 2026-09-25 | 0.7 | P1-5 审批中心落地：§4.3 模式化管线实现（PermissionMode 四档 + ask 规则 + DecisionSource::Mode）；§5.1 IPC 扩展（mode 参数/set_permission_mode/respond_permission/规则 CRUD/permission-request 与 decision-record 事件）；§6 新增 permission_rules 表（迁移 0002）；PermissionRequest 增加 kind 字段 |
+| 2026-09-25 | 0.6 | P1-4 会话视图落地：§4.1 diff 字段改为结构化 DiffPayload（ACP ToolCallContent::Diff 提取）；IPC 新增 read_text_file（write 新文件内容磁盘懒读）；前端 react-virtuoso + @pierre/diffs（依赖替换偏差见 roadmap） |
+| 2026-09-25 | 0.5 | P1-3 多会话管理落地：§5.1 多会话并行说明（客户端会话键路由、active run map 并发）；前端 sessions store + 会话列表/切换；IPC 契约不变（run_prompt 并发调用） |
+| 2026-09-25 | 0.4 | P1-2 事件管道落地：新增 §5.1 Tauri IPC 契约（run_prompt/cancel_run + Channel 批量推送）；§4.3 增补权限模式管线 v2 设计稿与管辖边界（ADR-0006，ZCode 源码研究结论），P1-5/P1-7 验收要点相应重写 |
 | 2026-09-24 | 0.1 | Step 0 初版：分层架构、AgentDriver/AgentEvent/ApprovalBroker/Registry 接口、事件管道、数据模型、进程与安全约定 |
+| 2026-09-25 | 0.3 | P1-1 脚手架落地：apps/desktop 为 Tauri v2 壳（crate `supercode-desktop` 并入 cargo workspace；pnpm-workspace 管理 apps/*）；前端 React 19 + Tailwind v4 + shadcn/ui（radix-nova 预设）；§5 事件管道与命令接入自 P1-2 起 |
 | 2026-09-24 | 0.2 | Phase 0 落地（v0.1.0）：§4.1 对齐 ACP v1 实际 schema（ThoughtChunk、Option 字段、ToolKind 全集）；§4.3 规则引擎 + 留痕流；§4.5 ProcessManager；§4.6 EventAggregator；§4.2 StartMode 与 trait 化节奏；§6 迁移 0001 六表 + SessionRecorder；§7 取消链路与 SDK 托管进程组 |

@@ -15,6 +15,12 @@ pub struct SessionRecorder {
     agent_id: String,
     cwd: String,
     title: String,
+    /// 归属工作空间（ADR-0007）；resume 复用原行时保留原归属
+    workspace_id: String,
+    /// 会话是否已建立（SessionStarted 后为 true）。续聊时 session/load 的历史重放
+    /// 事件先于建立到达——它们只作前端历史渲染，落库会污染本轮消息/工具记录
+    /// （P1-8 验收实证：重放的"你好"被当作本轮 agent 回复写入）。
+    session_active: bool,
     /// 会话建立后待落库的用户提示词（SessionStarted 时随会话行一起写入；
     /// resume 时同样记录——它是本轮新的用户消息）
     pending_user_prompt: Option<String>,
@@ -30,6 +36,7 @@ impl SessionRecorder {
         cwd: &str,
         title: &str,
         user_prompt: &str,
+        workspace_id: &str,
     ) -> Self {
         Self {
             store,
@@ -37,6 +44,8 @@ impl SessionRecorder {
             agent_id: agent_id.to_string(),
             cwd: cwd.to_string(),
             title: title.to_string(),
+            workspace_id: workspace_id.to_string(),
+            session_active: false,
             pending_user_prompt: Some(user_prompt.to_string()),
             pending_messages: HashMap::new(),
         }
@@ -44,8 +53,13 @@ impl SessionRecorder {
 
     /// 消费一条事件并落库。错误只影响持久化，不打断事件流消费。
     pub async fn handle_event(&mut self, event: &AgentEvent) {
+        // 会话建立前的重放事件（续聊 session/load）：仅前端渲染，不落库
+        if !self.session_active && !matches!(event, AgentEvent::SessionStarted { .. }) {
+            return;
+        }
         let result = match event {
             AgentEvent::SessionStarted { session_id } => {
+                self.session_active = true;
                 let mut result = self
                     .store
                     .insert_session(
@@ -54,6 +68,7 @@ impl SessionRecorder {
                         session_id,
                         &self.cwd,
                         &self.title,
+                        &self.workspace_id,
                     )
                     .await;
                 if result.is_ok()
@@ -149,7 +164,7 @@ impl SessionRecorder {
 
 #[cfg(test)]
 mod tests {
-    use super::super::Store;
+    use super::super::{DEFAULT_WORKSPACE, Store};
     use super::*;
     use crate::events::{ContentBlock, ToolKind, ToolStatus};
     use sqlx::Row;
@@ -163,8 +178,15 @@ mod tests {
             .await
             .unwrap();
         let sid = Uuid::new_v4();
-        let mut recorder =
-            SessionRecorder::new(store.clone(), sid, "opencode", "/tmp", "标题", "你好");
+        let mut recorder = SessionRecorder::new(
+            store.clone(),
+            sid,
+            "opencode",
+            "/tmp",
+            "标题",
+            "你好",
+            DEFAULT_WORKSPACE,
+        );
 
         recorder
             .handle_event(&AgentEvent::SessionStarted {
@@ -187,6 +209,7 @@ mod tests {
                 title: Some("git status".into()),
                 kind: ToolKind::Execute,
                 raw_input: None,
+                diff: None,
             })
             .await;
         recorder
@@ -230,5 +253,90 @@ mod tests {
             agent_text.contains("你好，我是 agent"),
             "chunk 应组装完整: {agent_text}"
         );
+    }
+
+    /// 回归（P1-8 验收发现）：续聊 session/load 的重放事件先于 SessionStarted 到达，
+    /// 不得落库——否则重放的历史消息/工具会被当作本轮记录写入（实证：重放的
+    /// "你好" 被写成新一轮 agent 回复）。
+    #[tokio::test]
+    async fn 重放事件不落库() {
+        let store = Store::open_in_memory().await.unwrap();
+        store
+            .upsert_agent("opencode", "OpenCode", "acp", None)
+            .await
+            .unwrap();
+        let sid = Uuid::new_v4();
+        let mut recorder = SessionRecorder::new(
+            store.clone(),
+            sid,
+            "opencode",
+            "/tmp",
+            "标题",
+            "你还记得吗",
+            DEFAULT_WORKSPACE,
+        );
+
+        // 重放（SessionStarted 之前）：历史消息 chunk + 历史工具调用
+        recorder
+            .handle_event(&AgentEvent::MessageChunk {
+                message_id: "old_m".into(),
+                text: "你好！有什么可以帮你的吗？".into(),
+            })
+            .await;
+        recorder
+            .handle_event(&AgentEvent::ToolCall {
+                tool_call_id: "old_call".into(),
+                name: Some("write".into()),
+                title: Some("old.txt".into()),
+                kind: ToolKind::Edit,
+                raw_input: None,
+                diff: None,
+            })
+            .await;
+
+        // 会话建立 + 本轮真实事件
+        recorder
+            .handle_event(&AgentEvent::SessionStarted {
+                session_id: "ses_resume_1".into(),
+            })
+            .await;
+        recorder
+            .handle_event(&AgentEvent::MessageChunk {
+                message_id: "new_m".into(),
+                text: "刚说过你好".into(),
+            })
+            .await;
+        recorder
+            .handle_event(&AgentEvent::TurnCompleted {
+                stop_reason: StopReason::EndTurn,
+            })
+            .await;
+
+        // 消息只应有本轮：user 提示词 + 本轮 agent 文本；重放文本不得出现
+        let rows: Vec<(String, String)> =
+            sqlx::query("SELECT role, content_json FROM messages ORDER BY created_at")
+                .fetch_all(&store.pool)
+                .await
+                .unwrap()
+                .iter()
+                .map(|row| (row.get("role"), row.get("content_json")))
+                .collect();
+        assert_eq!(rows.len(), 2, "重放消息不应落库: {rows:?}");
+        assert_eq!(rows[0].0, "user");
+        assert!(rows[0].1.contains("你还记得吗"));
+        assert_eq!(rows[1].0, "agent");
+        assert!(rows[1].1.contains("刚说过你好"));
+        assert!(
+            !rows[1].1.contains("有什么可以帮你的吗"),
+            "重放的 agent 消息被误写入"
+        );
+
+        // 重放的工具调用不得落库
+        let tool_count: i64 =
+            sqlx::query_scalar("SELECT COUNT(*) FROM tool_calls WHERE id = 'old_call'")
+                .fetch_one(&store.pool)
+                .await
+                .unwrap();
+        assert_eq!(tool_count, 0, "重放的工具调用被误写入");
     }
 }

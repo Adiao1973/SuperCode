@@ -30,6 +30,8 @@ pub enum AgentEvent {
         title: Option<String>,
         kind: ToolKind,
         raw_input: Option<serde_json::Value>,
+        /// ACP `ToolCallContent::Diff` 映射（opencode edit 类工具随首事件携带）
+        diff: Option<DiffPayload>,
     },
 
     /// 工具调用状态更新（status 可选：update 可能只带 content/locations）
@@ -38,8 +40,8 @@ pub enum AgentEvent {
         status: Option<ToolStatus>,
         content: Vec<ContentBlock>,
         locations: Vec<FileLocation>,
-        /// ACP v1 无独立 diff 字段，StreamJson 等 driver 填充
-        diff: Option<String>,
+        /// 有值时覆盖同 id 工具此前的 diff
+        diff: Option<DiffPayload>,
     },
 
     /// agent 生成的计划（plan 模式）
@@ -95,6 +97,16 @@ pub struct FileLocation {
     pub line: Option<u32>,
 }
 
+/// 结构化文件修改，对齐 ACP `ToolCallContent::Diff`。
+/// diff 计算与渲染由前端完成（@git-diff-view/react 接收原始新旧内容）。
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct DiffPayload {
+    pub path: String,
+    /// None 表示新建文件（整文件为新增）
+    pub old_text: Option<String>,
+    pub new_text: String,
+}
+
 #[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct PlanEntry {
     pub content: String,
@@ -148,5 +160,22 @@ mod tests {
         assert_eq!(json["type"], "tool_call_update");
         assert_eq!(json["status"], "in_progress");
         assert_eq!(json["content"][0]["type"], "text");
+
+        let ev = AgentEvent::ToolCall {
+            tool_call_id: "t2".into(),
+            name: Some("write".into()),
+            title: Some("write file".into()),
+            kind: ToolKind::Edit,
+            raw_input: None,
+            diff: Some(DiffPayload {
+                path: "/tmp/a.txt".into(),
+                old_text: None,
+                new_text: "hi\n".into(),
+            }),
+        };
+        let json = serde_json::to_value(&ev).unwrap();
+        assert_eq!(json["diff"]["path"], "/tmp/a.txt");
+        assert_eq!(json["diff"]["new_text"], "hi\n");
+        assert_eq!(json["diff"]["old_text"], serde_json::Value::Null);
     }
 }

@@ -4,11 +4,21 @@
 default:
     @just --list
 
-# 一键验证：fmt 检查 + clippy 严格 + 全部测试（DoD 硬标准）
+# 一键验证：前端构建 + fmt 检查 + clippy 严格 + 全部测试（DoD 硬标准）
+# 前端构建是前置条件：supercode-desktop 的 build.rs 要求 frontendDist（dist/）存在
 verify:
+    pnpm --filter @supercode/desktop build
     cargo fmt --check
     cargo clippy --all-targets -- -D warnings
     cargo test
+
+# 桌面端开发模式（tauri dev watcher：Rust 变更自动重编译，前端 HMR）
+dev:
+    cd apps/desktop && pnpm tauri dev
+
+# 桌面端打包：产出 .app 与 dmg（P1-10 整体验收用）
+build:
+    cd apps/desktop && pnpm tauri build
 
 # 自动修复格式与部分 clippy 问题
 fix:

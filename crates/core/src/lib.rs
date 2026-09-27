@@ -5,6 +5,7 @@
 //!
 //! - [`driver`] — Agent 适配层，统一 `AgentDriver` trait 与实现
 //! - [`approval`] — ApprovalBroker，统一审批队列 + 预授权规则引擎
+//! - [`envcheck`] — opencode 环境探测（安装/配置/严格判定，P1-7）
 //! - [`events`] — 统一事件模型 `AgentEvent` 与帧级合帧聚合器
 //! - [`proc`] — 进程管理器（进程组 spawn / 杀树 / 心跳 / 退出清理）
 //! - [`registry`] — AgentRegistry，agent 定义与安装探测
@@ -14,6 +15,7 @@
 pub mod approval;
 pub mod db;
 pub mod driver;
+pub mod envcheck;
 pub mod error;
 pub mod events;
 pub mod orchestrator;
