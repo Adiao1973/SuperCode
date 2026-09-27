@@ -18,6 +18,10 @@ node_modules/
 dist/
 *.local
 
+# ===== Tauri 移动端图标（pnpm tauri icon 从母版可再生，产品暂无移动端）=====
+apps/desktop/src-tauri/icons/android/
+apps/desktop/src-tauri/icons/ios/
+
 # ===== 环境与密钥 =====
 .env
 .env.*
