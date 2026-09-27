@@ -62,8 +62,9 @@ def draw_prompt(size):
     for p in (p_top, apex, p_bot):
         r = w / 2
         d.ellipse([p[0] - r, p[1] - r, p[0] + r, p[1] + r], fill=255)
-    # 光标 "_"：圆角方块（呼应 squircle 形状的自指细节）
-    d.rounded_rectangle([1110, 880, 1410, 1180], radius=88, fill=255)
+    # 光标 "_"：贴基线的宽扁药丸（终端下划线光标形态，与 chevron 底端 1438 对齐；
+    # 居中方块会读成"小正方形"——P1-10 用户反馈）
+    d.rounded_rectangle([1085, 1228, 1535, 1438], radius=105, fill=255)
     return mask
 
 
