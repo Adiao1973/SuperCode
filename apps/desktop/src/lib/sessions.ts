@@ -5,12 +5,18 @@
  */
 
 import type { AgentEvent } from "./events";
-import type { HistoryMessage, HistorySession } from "./agent";
+import type { HistoryMessage, HistorySession, Workspace } from "./agent";
 import type { PendingPermission } from "./permissions";
 import { beginRun, initialStream, streamReducer, type StreamState } from "./stream";
 
 /** 预授权规则默认值（每行一条） */
 export const DEFAULT_RULES = "read\nwrite\nedit\nbash(ls *)";
+
+/** 默认空间 id（Rust 侧 DEFAULT_WORKSPACE 的镜像，ADR-0007） */
+export const DEFAULT_WORKSPACE = "default";
+
+/** 无绑定项目时的兜底运行目录（普通聊天/电脑操作类任务，可自由编辑） */
+export const FALLBACK_CWD = "/tmp/supercode-p13";
 
 export interface SessionDraft {
   prompt: string;
@@ -26,6 +32,8 @@ export interface SessionEntry {
   /** ACP 侧会话 id（SessionStarted 后可用；cancel_run 需要） */
   acpSessionId: string | null;
   title: string;
+  /** 归属工作空间（P1-8，ADR-0007）；决定侧栏分组与落库归属 */
+  workspaceId: string;
   draft: SessionDraft;
   stream: StreamState;
   /** run_prompt invoke 失败信息（区别于流内 driver_error） */
@@ -42,7 +50,7 @@ export interface SessionsState {
 }
 
 export type SessionsAction =
-  | { type: "new"; cwd?: string }
+  | { type: "new"; workspace?: Workspace | null }
   | { type: "activate"; key: string }
   | { type: "patchDraft"; key: string; patch: Partial<SessionDraft> }
   | { type: "batch"; key: string; batch: AgentEvent[] }
@@ -59,19 +67,23 @@ export type SessionsAction =
   /** 历史消息加载（P1-6）：落库消息填充 items */
   | { type: "historyLoaded"; key: string; messages: HistoryMessage[] }
   /** 历史会话注入（P1-6：启动时） */
-  | { type: "hydrate"; sessions: HistorySession[] };
+  | { type: "hydrate"; sessions: HistorySession[] }
+  /** 工作空间删除（P1-8）：该空间会话移入默认空间（Rust 侧已同步迁移落库） */
+  | { type: "reassignWorkspace"; from: string; to: string };
 
 let sessionSeq = 0;
 
-function makeEntry(cwd?: string): SessionEntry {
+function makeEntry(workspace?: Workspace | null): SessionEntry {
   sessionSeq += 1;
   return {
     key: `s-${sessionSeq}`,
     acpSessionId: null,
     title: "新会话",
+    // 项目空间 cwd 预填空间路径（可临时覆盖）；默认空间不绑路径
+    workspaceId: workspace?.id ?? DEFAULT_WORKSPACE,
     draft: {
       prompt: "",
-      cwd: cwd ?? "/tmp/supercode-p13",
+      cwd: workspace?.path ?? FALLBACK_CWD,
       rulesText: DEFAULT_RULES,
       mode: "ask",
     },
@@ -82,9 +94,9 @@ function makeEntry(cwd?: string): SessionEntry {
   };
 }
 
-/** 初始状态：预建一个草稿会话，省一次点击 */
-export function initialSessionsState(cwd?: string): SessionsState {
-  const first = makeEntry(cwd);
+/** 初始状态：预建一个草稿会话（默认空间），省一次点击 */
+export function initialSessionsState(): SessionsState {
+  const first = makeEntry();
   return { items: [first], activeKey: first.key };
 }
 
@@ -105,7 +117,7 @@ export function sessionsReducer(
 ): SessionsState {
   switch (action.type) {
     case "new": {
-      const entry = makeEntry(action.cwd);
+      const entry = makeEntry(action.workspace);
       return { items: [...state.items, entry], activeKey: entry.key };
     }
     case "activate":
@@ -158,6 +170,7 @@ export function sessionsReducer(
           key: `h-${session.agent_session_id.slice(-12)}`,
           acpSessionId: session.agent_session_id,
           title: session.title || "历史会话",
+          workspaceId: session.workspace_id || DEFAULT_WORKSPACE,
           draft: { prompt: "", cwd: session.cwd, rulesText: DEFAULT_RULES, mode: "ask" },
           stream: initialStream,
           invokeError: null,
@@ -166,6 +179,16 @@ export function sessionsReducer(
         }));
       return { ...state, items: [...hydrated, ...state.items] };
     }
+    case "reassignWorkspace":
+      // 删除空间（P1-8）：该空间会话移入默认空间分组（落库已由 Rust 侧迁移）
+      return {
+        ...state,
+        items: state.items.map((it) =>
+          it.workspaceId === action.from
+            ? { ...it, workspaceId: action.to || DEFAULT_WORKSPACE }
+            : it,
+        ),
+      };
     case "batch": {
       const entry = state.items.find((it) => it.key === action.key);
       if (!entry) {

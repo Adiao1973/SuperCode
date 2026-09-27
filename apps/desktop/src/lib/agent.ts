@@ -18,6 +18,8 @@ export function runPrompt(options: {
   mode: string;
   /** 续聊既有会话的 agent_session_id（P1-6：session/load 恢复上下文） */
   resumeSessionId?: string | null;
+  /** 归属工作空间（P1-8，ADR-0007）；缺省 → 默认空间 */
+  workspaceId?: string | null;
   onEvents: (batch: AgentEvent[]) => void;
 }): Promise<RunInfo> {
   const channel = new Channel<AgentEvent[]>();
@@ -29,8 +31,31 @@ export function runPrompt(options: {
     deny: options.deny,
     mode: options.mode,
     resumeSessionId: options.resumeSessionId ?? null,
+    workspaceId: options.workspaceId ?? null,
     onEvents: channel,
   });
+}
+
+/** 工作空间（P1-8，ADR-0007）：project 空间绑定项目根路径；默认空间单例不绑路径 */
+export interface Workspace {
+  id: string;
+  name: string;
+  path: string | null;
+  kind: "project" | "default";
+}
+
+export function listWorkspaces(): Promise<Workspace[]> {
+  return invoke("list_workspaces");
+}
+
+/** 新建（或返回既有）项目空间：目录须已存在，name 取目录名 */
+export function createWorkspace(path: string): Promise<Workspace> {
+  return invoke("create_workspace", { path });
+}
+
+/** 删除项目空间：会话移入默认空间，不级联删 */
+export function deleteWorkspace(id: string): Promise<void> {
+  return invoke("delete_workspace", { id });
 }
 
 export interface HistorySession {
@@ -39,6 +64,7 @@ export interface HistorySession {
   title: string;
   status: string;
   updated_at: string;
+  workspace_id: string;
 }
 
 export function listHistorySessions(): Promise<HistorySession[]> {

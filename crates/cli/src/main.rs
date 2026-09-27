@@ -226,6 +226,8 @@ async fn run_session(
         &title,
         // run 与 resume：本轮 prompt 都是一条新的用户消息
         prompt.trim(),
+        // CLI 宿主暂无空间选择，会话归默认空间（ADR-0007）
+        supercode_core::db::DEFAULT_WORKSPACE,
     );
     // 消费循环：先落库再打印（持久化失败不打断事件流）
     let printer = tokio::spawn(async move {

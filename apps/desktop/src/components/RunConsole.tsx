@@ -104,6 +104,8 @@ export function RunConsole({ session, dispatch }: RunConsoleProps) {
         deny: [],
         mode: draft.mode,
         resumeSessionId: resume ? session.acpSessionId : null,
+        // 归属工作空间（P1-8）：落库与侧栏分组一致
+        workspaceId: session.workspaceId,
         // 事件按客户端会话键路由；acpSessionId 由 session_started 事件带入 store
         onEvents: (batch) => dispatch({ type: "batch", key, batch }),
       });
