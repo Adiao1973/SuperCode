@@ -404,6 +404,7 @@ supercode-desktop 对渲染层暴露的命令（invoke）；事件经 `tauri::ip
 | `list_session_messages` | `agent_session_id` | `Vec<MessageRow>` | 单个会话的落库消息（P1-6 历史渲染） |
 | `respond_permission` | `request_id`、`option_id` | `()` | 审批中心应答待决请求（转发 broker.respond） |
 | `list_rules` / `add_rule` / `delete_rule` | — / `pattern`+`effect` / `id` | 规则列表 / `RuleEntry` / `()` | 规则库 CRUD（SQLite permission_rules 表，§6） |
+| `delete_session` | `agent_session_id` | `()` | 删除会话（SuperCode 侧级联删除 messages/tool_calls/approvals；运行中拒绝；P1-6） |
 
 - **权限事件（Tauri 全局事件，非 Channel）**：每个运行的 broker 经转发任务把
   `PendingPermission` / `DecisionRecord` 以 `permission-request` / `decision-record`
