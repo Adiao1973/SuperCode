@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { PendingCard } from "@/components/PendingCard";
+import { CopyableBlock } from "@/components/CopyableBlock";
 import {
   cancelRun,
   listSessionMessages,
@@ -19,11 +20,20 @@ import {
   runPrompt,
   setPermissionMode,
 } from "@/lib/agent";
+import {
+  INSTALL_GUIDE,
+  JURISDICTION_NOTE,
+  LEVEL_LABEL,
+  checkOpencodeEnv,
+  strictGuideSnippet,
+  type OpencodeEnvReport,
+} from "@/lib/opencode-env";
 import type { StreamItem } from "@/lib/stream";
 import type { SessionEntry, SessionsAction } from "@/lib/sessions";
 import type { DiffPayload } from "@/lib/events";
 import type { ToolKind, ToolStatus } from "@/lib/events";
 import {
+  AlertTriangle,
   ChevronDown,
   ChevronRight,
   CircleStop,
@@ -33,6 +43,7 @@ import {
   Globe,
   Loader2,
   Play,
+  RefreshCw,
   Search,
   SquareTerminal,
   Trash2,
@@ -154,6 +165,40 @@ export function RunConsole({ session, dispatch }: RunConsoleProps) {
     return () => clearTimeout(timer);
   }, [stream.running, stream.items]);
 
+  // P1-7 cwd 严格模式联检：防抖 400ms（cwd 是自由文本，逐键 invoke 太吵）；
+  // 仅空闲时检测；报告与触发时的 cwd 一起存，避免旧报告错配新目录
+  const [envReport, setEnvReport] = useState<OpencodeEnvReport | null>(null);
+  const [envCwd, setEnvCwd] = useState<string | null>(null);
+  const [envGuideOpen, setEnvGuideOpen] = useState(false);
+  const [installGuideOpen, setInstallGuideOpen] = useState(false);
+  const [envTick, setEnvTick] = useState(0);
+  useEffect(() => {
+    const cwd = draft.cwd.trim();
+    if (stream.running || !cwd) {
+      setEnvReport(null);
+      setEnvCwd(null);
+      return;
+    }
+    let cancelled = false;
+    const timer = setTimeout(() => {
+      checkOpencodeEnv(cwd)
+        .then((report) => {
+          if (!cancelled) {
+            setEnvReport(report);
+            setEnvCwd(cwd);
+          }
+        })
+        .catch(() => {
+          /* 探测失败不打扰会话流程；设置页有完整环境面板 */
+        });
+    }, 400);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [draft.cwd, stream.running, envTick]);
+  const envFresh = envReport != null && envCwd != null && envCwd === draft.cwd.trim();
+
   // Cmd/Ctrl+R 运行、Cmd/Ctrl+. 停止：焦点免疫（仅作用于当前活动会话）
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -261,6 +306,82 @@ export function RunConsole({ session, dispatch }: RunConsoleProps) {
             </Button>
           )}
         </div>
+
+        {/* P1-7 opencode 环境联检：未安装 → 红色引导；宽松 → 琥珀警告 + 可复制收紧片段 */}
+        {!stream.running && envFresh && envReport && !envReport.installed && (
+          <div className="rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2">
+            <div className="flex items-center gap-2 text-[11px] text-destructive">
+              <AlertTriangle className="size-3 shrink-0" />
+              <span className="min-w-0 flex-1">
+                未检测到 opencode——请先安装后再运行
+                {envReport.probe_error ? `（${envReport.probe_error}）` : ""}
+              </span>
+              <button
+                type="button"
+                onClick={() => setInstallGuideOpen((v) => !v)}
+                className="hover:text-foreground flex shrink-0 items-center gap-1 font-medium"
+              >
+                {installGuideOpen ? "收起" : "安装指引"}
+                {installGuideOpen ? <ChevronDown className="size-3" /> : <ChevronRight className="size-3" />}
+              </button>
+            </div>
+            {installGuideOpen && (
+              <div className="mt-2">
+                <CopyableBlock text={INSTALL_GUIDE} />
+              </div>
+            )}
+          </div>
+        )}
+        {!stream.running && envFresh && envReport?.installed && !envReport.strict && (
+          <div className="rounded-md border border-amber-500/40 bg-amber-500/5 px-3 py-2">
+            <div className="flex items-center gap-2 text-[11px] text-amber-600 dark:text-amber-500">
+              <AlertTriangle className="size-3 shrink-0" />
+              <span className="min-w-0 flex-1">
+                宽松模式（
+                {envReport.project_config_path
+                  ? `项目配置 ${envReport.project_config_path}`
+                  : envReport.global_config_path
+                    ? `全局配置 ${envReport.global_config_path}`
+                    : "无 opencode.jsonc"}
+                ：edit {LEVEL_LABEL[envReport.project_edit].text} · bash {LEVEL_LABEL[envReport.project_bash].text}
+                ）——这些操作不会进 SuperCode 审批
+              </span>
+              <button
+                type="button"
+                onClick={() => setEnvGuideOpen((v) => !v)}
+                className="hover:text-foreground flex shrink-0 items-center gap-1 font-medium"
+              >
+                {envGuideOpen ? "收起" : "收紧引导"}
+                {envGuideOpen ? <ChevronDown className="size-3" /> : <ChevronRight className="size-3" />}
+              </button>
+              <button
+                type="button"
+                onClick={() => setEnvTick((t) => t + 1)}
+                className="hover:text-foreground flex shrink-0 items-center gap-1 font-medium"
+                title="按当前 cwd 重新检测"
+              >
+                <RefreshCw className="size-3" />
+                重新检测
+              </button>
+            </div>
+            {envGuideOpen && (
+              <div className="mt-2 space-y-2">
+                <CopyableBlock
+                  text={strictGuideSnippet(envCwd)}
+                  label="写入以下位置后点「重新检测」（项目级优先于全局）"
+                />
+                <p className="text-muted-foreground text-[11px] leading-relaxed">{JURISDICTION_NOTE}</p>
+              </div>
+            )}
+          </div>
+        )}
+        {!stream.running && envFresh && envReport?.strict && (
+          <p className="text-[11px] text-emerald-600 dark:text-emerald-500">
+            ✓ 严格模式已开启（{envReport.project_config_path ?? envReport.global_config_path}）——
+            bash/edit 全部经 SuperCode 审批
+          </p>
+        )}
+
         <p className="text-muted-foreground text-[11px]">
           fail-closed：未匹配预授权规则的权限请求自动拒绝（审批中心 P1-5 接管）
           {session.acpSessionId && (

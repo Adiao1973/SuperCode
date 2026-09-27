@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { OpencodeEnvSection } from "@/components/OpencodeEnvSection";
 import { addRule, deleteRule, listRules, type RuleEntry } from "@/lib/agent";
 import { Plus, Trash2 } from "lucide-react";
 
@@ -66,6 +67,8 @@ export function SettingsView() {
   return (
     <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
       <div className="mx-auto flex max-w-3xl flex-col gap-4">
+        <OpencodeEnvSection />
+
         <section>
           <h2 className="mb-2 text-sm font-medium">新增规则</h2>
           <div className="flex gap-2">

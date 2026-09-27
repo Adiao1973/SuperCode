@@ -60,7 +60,7 @@
 | P1-4 | 会话视图：虚拟列表消息流 + 工具时间线 + diff 展示 | 长会话（200+ 消息）滚动流畅；edit 类工具显示 diff | ✅ 已验收 2026-09-25（依赖替换见记录） |
 | P1-5 | 审批中心：会话级权限模式（plan/ask/autoedit/full，ADR-0006）+ 待决队列 + 规则库管理（SQLite） | 四模式行为与管线位次逐一验收；审批/预授权/拒绝路径与 Phase 0 一致 | ✅ 已验收 2026-09-25 |
 | P1-6 | SQLite 持久化 + 会话恢复 UI + 会话删除 | 重启后历史仍在；续聊上下文有效；删除级联且运行中保护 | ✅ 已验收 2026-09-27 |
-| P1-7 | opencode 安装探测与引导 + 严格模式引导（检测/建议收紧 opencode `permission` 配置，补客户端管辖边界外的白名单缺口，ADR-0006；含默认模型检查） | 未安装时给出可复制安装指引；严格模式引导可见可复制 | 待办 |
+| P1-7 | opencode 安装探测与引导 + 严格模式引导（检测/建议收紧 opencode `permission` 配置，补客户端管辖边界外的白名单缺口，ADR-0006；含默认模型检查） | 未安装时给出可复制安装指引；严格模式引导可见可复制 | ✅ 已验收 2026-09-27 |
 | P1-8 | 简版任务看板（任务=标题+目录+绑定会话+状态） | 任务创建→指派会话→状态流转闭环 | 待办 |
 | P1-9 | Phase 1 整体验收 + tag v0.2.0 合入 main | 验收剧本（P1-9 前预写进 docs/acceptance/phase1.md）+ 打包出 .app 可运行 | 待办 |
 
@@ -77,6 +77,9 @@
 - **P1-6 验收**：事件流接入 SessionRecorder 落库；重启后 hydrate 历史会话 + 懒加载落库消息；续聊 session/load 恢复上下文（暗号问答验证）；跑完一轮自动标记可续聊；会话删除（级联 + 二次确认 + 运行中保护，用户提议追加）。
 - **P1-6 修复**：① resume 轮清空流（重放事件即历史渲染源，避免三源叠加重复）；② session_rx 关闭与 done_rx 就绪的 select 随机分支 → 确定性取 done 真实结果；③ 默认 cwd 不存在 → run_prompt 自动 create_dir_all；④ recorder 独立任务 + 文件库 WAL/4 连接（DB 写不再阻塞事件转发）；⑤ 运行晚失败静默死亡 → done watcher 转 DriverError + 45 秒慢响应提示。
 - **P1-6 环境偏差（与 P0-4 同类）**：验收期间 GLM 编程计划触发 5 小时用量上限（opencode 无限重试、零事件），限额重置后恢复。
+- **P1-7 验收**：设置页「opencode 环境」面板（安装徽标+路径 / 默认模型检查 / 全局严格判定，三引导片段始终可见可复制）+ 运行框 cwd 联检（防抖 400ms：宽松→琥珀警告+可复制收紧片段+重新检测，收紧→绿色 ✓；未安装→红色安装指引）。剧本 A/B 实机通过；未安装路径由单测覆盖（不卸载本机 opencode）。
+- **P1-7 实现**：core 新增 `envcheck` 模块（PATH 扫描 + `opencode --version` 5s 超时；全局 `~/.config/opencode` 尊重 XDG_CONFIG_HOME——macOS 上 opencode 也用 XDG 风格路径，不可用 dirs::config_dir()；JSONC 解析用 **json5**（新依赖：注释/尾逗号且字符串内 `//`——`$schema` URL——必须存活）；严格判定=有效 edit∧bash（项目覆盖全局）均 ∈ {ask, deny, custom}）。全程只读，不代改用户配置；"经 OPENCODE_CONFIG 注入托管配置"仍留待后续评估。IPC：`check_opencode_env`（§5.1）。
+- **P1-7 偏差**：真机联测确认全局配置仅有 model、无 permission → 判定宽松（与 P1-5 实证一致：本机一直靠项目级 opencode.jsonc 收紧）。
 
 ## Phase 2 — 多 Agent 扩展（概要）
 
