@@ -3,10 +3,12 @@
  * 非活动会话的事件仍按 key 路由进 store，切回时完整重放当前状态。
  */
 import { Button } from "@/components/ui/button";
+import { deleteSession } from "@/lib/agent";
 import { cn } from "@/lib/utils";
 import { sessionStatus, type SessionEntry, type SessionsAction, type SessionsState } from "@/lib/sessions";
 import { RunConsole } from "@/components/RunConsole";
-import { MessageSquarePlus } from "lucide-react";
+import { MessageSquarePlus, Trash2 } from "lucide-react";
+import { useCallback, useState } from "react";
 
 interface SessionsWorkspaceProps {
   state: SessionsState;
@@ -22,6 +24,30 @@ const STATUS_TONE: Record<string, string> = {
 
 export function SessionsWorkspace({ state, dispatch }: SessionsWorkspaceProps) {
   const active = state.items.find((it) => it.key === state.activeKey) ?? null;
+  const [confirmKey, setConfirmKey] = useState<string | null>(null);
+
+  // 删除会话：有 acpSessionId 的先调 IPC 级联删除（运行中由 Rust 侧拒绝），再移出列表
+  const removeSession = useCallback(
+    async (entry: SessionEntry) => {
+      if (entry.acpSessionId) {
+        try {
+          await deleteSession(entry.acpSessionId);
+        } catch (e) {
+          dispatch({ type: "invokeError", key: entry.key, message: String(e) });
+          return;
+        }
+      }
+      if (state.activeKey === entry.key) {
+        const rest = state.items.filter((it) => it.key !== entry.key);
+        dispatch({
+          type: "activate",
+          key: rest[0]?.key ?? "",
+        });
+      }
+      dispatch({ type: "remove", key: entry.key });
+    },
+    [state.activeKey, state.items, dispatch],
+  );
 
   return (
     <div className="flex min-h-0 flex-1">
@@ -61,7 +87,16 @@ export function SessionsWorkspace({ state, dispatch }: SessionsWorkspaceProps) {
                 key={entry.key}
                 entry={entry}
                 active={entry.key === state.activeKey}
+                confirmDelete={confirmKey === entry.key}
                 onActivate={() => dispatch({ type: "activate", key: entry.key })}
+                onDelete={() => {
+                  if (confirmKey === entry.key) {
+                    setConfirmKey(null);
+                    void removeSession(entry);
+                  } else {
+                    setConfirmKey(entry.key);
+                  }
+                }}
               />
             ))}
           </div>
@@ -88,11 +123,15 @@ export function SessionsWorkspace({ state, dispatch }: SessionsWorkspaceProps) {
 function SessionListItem({
   entry,
   active,
+  confirmDelete,
   onActivate,
+  onDelete,
 }: {
   entry: SessionEntry;
   active: boolean;
+  confirmDelete: boolean;
   onActivate: () => void;
+  onDelete: () => void;
 }) {
   const status = sessionStatus(entry);
   return (
@@ -100,13 +139,39 @@ function SessionListItem({
       type="button"
       onClick={onActivate}
       className={cn(
-        "hover:bg-sidebar-accent flex w-full flex-col gap-0.5 rounded-md px-2.5 py-2 text-left transition-colors",
+        "group hover:bg-sidebar-accent flex w-full flex-col gap-0.5 rounded-md px-2.5 py-2 text-left transition-colors",
         active ? "bg-sidebar-accent" : "",
+        confirmDelete && "border-destructive/60 border",
       )}
     >
       <span className="flex w-full items-center gap-2">
         <span className={cn("size-1.5 shrink-0 rounded-full", STATUS_TONE[status.tone])} />
         <span className="truncate text-[13px]">{entry.title}</span>
+        <span
+          role="button"
+          tabIndex={-1}
+          title={
+            entry.stream.running
+              ? "运行中不可删除"
+              : confirmDelete
+                ? "再点一次确认删除"
+                : "删除会话"
+          }
+          onClick={(e) => {
+            e.stopPropagation();
+            if (!entry.stream.running) {
+              onDelete();
+            }
+          }}
+          className={cn(
+            "ml-auto hidden shrink-0 px-1 group-hover:block",
+            confirmDelete
+              ? "text-destructive text-[10px] font-medium"
+              : "text-muted-foreground/50 hover:text-destructive",
+          )}
+        >
+          {confirmDelete ? "确认?" : <Trash2 className="size-3.5" />}
+        </span>
       </span>
       <span className="text-muted-foreground flex w-full items-center gap-2 pl-3.5 text-[10px]">
         {status.label}

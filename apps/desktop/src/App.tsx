@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { ApprovalsView } from "@/components/ApprovalsView";
 import { SessionsWorkspace } from "@/components/SessionsWorkspace";
 import { SettingsView } from "@/components/SettingsView";
+import { listHistorySessions } from "@/lib/agent";
 import { permissionCenter } from "@/lib/permissions";
 import { cn } from "@/lib/utils";
 import { initialSessionsState, sessionsReducer } from "@/lib/sessions";
@@ -32,6 +33,13 @@ function App() {
     () => initialSessionsState(),
   );
   const activeNav = NAV_ITEMS.find((item) => item.id === nav) ?? NAV_ITEMS[0];
+
+  // P1-6：启动时注入 SQLite 历史会话（重启后仍可续聊）
+  useEffect(() => {
+    void listHistorySessions()
+      .then((sessions) => dispatch({ type: "hydrate", sessions }))
+      .catch(() => {}); // 历史加载失败不阻塞新会话
+  }, []);
 
   // 审批事件订阅（应用级一次）：待决请求按 ACP session id 路由进对应会话（内联卡片）
   useEffect(() => {

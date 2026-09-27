@@ -12,7 +12,13 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { PendingCard } from "@/components/PendingCard";
-import { cancelRun, readTextFile, runPrompt, setPermissionMode } from "@/lib/agent";
+import {
+  cancelRun,
+  listSessionMessages,
+  readTextFile,
+  runPrompt,
+  setPermissionMode,
+} from "@/lib/agent";
 import type { StreamItem } from "@/lib/stream";
 import type { SessionEntry, SessionsAction } from "@/lib/sessions";
 import type { DiffPayload } from "@/lib/events";
@@ -73,7 +79,9 @@ export function RunConsole({ session, dispatch }: RunConsoleProps) {
       return; // ⌘R 防重入：运行中不允许同一会话再起一轮
     }
     const key = session.key;
-    dispatch({ type: "begin", key });
+    // P1-6：resumable 会话（历史加载或跑完过一轮）→ session/load 续聊，沿用原上下文
+    const resume = session.resumable && session.acpSessionId != null;
+    dispatch({ type: "begin", key, resume });
     try {
       await runPrompt({
         prompt: draft.prompt,
@@ -84,6 +92,7 @@ export function RunConsole({ session, dispatch }: RunConsoleProps) {
           .filter(Boolean),
         deny: [],
         mode: draft.mode,
+        resumeSessionId: resume ? session.acpSessionId : null,
         // 事件按客户端会话键路由；acpSessionId 由 session_started 事件带入 store
         onEvents: (batch) => dispatch({ type: "batch", key, batch }),
       });
@@ -97,6 +106,31 @@ export function RunConsole({ session, dispatch }: RunConsoleProps) {
     }
   }, [session.key, draft, stream.running, dispatch]);
 
+  // P1-6：历史会话首次进入时加载落库消息
+  useEffect(() => {
+    if (
+      session.resumable &&
+      session.acpSessionId &&
+      session.stream.items.length === 0 &&
+      !session.stream.running
+    ) {
+      void listSessionMessages(session.acpSessionId)
+        .then((messages) =>
+          dispatch({ type: "historyLoaded", key: session.key, messages }),
+        )
+        .catch((e) =>
+          dispatch({ type: "invokeError", key: session.key, message: String(e) }),
+        );
+    }
+  }, [
+    session.resumable,
+    session.acpSessionId,
+    session.stream.items.length,
+    session.stream.running,
+    session.key,
+    dispatch,
+  ]);
+
   const stop = useCallback(async () => {
     if (!session.acpSessionId) {
       return;
@@ -107,6 +141,18 @@ export function RunConsole({ session, dispatch }: RunConsoleProps) {
       dispatch({ type: "invokeError", key: session.key, message: String(e) });
     }
   }, [session.acpSessionId, session.key, dispatch]);
+
+  // 长时间无事件提示（P1-6 验收发现：模型限流时 opencode 无限重试，
+  // 前端只见"运行中"零反馈——45 秒无事件给一句解释；任何活动重置计时）
+  const [slowAgent, setSlowAgent] = useState(false);
+  useEffect(() => {
+    if (!stream.running) {
+      setSlowAgent(false);
+      return;
+    }
+    const timer = setTimeout(() => setSlowAgent(true), 45_000);
+    return () => clearTimeout(timer);
+  }, [stream.running, stream.items]);
 
   // Cmd/Ctrl+R 运行、Cmd/Ctrl+. 停止：焦点免疫（仅作用于当前活动会话）
   useEffect(() => {
@@ -234,7 +280,11 @@ export function RunConsole({ session, dispatch }: RunConsoleProps) {
       <div ref={scrollRef} className="min-h-0 flex-1">
         {stream.items.length === 0 ? (
           <p className="text-muted-foreground py-8 text-center text-sm">
-            点击「运行」驱动 opencode（ACP）执行任务，事件经 Rust 合帧 → Tauri Channel 到达这里。
+            {stream.running
+              ? "正在恢复上下文 / 等待 agent 响应…"
+              : session.resumable
+                ? "输入新提示词继续此会话（将恢复上下文），或查看下方历史。"
+                : "点击「运行」驱动 opencode（ACP）执行任务，事件经 Rust 合帧 → Tauri Channel 到达这里。"}
           </p>
         ) : (
           <Virtuoso
@@ -259,6 +309,12 @@ export function RunConsole({ session, dispatch }: RunConsoleProps) {
             <PendingCard key={pending.id} pending={pending} />
           ))}
         </div>
+      )}
+
+      {slowAgent && stream.running && (
+        <p className="text-muted-foreground/80 shrink-0 border-t px-5 pt-2 text-center text-[11px]">
+          agent 已超过 45 秒无响应——可能是模型限流或网络问题，可点「停止」中止后稍后再试
+        </p>
       )}
 
       {/* 状态条 */}
@@ -294,6 +350,14 @@ const StreamItemView = memo(function StreamItemView({ item }: { item: StreamItem
           {item.text}
           {item.active && <span className="text-primary animate-pulse">▍</span>}
         </p>
+      );
+    case "user_message":
+      return (
+        <div className="flex justify-end">
+          <p className="bg-primary/10 text-foreground max-w-[85%] rounded-lg px-3 py-1.5 text-sm whitespace-pre-wrap">
+            {item.text}
+          </p>
+        </div>
       );
     case "tool":
       return <ToolView item={item} />;

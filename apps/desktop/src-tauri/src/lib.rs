@@ -4,13 +4,14 @@
 use std::{collections::HashMap, sync::Arc, time::Duration};
 
 use supercode_core::approval::{ApprovalBroker, PermissionMode, PermissionRules, RuleEffect};
-use supercode_core::db::Store;
+use supercode_core::db::{SessionRecorder, Store};
 use supercode_core::driver::{AcpDriver, PermissionHandler, StartMode};
 use supercode_core::events::{AgentEvent, EventAggregator};
 use supercode_core::registry;
 use tauri::{ipc::Channel, Emitter, Manager};
 use tokio::sync::{mpsc, oneshot};
 use tokio_util::sync::CancellationToken;
+use uuid::Uuid as SessionUuid;
 use uuid::Uuid;
 
 /// 帧周期：~16ms（§5 硬性架构约束，非优化项）
@@ -51,6 +52,7 @@ fn parse_mode(mode: &str) -> Result<PermissionMode, String> {
 }
 
 #[tauri::command]
+#[allow(clippy::too_many_arguments)] // Tauri IPC 参数展开，语义即数据面
 async fn run_prompt(
     app: tauri::AppHandle,
     prompt: String,
@@ -58,14 +60,21 @@ async fn run_prompt(
     allow: Vec<String>,
     deny: Vec<String>,
     mode: String,
+    // P1-6：Some → StartMode::Load 续聊既有会话（agent_session_id）
+    resume_session_id: Option<String>,
     on_events: Channel<Vec<AgentEvent>>,
 ) -> Result<RunInfo, String> {
     let def = registry::AgentDefinition::find("opencode").map_err(|e| e.to_string())?;
     let permission_mode = parse_mode(&mode)?;
+    // 默认目录可能不存在（新用户首跑）：自动创建，避免 agent 侧会话建立失败
+    std::fs::create_dir_all(&cwd).map_err(|e| format!("创建工作目录失败：{e}"))?;
 
     // 规则库（SQLite 持久）∪ 本次 draft 规则，合成 broker 规则集
     let state = app.state::<AppState>();
     let store = state.store().await;
+    let _ = store
+        .upsert_agent("opencode", "OpenCode", "acp", None)
+        .await;
     let mut rules = PermissionRules::new(allow, deny);
     for entry in store
         .list_permission_rules()
@@ -131,22 +140,70 @@ async fn run_prompt(
     let (raw_tx, raw_rx) = mpsc::channel::<AgentEvent>(256);
     let (frame_in_tx, frame_in_rx) = mpsc::channel::<AgentEvent>(256);
     let (frame_tx, frame_rx) = mpsc::channel::<Vec<AgentEvent>>(32);
+    // invoke 返回 RunInfo 后的晚失败兜底也要能推事件（见 done watcher）
+    let frame_in_tx_for_done = frame_in_tx.clone();
     let (session_tx, session_rx) = oneshot::channel::<String>();
-    let (done_tx, done_rx) = oneshot::channel::<supercode_core::error::Result<()>>();
+    let (done_tx, mut done_rx) = oneshot::channel::<supercode_core::error::Result<()>>();
     let session_of_run = Arc::new(std::sync::Mutex::new(None::<String>));
+    let cancel = CancellationToken::new();
+    let cancel_for_run = cancel.clone();
+    let cancel_for_tap = cancel.clone();
+
+    // P1-6 落库：resume 沿用原会话行（按 agent_session_id 反查），新跑生成新 UUID。
+    // insert_session OR IGNORE 幂等；本轮提示词作为新用户消息记录。
+    // recorder 跑在独立任务（有界通道缓冲）——逐事件 DB 写不得阻塞事件转发（§5 管线）
+    let recorder_store = state.store().await.clone();
+    let supercode_session = match &resume_session_id {
+        Some(agent_id) => match recorder_store.find_session_by_agent(agent_id).await {
+            Ok(Some(existing)) => existing,
+            Ok(None) => SessionUuid::new_v4(),
+            Err(e) => {
+                eprintln!("[p1-6] 会话反查失败，回退新行：{e}");
+                SessionUuid::new_v4()
+            }
+        },
+        None => SessionUuid::new_v4(),
+    };
+    let mut recorder = SessionRecorder::new(
+        recorder_store,
+        supercode_session,
+        "opencode",
+        &cwd,
+        &prompt.chars().take(24).collect::<String>(),
+        &prompt,
+    );
+    let start_mode = resume_session_id
+        .map(StartMode::Load)
+        .unwrap_or(StartMode::New);
+    let (rec_tx, mut rec_rx) = mpsc::channel::<AgentEvent>(512);
+    tauri::async_runtime::spawn(async move {
+        while let Some(event) = rec_rx.recv().await {
+            recorder.handle_event(&event).await;
+        }
+    });
 
     tauri::async_runtime::spawn(async move {
         let mut raw_rx = raw_rx;
         let mut session_tx = Some(session_tx);
+        let mut frontend_dead = false;
         while let Some(event) = raw_rx.recv().await {
-            // driver 契约：SessionStarted 是首个事件；此后不再捕获
+            // SessionStarted 捕获必须先于一切可能失败的转发（invoke 依赖它返回）
             if let (Some(tx), AgentEvent::SessionStarted { session_id }) =
                 (session_tx.take(), &event)
             {
                 let _ = tx.send(session_id.clone());
             }
-            if frame_in_tx.send(event).await.is_err() {
-                break;
+            // 落库通道失效仅丢持久化，不中断捕获与转发
+            if rec_tx.send(event.clone()).await.is_err() {
+                eprintln!("[p1-6] recorder 通道失效，事件持久化中断");
+            }
+            // 前端管道失效（页面重载等）：终止孤儿运行（否则 agent 跑完整轮白烧
+            // token，且 SessionStarted 丢失导致 invoke 误报"未返回会话信息"），
+            // 循环保持排空以完成收尾
+            if frame_in_tx.send(event).await.is_err() && !frontend_dead {
+                frontend_dead = true;
+                eprintln!("[p1-6] 前端通道失效，终止本次运行");
+                cancel_for_tap.cancel();
             }
         }
     });
@@ -163,8 +220,6 @@ async fn run_prompt(
         }
     });
 
-    let cancel = CancellationToken::new();
-    let cancel_for_run = cancel.clone();
     let driver = AcpDriver::new(def.command);
     let cleanup_session = session_of_run.clone();
     let app_for_cleanup = app.clone();
@@ -172,7 +227,7 @@ async fn run_prompt(
         let result = driver
             .run(
                 std::path::PathBuf::from(cwd),
-                StartMode::New,
+                start_mode,
                 prompt,
                 raw_tx,
                 permissions,
@@ -190,11 +245,23 @@ async fn run_prompt(
 
     // session_id 就绪即返回；若运行先于会话建立失败，立即把错误抛回调用方
     let session_id = tokio::select! {
-        id = session_rx => id.map_err(|_| "事件流在会话建立前关闭".to_string())?,
-        done = done_rx => {
+        id = session_rx => match id {
+            Ok(id) => id,
+            // 事件流关闭：driver.run 已返回——取真实结果而非笼统报错
+            Err(_) => {
+                cancel.cancel();
+                return match done_rx.await {
+                    Ok(Ok(())) => Err("会话建立失败：agent 未返回会话信息".into()),
+                    Ok(Err(e)) => Err(format!("会话建立失败：{e}")),
+                    Err(_) => Err("事件流在会话建立前关闭".into()),
+                };
+            }
+        },
+        done = &mut done_rx => {
+            cancel.cancel();
             return match done {
                 Ok(Ok(())) => Err("运行在会话建立前即结束".into()),
-                Ok(Err(e)) => Err(e.to_string()),
+                Ok(Err(e)) => Err(format!("会话建立失败：{e}")),
                 Err(_) => Err("运行任务异常退出".into()),
             };
         }
@@ -212,6 +279,20 @@ async fn run_prompt(
             broker: broker.clone(),
         },
     );
+
+    // 晚失败兜底（P1-6 验收发现）：invoke 返回后无人消费 done——运行晚失败
+    // （如 agent 进程死亡）必须转成 DriverError 事件让前端结束运行态
+    tauri::async_runtime::spawn(async move {
+        if let Ok(Err(e)) = done_rx.await {
+            eprintln!("[p1-6] 运行晚失败：{e}");
+            let _ = frame_in_tx_for_done
+                .send(AgentEvent::DriverError {
+                    message: format!("运行失败：{e}"),
+                })
+                .await;
+        }
+    });
+
     Ok(RunInfo { session_id })
 }
 
@@ -251,6 +332,82 @@ async fn set_permission_mode(
         }
         None => Err(format!("会话 {session_id} 不在运行中")),
     }
+}
+
+/// 历史会话列表（P1-6：启动时注入前端）
+#[tauri::command]
+async fn list_history_sessions(app: tauri::AppHandle) -> Result<Vec<HistorySession>, String> {
+    let state = app.state::<AppState>();
+    let store = state.store().await;
+    let rows = store.list_sessions().await.map_err(|e| e.to_string())?;
+    Ok(rows
+        .into_iter()
+        .map(|row| HistorySession {
+            agent_session_id: row.agent_session_id,
+            cwd: row.cwd,
+            title: row.title,
+            status: row.status,
+            updated_at: row.updated_at,
+        })
+        .collect())
+}
+
+/// 删除会话（P1-6：SuperCode 侧级联删除；运行中禁止）
+#[tauri::command]
+async fn delete_session(app: tauri::AppHandle, agent_session_id: String) -> Result<(), String> {
+    let state = app.state::<AppState>();
+    {
+        let runs = state.runs.lock().await;
+        if runs.contains_key(&agent_session_id) {
+            return Err("会话运行中，请先停止再删除".into());
+        }
+    }
+    let store = state.store().await;
+    let _ = store
+        .delete_session_by_agent(&agent_session_id)
+        .await
+        .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+/// 历史会话 DTO（Tauri IPC 返回类型需本地 Serialize）
+#[derive(serde::Serialize)]
+struct HistorySession {
+    agent_session_id: String,
+    cwd: String,
+    title: String,
+    status: String,
+    updated_at: String,
+}
+
+/// 历史消息 DTO
+#[derive(serde::Serialize)]
+struct HistoryMessage {
+    role: String,
+    text: String,
+    created_at: String,
+}
+
+/// 单个会话的落库消息（P1-6：历史渲染）
+#[tauri::command]
+async fn list_session_messages(
+    app: tauri::AppHandle,
+    agent_session_id: String,
+) -> Result<Vec<HistoryMessage>, String> {
+    let state = app.state::<AppState>();
+    let store = state.store().await;
+    let rows = store
+        .list_messages(&agent_session_id)
+        .await
+        .map_err(|e| e.to_string())?;
+    Ok(rows
+        .into_iter()
+        .map(|row| HistoryMessage {
+            role: row.role,
+            text: row.text,
+            created_at: row.created_at,
+        })
+        .collect())
 }
 
 /// 审批中心应答待决请求（应答成功即从待决映射移除）
@@ -384,6 +541,9 @@ pub fn run() {
             read_text_file,
             set_permission_mode,
             respond_permission,
+            list_history_sessions,
+            list_session_messages,
+            delete_session,
             list_rules,
             add_rule,
             delete_rule
