@@ -680,6 +680,131 @@ async fn read_text_file(path: String) -> Result<String, String> {
     Ok(String::from_utf8_lossy(&bytes).into_owned())
 }
 
+// ── Agent 管理（P2-2，§5.1）：注册表合并视图 + 用户自定义 CRUD ──
+
+#[derive(serde::Serialize)]
+#[serde(rename_all = "snake_case")]
+struct AgentRow {
+    id: String,
+    display_name: String,
+    driver_kind: registry::DriverKind,
+    command: String,
+    version_args: Vec<String>,
+    capabilities: registry::Capabilities,
+    /// id 出现在用户文件（含覆盖内置）
+    is_user_defined: bool,
+    installed_version: Option<String>,
+}
+
+/// 新增/更新入参。Tauri 仅映射**顶层**命令形参（camelCase↔snake_case），
+/// 嵌套 struct 走 serde 原样匹配——故这里显式 rename_all=camelCase 对齐前端
+/// `AgentInput`（审查 critical：否则 add/update_agent 反序列化必失败）。
+#[derive(serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct AgentInput {
+    id: String,
+    display_name: String,
+    driver_kind: String,
+    command: String,
+    version_args: Vec<String>,
+    supports_load_session: bool,
+    supports_diff: bool,
+    supports_permission: bool,
+}
+
+impl AgentInput {
+    fn into_definition(self) -> Result<registry::AgentDefinition, String> {
+        let driver_kind = match self.driver_kind.as_str() {
+            "acp" => registry::DriverKind::Acp,
+            "stream_json" => registry::DriverKind::StreamJson,
+            "native" => registry::DriverKind::Native,
+            other => return Err(format!("未知 driver_kind: {other}")),
+        };
+        let id = self.id.trim().to_string();
+        if id.is_empty()
+            || !id
+                .chars()
+                .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-')
+        {
+            return Err("id 须为 [a-z0-9-]+".into());
+        }
+        let command = self.command.trim().to_string();
+        if command.is_empty() {
+            return Err("command 不能为空".into());
+        }
+        let version_args = if self.version_args.is_empty() {
+            vec!["--version".into()]
+        } else {
+            self.version_args
+        };
+        Ok(registry::AgentDefinition {
+            id,
+            display_name: self.display_name.trim().to_string(),
+            driver_kind,
+            command,
+            version_args,
+            capabilities: registry::Capabilities {
+                supports_load_session: self.supports_load_session,
+                supports_diff: self.supports_diff,
+                supports_permission: self.supports_permission,
+            },
+        })
+    }
+}
+
+fn user_defined_ids() -> std::collections::HashSet<String> {
+    registry::AgentRegistry::load_user_entries()
+        .into_iter()
+        .map(|e| e.id)
+        .collect()
+}
+
+async fn probe_row(def: registry::AgentDefinition, is_user_defined: bool) -> AgentRow {
+    let installed_version = def.detect_version().await;
+    AgentRow {
+        id: def.id,
+        display_name: def.display_name,
+        driver_kind: def.driver_kind,
+        command: def.command,
+        version_args: def.version_args,
+        capabilities: def.capabilities,
+        is_user_defined,
+        installed_version,
+    }
+}
+
+#[tauri::command]
+async fn list_agents() -> Result<Vec<AgentRow>, String> {
+    let reg = registry::AgentRegistry::load();
+    let user_ids = user_defined_ids();
+    // 并行探测（npx 类冷启动可达 8s 超时，串行会卡设置页）
+    let futs = reg.entries().iter().map(|def| {
+        let def = def.clone();
+        let is_user = user_ids.contains(&def.id);
+        async move { probe_row(def, is_user).await }
+    });
+    Ok(futures::future::join_all(futs).await)
+}
+
+#[tauri::command]
+async fn add_agent(input: AgentInput) -> Result<AgentRow, String> {
+    let def = input.into_definition()?;
+    registry::AgentRegistry::upsert_user_agent(def.clone()).map_err(|e| e.to_string())?;
+    Ok(probe_row(def, true).await)
+}
+
+#[tauri::command]
+async fn update_agent(input: AgentInput) -> Result<AgentRow, String> {
+    let def = input.into_definition()?;
+    registry::AgentRegistry::upsert_user_agent(def.clone()).map_err(|e| e.to_string())?;
+    Ok(probe_row(def, true).await)
+}
+
+#[tauri::command]
+async fn delete_agent(id: String) -> Result<(), String> {
+    registry::AgentRegistry::remove_user_agent(&id).map_err(|e| e.to_string())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     // GUI PATH 修正（P1-10，§4.7）：Finder/Dock 启动的 .app 只拿 launchd 的
@@ -712,8 +837,59 @@ pub fn run() {
             list_tasks,
             create_task,
             update_task,
-            delete_task
+            delete_task,
+            list_agents,
+            add_agent,
+            update_agent,
+            delete_agent
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// 前端 invoke 以 camelCase 发嵌套 input——serde 必须能对上（审查 critical 回归）。
+    #[test]
+    fn agent_input_accepts_camel_case_from_frontend() {
+        let json = r#"{
+            "id": "my-agent",
+            "displayName": "My Agent",
+            "driverKind": "acp",
+            "command": "my-agent --acp",
+            "versionArgs": ["--version"],
+            "supportsLoadSession": true,
+            "supportsDiff": true,
+            "supportsPermission": false
+        }"#;
+        let input: AgentInput = serde_json::from_str(json).expect("camelCase 反序列化应成功");
+        assert_eq!(input.id, "my-agent");
+        assert_eq!(input.display_name, "My Agent");
+        assert_eq!(input.driver_kind, "acp");
+        assert_eq!(input.version_args, vec!["--version".to_string()]);
+        assert!(!input.supports_permission);
+
+        let def = input.into_definition().unwrap();
+        assert_eq!(def.command, "my-agent --acp");
+        assert_eq!(def.driver_kind, registry::DriverKind::Acp);
+    }
+
+    #[test]
+    fn agent_input_rejects_bad_id_and_empty_command() {
+        let bad_id: AgentInput = serde_json::from_str(
+            r#"{"id":"Bad_ID","displayName":"x","driverKind":"acp","command":"x",
+                "versionArgs":[],"supportsLoadSession":true,"supportsDiff":true,"supportsPermission":true}"#,
+        )
+        .unwrap();
+        assert!(bad_id.into_definition().is_err());
+
+        let empty_cmd: AgentInput = serde_json::from_str(
+            r#"{"id":"ok","displayName":"x","driverKind":"acp","command":"  ",
+                "versionArgs":[],"supportsLoadSession":true,"supportsDiff":true,"supportsPermission":true}"#,
+        )
+        .unwrap();
+        assert!(empty_cmd.into_definition().is_err());
+    }
 }

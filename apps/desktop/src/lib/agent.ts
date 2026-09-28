@@ -156,3 +156,51 @@ export function deleteRule(id: string): Promise<void> {
 export function readTextFile(path: string): Promise<string> {
   return invoke("read_text_file", { path });
 }
+
+/** Agent 注册表行（P2-2，§5.1 AgentRow） */
+export interface AgentRow {
+  id: string;
+  display_name: string;
+  driver_kind: "acp" | "stream_json" | "native";
+  command: string;
+  version_args: string[];
+  capabilities: {
+    supports_load_session: boolean;
+    supports_diff: boolean;
+    supports_permission: boolean;
+  };
+  /** id 出现在用户自定义文件（含覆盖内置） */
+  is_user_defined: boolean;
+  installed_version: string | null;
+}
+
+/** 新增/更新自定义 agent 入参（能力位扁平化） */
+export interface AgentInput {
+  id: string;
+  displayName: string;
+  driverKind: "acp" | "stream_json" | "native";
+  command: string;
+  versionArgs: string[];
+  supportsLoadSession: boolean;
+  supportsDiff: boolean;
+  supportsPermission: boolean;
+}
+
+/** 注册表合并视图 + 并行安装探测 */
+export function listAgents(): Promise<AgentRow[]> {
+  return invoke("list_agents");
+}
+
+/** 新增（或同 id 覆盖）用户自定义 agent → ~/.supercode/agents.json */
+export function addAgent(input: AgentInput): Promise<AgentRow> {
+  return invoke("add_agent", { input });
+}
+
+export function updateAgent(input: AgentInput): Promise<AgentRow> {
+  return invoke("update_agent", { input });
+}
+
+/** 删除用户自定义条目；覆盖内置时恢复出厂定义 */
+export function deleteAgent(id: string): Promise<void> {
+  return invoke("delete_agent", { id });
+}
