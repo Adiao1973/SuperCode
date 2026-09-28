@@ -15,7 +15,7 @@ import { PendingCard } from "@/components/PendingCard";
 import { CopyableBlock } from "@/components/CopyableBlock";
 import {
   cancelRun,
-  listAgents,
+  listAgentDefinitions,
   checkNodeEnv,
   type AgentRow,
   type NodeEnvReport,
@@ -96,12 +96,12 @@ export function RunConsole({ session, dispatch }: RunConsoleProps) {
   const [nodeTick, setNodeTick] = useState(0);
   useEffect(() => {
     let disposed = false;
-    listAgents().then((rows) => { if (!disposed) setAgents(rows); })
+    listAgentDefinitions().then((rows) => { if (!disposed) setAgents(rows); })
       .catch((error) => { if (!disposed) setAgentsError(String(error)); });
     return () => { disposed = true; };
   }, [session.key]);
   useEffect(() => {
-    if (draft.agentId !== "claude-code") return;
+    if (draft.agentId !== "claude-code" && draft.agentId !== "codex") return;
     let disposed = false;
     setNodeEnv(null);
     setNodeError(null);
@@ -353,7 +353,7 @@ export function RunConsole({ session, dispatch }: RunConsoleProps) {
         </div>
 
         {agentsError && <p className="text-xs text-destructive">Agent 列表加载失败：{agentsError}</p>}
-        {draft.agentId === "claude-code" && (
+        {(draft.agentId === "claude-code" || draft.agentId === "codex") && (
           <div className="space-y-2 rounded-md border px-3 py-2 text-xs">
             <div className="flex items-center justify-between gap-2">
               <span>{nodeError ? `依赖探测失败：${nodeError}` : nodeEnv
@@ -361,19 +361,34 @@ export function RunConsole({ session, dispatch }: RunConsoleProps) {
                 : "正在检测 Node / npx…"}</span>
               <Button variant="ghost" size="sm" onClick={() => setNodeTick((tick) => tick + 1)}>重新检测</Button>
             </div>
-            {nodeEnv?.node_version && Number(nodeEnv.node_version.replace(/^v/, "").split(".")[0]) < 22 && (
-              <p className="text-destructive">当前适配器要求 Node.js ≥22，请升级后重启应用。</p>
+            {draft.agentId === "claude-code" && nodeEnv?.node_version && Number(nodeEnv.node_version.replace(/^v/, "").split(".")[0]) < 22 && (
+              <p className="text-destructive">当前 Claude 适配器要求 Node.js ≥22，请升级后重启应用。</p>
             )}
             <details open={nodeEnv != null && (!nodeEnv.node_version || !nodeEnv.npx_version)}>
-              <summary className="cursor-pointer">Claude Code 安装与认证指引</summary>
+              <summary className="cursor-pointer">
+                {draft.agentId === "codex" ? "Codex 安装与认证指引" : "Claude Code 安装与认证指引"}
+              </summary>
               <div className="mt-2 space-y-2">
-                <p>缺少 Node/npx 时安装 Node.js 22 或更高版本（macOS 可使用 Homebrew），随后重启应用。</p>
+                <p>{draft.agentId === "claude-code"
+                  ? "缺少 Node/npx 时安装 Node.js 22 或更高版本（macOS 可使用 Homebrew），随后重启应用。"
+                  : "缺少 Node/npx 时安装 Node.js（macOS 可使用 Homebrew），随后重启应用。"}</p>
                 <CopyableBlock text="brew install node" />
-                <p>检查适配器；需要登录时在终端完成认证后重试。</p>
-                <CopyableBlock text="npx -y @agentclientprotocol/claude-agent-acp --version" />
-                <CopyableBlock text="npx -y @agentclientprotocol/claude-agent-acp --cli auth login" />
-                <p>也可使用 Anthropic API Key 按量计费，无需 Pro/Max 订阅。在启动 SuperCode 的环境中配置 ANTHROPIC_API_KEY；网关还需按供应商说明配置 ANTHROPIC_BASE_URL 与凭证。SuperCode 不保存密钥。</p>
-                <p>从 Finder/Dock 启动不会继承终端临时变量；请从配置好环境的终端启动应用，或使用 Claude 自身支持的配置方式。</p>
+                {draft.agentId === "codex" ? (
+                  <>
+                    <p>检查 Codex ACP 适配器；登录或 API Key 由 Codex 管理。</p>
+                    <CopyableBlock text="npx -y @agentclientprotocol/codex-acp --version" />
+                    <CopyableBlock text="codex login" />
+                    <p>也可在启动 SuperCode 的环境中设置 CODEX_API_KEY 或 OPENAI_API_KEY。SuperCode 不保存密钥。</p>
+                  </>
+                ) : (
+                  <>
+                    <p>检查适配器；需要登录时在终端完成认证后重试。</p>
+                    <CopyableBlock text="npx -y @agentclientprotocol/claude-agent-acp --version" />
+                    <CopyableBlock text="npx -y @agentclientprotocol/claude-agent-acp --cli auth login" />
+                    <p>也可使用 Anthropic API Key 按量计费，无需 Pro/Max 订阅。在启动 SuperCode 的环境中配置 ANTHROPIC_API_KEY；网关还需按供应商说明配置 ANTHROPIC_BASE_URL 与凭证。SuperCode 不保存密钥。</p>
+                  </>
+                )}
+                <p>从 Finder/Dock 启动不会继承终端临时变量；请从配置好环境的终端启动应用，或使用 agent 自身支持的配置方式。</p>
               </div>
             </details>
           </div>

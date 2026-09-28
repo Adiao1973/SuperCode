@@ -5,7 +5,7 @@ mod recorder;
 
 pub use recorder::SessionRecorder;
 
-use std::path::PathBuf;
+use std::{path::PathBuf, time::Duration};
 
 use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
 use sqlx::{Row, SqlitePool};
@@ -106,7 +106,24 @@ impl Store {
             .filename(path)
             .create_if_missing(true)
             .journal_mode(sqlx::sqlite::SqliteJournalMode::Wal);
-        Self::connect(options).await
+        // 首次并行打开同一个新库时，SQLite 的 WAL 初始化或 sqlx 的迁移
+        // 元数据写入可能竞态。仅对这两类瞬时冲突重试；真正的迁移错误立即返回。
+        for attempt in 0..8 {
+            match Self::connect(options.clone()).await {
+                Ok(store) => return Ok(store),
+                Err(CoreError::Db(message))
+                    if attempt < 7
+                        && (message.contains("database is locked")
+                            || message.contains("_sqlx_migrations.version")
+                            || message.contains("already exists")
+                            || message.contains("duplicate column name")) =>
+                {
+                    tokio::time::sleep(Duration::from_millis(25 * (attempt + 1))).await;
+                }
+                Err(err) => return Err(err),
+            }
+        }
+        unreachable!("最后一次失败已在循环中返回")
     }
 
     pub async fn open_in_memory() -> Result<Self> {
@@ -768,6 +785,28 @@ fn extract_text_from_content_json(content_json: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[tokio::test]
+    async fn 同一新库并行打开不会迁移冲突() {
+        for _ in 0..3 {
+            let path = std::env::temp_dir().join(format!("sc-p24-migrate-{}.db", Uuid::new_v4()));
+            let barrier = std::sync::Arc::new(tokio::sync::Barrier::new(4));
+            let handles: Vec<_> = (0..4)
+                .map(|_| {
+                    let path = path.clone();
+                    let barrier = barrier.clone();
+                    tokio::spawn(async move {
+                        barrier.wait().await;
+                        Store::open(&path).await
+                    })
+                })
+                .collect();
+            for handle in handles {
+                let store = handle.await.unwrap().expect("并行打开不应因迁移竞态失败");
+                assert!(!store.list_workspaces().await.unwrap().is_empty());
+            }
+        }
+    }
 
     #[tokio::test]
     async fn 会话增查列表闭环() {

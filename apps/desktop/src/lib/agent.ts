@@ -194,6 +194,11 @@ export function listAgents(): Promise<AgentRow[]> {
   return invoke("list_agents");
 }
 
+/** 会话选择器只读定义，不启动 npx 版本探测 */
+export function listAgentDefinitions(): Promise<AgentRow[]> {
+  return invoke("list_agent_definitions");
+}
+
 /** 新增（或同 id 覆盖）用户自定义 agent → ~/.supercode/agents.json */
 export function addAgent(input: AgentInput): Promise<AgentRow> {
   return invoke("add_agent", { input });
