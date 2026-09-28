@@ -97,7 +97,7 @@
 | ID | 任务 | 验收命令与预期 | 状态 |
 |---|---|---|---|
 | P2-1 | Agent 注册表机制（core）：`AgentDefinition` 扩展 driver_kind/capabilities/spawn；内置条目含 opencode/claude-code/codex/mimo/zcode；用户自定义 `~/.supercode/agents.json` 合并；`probe_installed` 批量探测 | `cargo test` 注册表单测绿（内置查找/自定义合并覆盖同 id/探测解析）；`supercode detect` 列出全部注册 agent 及安装状态（未安装显示 —） | ✅ 已验收 2026-09-28 |
-| P2-2 | 设置 UI：agent 管理页（列表 + 安装徽标/版本 + 自定义 agent CRUD + 安装引导可复制） | `pnpm tauri dev` 设置页可见全部注册 agent；未安装项给出可复制安装命令；新增自定义 agent 后出现在列表且重启保留 | 待办 |
+| P2-2 | 设置 UI：agent 管理页（列表 + 安装徽标/版本 + 自定义 agent CRUD + 安装引导可复制） | `pnpm tauri dev` 设置页可见全部注册 agent；未安装项给出可复制安装命令；新增自定义 agent 后出现在列表且重启保留 | ✅ 已验收 2026-09-28 |
 | P2-3 | claude-code 接入：`npx -y @agentclientprotocol/claude-agent-acp` 走 AcpDriver；Node/npx 依赖探测引导 | 真实任务跑通（流式消息 + 工具时间线 + 审批应答）；npx/Node 未装时给出可复制安装指引；续聊 session/load 生效 | 待办 |
 | P2-4 | codex 接入：`npx -y @agentclientprotocol/codex-acp` 走 AcpDriver | 同 P2-3 剧本在 codex 上通过（两 agent 并行会话互不串台） | 待办 |
 | P2-5 | mimo 接入：`mimo acp` 走 AcpDriver | 同 P2-3 剧本在 mimo 上通过 | 待办 |
@@ -127,6 +127,10 @@
   ZCode —（zcode -p --output-format stream-json --mode yolo）
   ```
 - **P2-1 实现**：`AgentDefinition` serde 双向（内置常量 + `~/.supercode/agents.json`），`version_args`/`capabilities` 缺省友好；`AgentRegistry::load()` 合并用户条目（同 id 覆盖内置，坏文件静默不拖垮宿主）；`detect_version` 加 8s 超时（npx 冷启动可慢但不能卡死）。CLI `detect` 改走 `probe_installed` 全量列出；桌面端 `AgentDefinition::find` 便捷入口委托 `load()` 自动生效。
+- **P2-2 验收**：设置页「Agent 管理」区块实机核对（用户截图）——五条注册 agent 列出；OpenCode ✓1.18.30 / Claude Code ✓0.81.2 / Codex ✓adapter 1.13.1；MiMo/ZCode 未安装项展示琥珀徽标 + 可复制安装指引；自定义 CRUD 写 `~/.supercode/agents.json` 重启保留。`just verify` 全绿（core 61 + desktop 2 = 63 测试）。
+- **P2-2 审查修复（独立审查发现 critical）**：`AgentInput` 嵌套入参 casing 不匹配——Tauri 仅映射顶层命令形参，嵌套 struct 走 serde 原样匹配，前端 camelCase vs Rust snake_case 导致 add/update_agent 反序列化必失败。修复：`#[serde(rename_all = "camelCase")]` + 2 条 serde JSON 回归测锁定字段名；前端 id 校验收紧 `^[a-z0-9-]+$` 与后端一致。复审 PASS。**教训**：项目首个嵌套命令入参即踩坑——嵌套 IPC 入参必须显式 rename_all 并配 serde 级单测（`just verify` 不覆盖 IPC 反序列化层）。
+- **P2-2 偏差（zcode 误报未安装，用户实机发现）**：本机装的是 **ZCode.app 桌面版**，CLI 嵌在 `/Applications/ZCode.app/Contents/Resources/glm/zcode.cjs`（Node 脚本，0.16.9），**不注册 PATH 命令**——`zcode --version` 失败故判未安装（探测逻辑正确，安装形态特殊）。处理：安装引导改为可复制软链命令（`ln -sf …/zcode.cjs ~/.local/bin/zcode`）；实机验证软链后 `detect` → `ZCode 0.16.9 ✓`。与 P1-10 GUI PATH 问题同类：环境形态差异由产品引导兜底。
+- **P2-6 预警（本次实证，P2-6 接入时处理）**：zcode 0.16.9 `--help` 实际输出格式为 `--json`，与 §4.4 内置表 `--output-format stream-json` 不符——StreamJsonDriver 落地前需以实测 help 为准更新 spawn 命令（架构表同步）。
 
 ## Phase 3 — AI 指挥官与 Windows（概要）
 

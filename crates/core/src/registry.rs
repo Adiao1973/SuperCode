@@ -215,14 +215,94 @@ impl AgentRegistry {
         &self.entries
     }
 
-    /// 批量探测安装与版本：`(definition, Option<version>)`
+    /// 批量探测安装与版本：`(definition, Option<version>)`（并行，总耗时≈最慢一条）
     pub async fn probe_installed(&self) -> Vec<(AgentDefinition, Option<String>)> {
-        let mut out = Vec::with_capacity(self.entries.len());
-        for def in &self.entries {
-            let version = def.detect_version().await;
-            out.push((def.clone(), version));
+        let futs = self.entries.iter().map(|def| {
+            let def = def.clone();
+            async move {
+                let version = def.detect_version().await;
+                (def, version)
+            }
+        });
+        futures::future::join_all(futs).await
+    }
+
+    // ── 用户自定义写路径（P2-2：设置 UI agent 管理，§4.4） ──
+
+    /// 仅用户文件中的条目（不含内置；文件缺失/解析失败 → 空）
+    pub fn load_user_entries() -> Vec<AgentDefinition> {
+        match Self::user_config_path() {
+            Some(path) => Self::load_user_entries_at(&path),
+            None => Vec::new(),
         }
-        out
+    }
+
+    /// 原子写回用户文件（`~/.supercode/` 自动创建；临时文件 + rename）
+    pub fn save_user_entries(entries: &[AgentDefinition]) -> Result<()> {
+        let path = Self::user_config_path().ok_or_else(|| {
+            crate::error::CoreError::Io(std::io::Error::other("无法定位用户目录"))
+        })?;
+        Self::save_user_entries_at(&path, entries)
+    }
+
+    /// upsert 进用户文件（同 id 覆盖；覆盖内置 id = 用户覆盖语义）
+    pub fn upsert_user_agent(def: AgentDefinition) -> Result<()> {
+        let path = Self::user_config_path().ok_or_else(|| {
+            crate::error::CoreError::Io(std::io::Error::other("无法定位用户目录"))
+        })?;
+        Self::upsert_user_agent_at(&path, def)
+    }
+
+    /// 从用户文件移除：纯自定义即消失，覆盖内置则恢复内置条目；
+    /// 用户文件中不存在该 id → Err
+    pub fn remove_user_agent(id: &str) -> Result<()> {
+        let path = Self::user_config_path().ok_or_else(|| {
+            crate::error::CoreError::Io(std::io::Error::other("无法定位用户目录"))
+        })?;
+        Self::remove_user_agent_at(&path, id)
+    }
+
+    /// 路径参数形态（测试与显式路径场景）
+    pub fn load_user_entries_at(path: &Path) -> Vec<AgentDefinition> {
+        let Ok(text) = std::fs::read_to_string(path) else {
+            return Vec::new();
+        };
+        serde_json::from_str::<Vec<AgentDefinition>>(&text).unwrap_or_default()
+    }
+
+    /// 原子写：父目录自动创建，临时文件 + rename 避免半截文件
+    pub fn save_user_entries_at(path: &Path, entries: &[AgentDefinition]) -> Result<()> {
+        if let Some(dir) = path.parent() {
+            std::fs::create_dir_all(dir)?;
+        }
+        let text = serde_json::to_string_pretty(entries).map_err(|e| {
+            crate::error::CoreError::Protocol(format!("序列化用户 agent 失败: {e}"))
+        })?;
+        let tmp = path.with_extension("json.tmp");
+        std::fs::write(&tmp, text)?;
+        std::fs::rename(&tmp, path)?;
+        Ok(())
+    }
+
+    pub fn upsert_user_agent_at(path: &Path, def: AgentDefinition) -> Result<()> {
+        let mut entries = Self::load_user_entries_at(path);
+        match entries.iter_mut().find(|e| e.id == def.id) {
+            Some(slot) => *slot = def,
+            None => entries.push(def),
+        }
+        Self::save_user_entries_at(path, &entries)
+    }
+
+    pub fn remove_user_agent_at(path: &Path, id: &str) -> Result<()> {
+        let mut entries = Self::load_user_entries_at(path);
+        let before = entries.len();
+        entries.retain(|e| e.id != id);
+        if entries.len() == before {
+            return Err(crate::error::CoreError::Spawn(format!(
+                "用户自定义中无 agent: {id}"
+            )));
+        }
+        Self::save_user_entries_at(path, &entries)
     }
 }
 
@@ -363,5 +443,95 @@ mod tests {
             capabilities: Capabilities::default(),
         };
         assert_eq!(def.detect_version().await.as_deref(), Some("1.2.3-stub"));
+    }
+
+    fn temp_user_path(tag: &str) -> PathBuf {
+        let dir = std::env::temp_dir().join(format!("sc-reg-write-{tag}-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        dir.join("agents.json")
+    }
+
+    fn sample_def(id: &str, command: &str) -> AgentDefinition {
+        AgentDefinition {
+            id: id.into(),
+            display_name: id.into(),
+            driver_kind: DriverKind::Acp,
+            command: command.into(),
+            version_args: vec!["--version".into()],
+            capabilities: Capabilities::default(),
+        }
+    }
+
+    #[test]
+    fn upsert_writes_and_overrides_builtin() {
+        let path = temp_user_path("upsert");
+        AgentRegistry::upsert_user_agent_at(&path, sample_def("custom-a", "a --acp")).unwrap();
+        AgentRegistry::upsert_user_agent_at(&path, sample_def("opencode", "my-oc acp")).unwrap();
+
+        let entries = AgentRegistry::load_user_entries_at(&path);
+        assert_eq!(entries.len(), 2);
+        assert!(entries.iter().any(|e| e.id == "custom-a"));
+        let oc = entries.iter().find(|e| e.id == "opencode").unwrap();
+        assert_eq!(oc.command, "my-oc acp", "同 id 覆盖写入用户文件");
+
+        // 合并视图：内置 opencode 被用户条目覆盖
+        let mut reg = AgentRegistry::builtin();
+        reg.merge_user_file(&path);
+        assert_eq!(reg.find("opencode").unwrap().command, "my-oc acp");
+        assert_eq!(reg.entries().len(), 6);
+
+        // 再 upsert 同 id 不膨胀
+        AgentRegistry::upsert_user_agent_at(&path, sample_def("custom-a", "a2 --acp")).unwrap();
+        let entries = AgentRegistry::load_user_entries_at(&path);
+        assert_eq!(entries.len(), 2);
+        assert_eq!(
+            entries.iter().find(|e| e.id == "custom-a").unwrap().command,
+            "a2 --acp"
+        );
+
+        let _ = std::fs::remove_dir_all(path.parent().unwrap());
+    }
+
+    #[test]
+    fn remove_custom_vanishes_and_override_restores_builtin() {
+        let path = temp_user_path("remove");
+        AgentRegistry::upsert_user_agent_at(&path, sample_def("custom-b", "b --acp")).unwrap();
+        AgentRegistry::upsert_user_agent_at(&path, sample_def("zcode", "my-zcode run")).unwrap();
+
+        // 删纯自定义：条目消失
+        AgentRegistry::remove_user_agent_at(&path, "custom-b").unwrap();
+        let entries = AgentRegistry::load_user_entries_at(&path);
+        assert!(entries.iter().all(|e| e.id != "custom-b"));
+        assert_eq!(entries.len(), 1);
+
+        // 删覆盖条目：合并视图恢复内置 zcode
+        AgentRegistry::remove_user_agent_at(&path, "zcode").unwrap();
+        assert!(AgentRegistry::load_user_entries_at(&path).is_empty());
+        let mut reg = AgentRegistry::builtin();
+        reg.merge_user_file(&path);
+        assert_eq!(
+            reg.find("zcode").unwrap().command,
+            "zcode -p --output-format stream-json --mode yolo"
+        );
+
+        let _ = std::fs::remove_dir_all(path.parent().unwrap());
+    }
+
+    #[test]
+    fn remove_unknown_id_errors_and_save_creates_dir() {
+        let path = temp_user_path("unknown");
+        assert!(AgentRegistry::remove_user_agent_at(&path, "nope").is_err());
+
+        // 父目录不存在时 save 自动创建（不 panic）
+        let nested = std::env::temp_dir()
+            .join(format!("sc-reg-nested-{}", std::process::id()))
+            .join("sub")
+            .join("agents.json");
+        let _ = std::fs::remove_dir_all(nested.parent().unwrap().parent().unwrap());
+        AgentRegistry::save_user_entries_at(&nested, &[sample_def("x", "x")]).unwrap();
+        assert_eq!(AgentRegistry::load_user_entries_at(&nested).len(), 1);
+        let _ = std::fs::remove_dir_all(nested.parent().unwrap().parent().unwrap());
+
+        let _ = std::fs::remove_dir_all(path.parent().unwrap());
     }
 }

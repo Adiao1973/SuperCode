@@ -333,6 +333,19 @@ impl AgentRegistry {
     /// 批量探测安装与版本：`(definition, Option<version>)`
     pub async fn probe_installed(&self) -> Vec<(AgentDefinition, Option<String>)>;
 }
+
+// ── 用户自定义写路径（P2-2：设置 UI agent 管理） ──
+impl AgentRegistry {
+    /// 仅用户文件中的条目（不含内置；文件缺失/解析失败 → 空）
+    pub fn load_user_entries() -> Vec<AgentDefinition>;
+    /// 原子写回用户文件（`~/.supercode/` 自动创建；临时文件 + rename）
+    pub fn save_user_entries(entries: &[AgentDefinition]) -> Result<()>;
+    /// upsert 进用户文件（同 id 覆盖；覆盖内置 id = 用户覆盖语义）
+    pub fn upsert_user_agent(def: AgentDefinition) -> Result<()>;
+    /// 从用户文件移除：纯自定义即消失，覆盖内置则恢复内置条目；
+    /// 用户文件中不存在该 id → Err
+    pub fn remove_user_agent(id: &str) -> Result<()>;
+}
 ```
 
 **用户自定义格式**（`~/.supercode/agents.json`，JSON 数组；只读合并，写入由设置 UI 负责）：
@@ -500,6 +513,12 @@ supercode-desktop 对渲染层暴露的命令（invoke）；事件经 `tauri::ip
 | `check_opencode_env` | `cwd: Option`（P1-7：Some 时附检 `<cwd>` 项目级配置） | `OpencodeEnvReport`（§4.7） | opencode 环境探测：安装/版本、全局与项目配置的 permission/model 解析、严格判定。只读不改配置；引导文案在前端（设置页区块 + 运行框 cwd 联检） |
 | `list_workspaces` / `create_workspace` / `delete_workspace` | — / `path` / `id` | 空间列表 / `Workspace` / `()`（P1-8，ADR-0007） | 工作空间 CRUD：默认空间单例（kind=default）恒在排最后，project 空间按项目根绝对路径 UNIQUE 去重（name 取目录名）；删除仅限 project 空间，会话移入默认空间不级联删 |
 | `list_tasks` / `create_task` / `update_task` / `delete_task` | — / `title`+`workspace_id` / `id`+`status?`/`session_id?` / `id` | 任务列表 / `TaskEntry` / `TaskEntry` / `()`（P1-9 简版看板） | 任务=标题+空间+绑定会话+状态（backlog\|in_progress\|review\|done）；绑定会话随 delete_session 级联解绑；看板按空间分节四列展示（拖拽升级在 Phase 2） |
+| `list_agents` | — | `Vec<AgentRow>`（P2-2） | 注册表合并视图（内置顺序+用户新增）+ 并行探测安装版本；`is_user_defined` 标记用户文件条目（含覆盖内置） |
+| `add_agent` / `update_agent` | `id`、`display_name`、`driver_kind`、`command`、`version_args`、`capabilities`（update 带 `id`） | `AgentRow` | 写入 `~/.supercode/agents.json` 并返回探测后的行（同 id 覆盖=用户覆盖内置语义） |
+| `delete_agent` | `id` | `()` | 从用户文件移除：纯自定义消失，覆盖内置则恢复出厂条目；文件中无此 id 报错 |
+
+`AgentRow` = `AgentDefinition` 序列化字段 + `is_user_defined: bool` + `installed_version: Option<String>`
+（前端 TS 镜像；探测语义沿用 §4.4，`list_agents` 内并行探测）。
 
 - **权限事件（Tauri 全局事件，非 Channel）**：每个运行的 broker 经转发任务把
   `PendingPermission` / `DecisionRecord` 以 `permission-request` / `decision-record`
@@ -596,6 +615,7 @@ P1-8 落地迁移 0003（workspaces + sessions.workspace_id，历史会话按 di
 
 | 日期 | 版本 | 摘要 |
 |---|---|---|
+| 2026-09-28 | 0.15 | P2-2 小设计：§4.4 补用户自定义写路径（load_user_entries/save/upsert/remove，原子写）；§5.1 新增 list/add/update/delete_agent 与 AgentRow |
 | 2026-09-28 | 0.14 | P2-1 小设计：§4.4 AgentDefinition 落地形态（driver_kind/command/version_args/capabilities + serde 用户自定义）；AgentRegistry builtin/load/find/probe_installed；内置五条齐备（opencode/claude-code/codex/mimo/zcode） |
 | 2026-09-27 | 0.13 | P1-10 打包验收：版本号 v0.2.0 + just build 剧本；§4.7 增 GUI PATH 修正（launchd 不继承 shell PATH，探测与 spawn 双失效，宿主启动并入常见安装目录） |
 | 2026-09-27 | 0.12 | P1-9 简版任务看板：§5.1 IPC 增 list/create/update/delete_task（update 兼改状态与绑定会话）；tasks 表读写方法（绑定会话随 delete_session 解绑）；前端看板按空间分节四列 |
