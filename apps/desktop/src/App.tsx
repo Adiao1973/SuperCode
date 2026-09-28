@@ -130,7 +130,7 @@ function App() {
           <div className="border-t py-3" />
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <span className="size-2 rounded-full bg-emerald-500" />
-            opencode · 已接入（环境面板见设置）
+            ACP Agents · 在会话中选择（管理与环境见设置）
           </div>
         </div>
       </aside>

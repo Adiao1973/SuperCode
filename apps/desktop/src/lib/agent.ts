@@ -11,6 +11,7 @@ export interface RunInfo {
 }
 
 export function runPrompt(options: {
+  agentId: string;
   prompt: string;
   cwd: string;
   allow: string[];
@@ -25,6 +26,7 @@ export function runPrompt(options: {
   const channel = new Channel<AgentEvent[]>();
   channel.onmessage = options.onEvents;
   return invoke<RunInfo>("run_prompt", {
+    agentId: options.agentId,
     prompt: options.prompt,
     cwd: options.cwd,
     allow: options.allow,
@@ -93,6 +95,7 @@ export function deleteTask(id: string): Promise<void> {
 }
 
 export interface HistorySession {
+  agent_id: string;
   agent_session_id: string;
   cwd: string;
   title: string;
@@ -203,4 +206,12 @@ export function updateAgent(input: AgentInput): Promise<AgentRow> {
 /** 删除用户自定义条目；覆盖内置时恢复出厂定义 */
 export function deleteAgent(id: string): Promise<void> {
   return invoke("delete_agent", { id });
+}
+
+export interface NodeEnvReport {
+  node_version: string | null;
+  npx_version: string | null;
+}
+export function checkNodeEnv(): Promise<NodeEnvReport> {
+  return invoke("check_node_env");
 }

@@ -127,7 +127,7 @@ impl AcpDriver {
                 agent_client_protocol::on_receive_request!(),
             )
             .connect_with(agent, move |connection: ConnectionTo<Agent>| async move {
-                let _init = connection
+                let init = connection
                     .send_request(acp::InitializeRequest::new(
                         agent_client_protocol::schema::ProtocolVersion::V1,
                     ))
@@ -147,6 +147,11 @@ impl AcpDriver {
                         session.session_id
                     }
                     StartMode::Load(agent_session_id) => {
+                        if !init.agent_capabilities.load_session {
+                            return Err(acp_error(CoreError::Protocol(
+                                "agent 未声明 session/load 能力".into(),
+                            )));
+                        }
                         let session_id = acp::SessionId::from(agent_session_id);
                         // 重放的历史通知会先于响应流入 events 通道
                         connection
