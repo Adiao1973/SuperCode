@@ -70,6 +70,7 @@ impl AgentDefinition {
         let fut = async {
             let output = tokio::process::Command::new(program)
                 .args(&self.version_args)
+                .kill_on_drop(true)
                 .output()
                 .await
                 .ok()?;

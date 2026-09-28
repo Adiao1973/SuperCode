@@ -56,6 +56,7 @@ fn parse_mode(mode: &str) -> Result<PermissionMode, String> {
 async fn run_prompt(
     app: tauri::AppHandle,
     prompt: String,
+    agent_id: Option<String>,
     cwd: String,
     allow: Vec<String>,
     deny: Vec<String>,
@@ -66,17 +67,34 @@ async fn run_prompt(
     workspace_id: Option<String>,
     on_events: Channel<Vec<AgentEvent>>,
 ) -> Result<RunInfo, String> {
-    let def = registry::AgentDefinition::find("opencode").map_err(|e| e.to_string())?;
+    let def = registry::AgentDefinition::find(agent_id.as_deref().unwrap_or("opencode"))
+        .map_err(|e| e.to_string())?;
     let permission_mode = parse_mode(&mode)?;
-    // 默认目录可能不存在（新用户首跑）：自动创建，避免 agent 侧会话建立失败
-    std::fs::create_dir_all(&cwd).map_err(|e| format!("创建工作目录失败：{e}"))?;
-
-    // 规则库（SQLite 持久）∪ 本次 draft 规则，合成 broker 规则集
     let state = app.state::<AppState>();
     let store = state.store().await;
-    let _ = store
-        .upsert_agent("opencode", "OpenCode", "acp", None)
-        .await;
+    let existing = if let Some(id) = &resume_session_id {
+        let local_id = store
+            .find_session_by_agent(id)
+            .await
+            .map_err(|e| e.to_string())?
+            .ok_or("续聊会话不存在")?;
+        Some(
+            store
+                .get_session(local_id)
+                .await
+                .map_err(|e| e.to_string())?
+                .ok_or("续聊会话不存在")?,
+        )
+    } else {
+        None
+    };
+    supercode_core::orchestrator::validate_launch(&def, existing.as_ref(), &cwd)
+        .map_err(|e| e.to_string())?;
+    std::fs::create_dir_all(&cwd).map_err(|e| format!("创建工作目录失败：{e}"))?;
+    store
+        .upsert_agent(&def.id, &def.display_name, "acp", None)
+        .await
+        .map_err(|e| e.to_string())?;
     let mut rules = PermissionRules::new(allow, deny);
     for entry in store
         .list_permission_rules()
@@ -155,21 +173,14 @@ async fn run_prompt(
     // insert_session OR IGNORE 幂等；本轮提示词作为新用户消息记录。
     // recorder 跑在独立任务（有界通道缓冲）——逐事件 DB 写不得阻塞事件转发（§5 管线）
     let recorder_store = state.store().await.clone();
-    let supercode_session = match &resume_session_id {
-        Some(agent_id) => match recorder_store.find_session_by_agent(agent_id).await {
-            Ok(Some(existing)) => existing,
-            Ok(None) => SessionUuid::new_v4(),
-            Err(e) => {
-                eprintln!("[p1-6] 会话反查失败，回退新行：{e}");
-                SessionUuid::new_v4()
-            }
-        },
+    let supercode_session = match &existing {
+        Some(row) => SessionUuid::parse_str(&row.id).map_err(|e| e.to_string())?,
         None => SessionUuid::new_v4(),
     };
     let mut recorder = SessionRecorder::new(
         recorder_store,
         supercode_session,
-        "opencode",
+        &def.id,
         &cwd,
         &prompt.chars().take(24).collect::<String>(),
         &prompt,
@@ -352,6 +363,7 @@ async fn list_history_sessions(app: tauri::AppHandle) -> Result<Vec<HistorySessi
     Ok(rows
         .into_iter()
         .map(|row| HistorySession {
+            agent_id: row.agent_id,
             agent_session_id: row.agent_session_id,
             cwd: row.cwd,
             title: row.title,
@@ -383,6 +395,7 @@ async fn delete_session(app: tauri::AppHandle, agent_session_id: String) -> Resu
 /// 历史会话 DTO（Tauri IPC 返回类型需本地 Serialize）
 #[derive(serde::Serialize)]
 struct HistorySession {
+    agent_id: String,
     agent_session_id: String,
     cwd: String,
     title: String,
@@ -554,8 +567,13 @@ async fn delete_task(app: tauri::AppHandle, id: String) -> Result<(), String> {
     store.delete_task(&id).await.map_err(|e| e.to_string())
 }
 
-/// opencode 环境探测（P1-7，architecture §4.7）：安装/版本 + 全局与项目配置解析 + 严格判定。
-/// 只读不改用户配置；引导文案在前端。
+/// Claude ACP 的 Node/npx 依赖探测，只返回事实，不访问认证配置。
+#[tauri::command]
+async fn check_node_env() -> supercode_core::envcheck::NodeEnvReport {
+    supercode_core::envcheck::check_node().await
+}
+
+/// OpenCode 安装/配置联检（只读）。
 #[tauri::command]
 async fn check_opencode_env(
     cwd: Option<String>,
@@ -831,6 +849,7 @@ pub fn run() {
             add_rule,
             delete_rule,
             check_opencode_env,
+            check_node_env,
             list_workspaces,
             create_workspace,
             delete_workspace,

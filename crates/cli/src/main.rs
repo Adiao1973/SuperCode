@@ -42,6 +42,9 @@ enum Cmd {
     Run {
         /// 发给 agent 的任务提示词
         prompt: String,
+        /// 注册表 agent id
+        #[arg(long, default_value = "opencode")]
+        agent: String,
         /// 会话工作目录（默认当前目录）
         #[arg(long)]
         cwd: Option<PathBuf>,
@@ -84,11 +87,12 @@ async fn main() -> ExitCode {
     match cli.cmd {
         Cmd::Detect => cmd_detect().await,
         Cmd::Run {
+            agent,
             prompt,
             cwd,
             allows,
             denies,
-        } => run_session(Target::New, prompt, cwd, allows, denies).await,
+        } => run_session(Target::New { agent }, prompt, cwd, allows, denies).await,
         Cmd::Sessions { cmd } => cmd_sessions(cmd).await,
         Cmd::Resume {
             session_id,
@@ -107,7 +111,7 @@ async fn main() -> ExitCode {
 
 /// CLI 侧会话目标：新会话或恢复 SuperCode 侧 UUID 对应的会话。
 enum Target {
-    New,
+    New { agent: String },
     Resume { id: Uuid },
 }
 
@@ -174,13 +178,6 @@ async fn run_session(
     allows: Vec<String>,
     denies: Vec<String>,
 ) -> ExitCode {
-    let def = registry::AgentDefinition::find("opencode").expect("内置注册表必有 opencode");
-    let Some(version) = def.detect_version().await else {
-        eprintln!("未检测到 opencode，请先安装（https://opencode.ai/docs）");
-        return ExitCode::from(2);
-    };
-    eprintln!("· agent: {} {version}", def.display_name);
-
     let store = match Store::open_default().await {
         Ok(store) => store,
         Err(err) => {
@@ -188,16 +185,56 @@ async fn run_session(
             return ExitCode::FAILURE;
         }
     };
+    let existing = match &target {
+        Target::Resume { id } => match store.get_session(*id).await {
+            Ok(Some(row)) => Some(row),
+            Ok(None) => {
+                eprintln!("会话不存在: {id}");
+                return ExitCode::from(2);
+            }
+            Err(err) => {
+                eprintln!("读取会话失败: {err}");
+                return ExitCode::FAILURE;
+            }
+        },
+        Target::New { .. } => None,
+    };
+    let agent_id = match &target {
+        Target::New { agent } => agent.as_str(),
+        Target::Resume { .. } => &existing.as_ref().unwrap().agent_id,
+    };
+    let def = match registry::AgentDefinition::find(agent_id) {
+        Ok(def) => def,
+        Err(err) => {
+            eprintln!("{err}");
+            return ExitCode::from(2);
+        }
+    };
+    if let Err(err) = supercode_core::orchestrator::validate_launch(
+        &def,
+        existing.as_ref(),
+        existing.as_ref().map(|s| s.cwd.as_str()).unwrap_or(""),
+    ) {
+        eprintln!("{err}");
+        return ExitCode::from(2);
+    }
+    let version = def.detect_version().await;
+    eprintln!(
+        "· agent: {} {}",
+        def.display_name,
+        version.as_deref().unwrap_or("版本未知")
+    );
     if let Err(err) = store
-        .upsert_agent(&def.id, &def.display_name, "acp", Some(&version))
+        .upsert_agent(&def.id, &def.display_name, "acp", version.as_deref())
         .await
     {
-        eprintln!("· 持久化警告（agents）: {err}");
+        eprintln!("保存 agent 失败: {err}");
+        return ExitCode::FAILURE;
     }
 
     // 会话档案：New 新建 UUID；Resume 从库中取 agent 侧会话 id 与原 cwd
     let (our_id, agent_session_id, cwd, title) = match &target {
-        Target::New => {
+        Target::New { .. } => {
             let cwd = cwd
                 .unwrap_or_else(|| std::env::current_dir().unwrap_or_else(|_| PathBuf::from("/")));
             (Uuid::new_v4(), None, cwd, truncate(prompt.trim(), 60))

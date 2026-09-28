@@ -520,3 +520,51 @@ mod tests {
         }
     }
 }
+
+/// Node/npx runtime facts; does not inspect credentials or contact model providers.
+#[derive(Debug, Clone, serde::Serialize)]
+pub struct NodeEnvReport {
+    pub node_version: Option<String>,
+    pub npx_version: Option<String>,
+}
+
+async fn runtime_version(program: &str) -> Option<String> {
+    let output = tokio::time::timeout(
+        std::time::Duration::from_secs(5),
+        tokio::process::Command::new(program)
+            .arg("--version")
+            .kill_on_drop(true)
+            .output(),
+    )
+    .await
+    .ok()?
+    .ok()?;
+    if !output.status.success() {
+        return None;
+    }
+    String::from_utf8_lossy(&output.stdout)
+        .lines()
+        .map(str::trim)
+        .find(|line| !line.is_empty())
+        .map(str::to_owned)
+}
+
+pub async fn check_node() -> NodeEnvReport {
+    let (node_version, npx_version) = tokio::join!(runtime_version("node"), runtime_version("npx"));
+    NodeEnvReport {
+        node_version,
+        npx_version,
+    }
+}
+
+#[cfg(test)]
+mod node_tests {
+    #[tokio::test]
+    async fn missing_runtime_is_reported_without_panicking() {
+        assert!(
+            super::runtime_version("supercode-nonexistent-node-runtime")
+                .await
+                .is_none()
+        );
+    }
+}

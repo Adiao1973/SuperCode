@@ -98,7 +98,7 @@
 |---|---|---|---|
 | P2-1 | Agent 注册表机制（core）：`AgentDefinition` 扩展 driver_kind/capabilities/spawn；内置条目含 opencode/claude-code/codex/mimo/zcode；用户自定义 `~/.supercode/agents.json` 合并；`probe_installed` 批量探测 | `cargo test` 注册表单测绿（内置查找/自定义合并覆盖同 id/探测解析）；`supercode detect` 列出全部注册 agent 及安装状态（未安装显示 —） | ✅ 已验收 2026-09-28 |
 | P2-2 | 设置 UI：agent 管理页（列表 + 安装徽标/版本 + 自定义 agent CRUD + 安装引导可复制） | `pnpm tauri dev` 设置页可见全部注册 agent；未安装项给出可复制安装命令；新增自定义 agent 后出现在列表且重启保留 | ✅ 已验收 2026-09-28 |
-| P2-3 | claude-code 接入：`npx -y @agentclientprotocol/claude-agent-acp` 走 AcpDriver；Node/npx 依赖探测引导 | 真实任务跑通（流式消息 + 工具时间线 + 审批应答）；npx/Node 未装时给出可复制安装指引；续聊 session/load 生效 | 待办 |
+| P2-3 | claude-code 接入：`npx -y @agentclientprotocol/claude-agent-acp` 走 AcpDriver；Node/npx 依赖探测引导 | 真实任务跑通（流式消息 + 工具时间线 + 审批应答）；npx/Node 未装时给出可复制安装指引；续聊 session/load 生效；自动/手动步骤见 `docs/acceptance/p2-3.md` | ✅ 已验收 2026-09-28 |
 | P2-4 | codex 接入：`npx -y @agentclientprotocol/codex-acp` 走 AcpDriver | 同 P2-3 剧本在 codex 上通过（两 agent 并行会话互不串台） | 待办 |
 | P2-5 | mimo 接入：`mimo acp` 走 AcpDriver | 同 P2-3 剧本在 mimo 上通过 | 待办 |
 | P2-6 | StreamJsonDriver + zcode 受限支持：headless `--mode yolo` 预授权流解析；UI 标注"该 agent 无法外部审批" | zcode 任务跑通消息/工具事件；UI 可见受限标注；权限模式选择器对 zcode 置灰 | 待办 |
@@ -117,6 +117,8 @@
 7. 重启后历史会话按空间归类、agent 归属正确。
 
 ### Phase 2 验收与偏差记录
+
+- **P2-3 验收**：桌面/CLI 注册表驱动 agent 选择、真实归属落库与历史恢复；续聊校验 agent/cwd/能力，服务端 load 能力协商；Node/npx 探测与安装/登录/API Key 引导。`just verify` 68 测试全绿（1 既有 ignored），真实 Claude adapter 0.81.2 流式回复、Write 审批允许、Read、跨进程暗号续聊均通过。macOS WebKit 完成选择/依赖引导/内联审批/续聊/重启归属核对；完整输出与范围说明见 `docs/acceptance/p2-3.md`。无新增包依赖；CLI 新增 `run --agent` 支持验收，`resume` 使用存档 agent。Codex/MiMo 专项验收仍按后续任务推进。
 
 - **P2-1 验收**：`just verify` 全绿（58 测试，registry 新增 7 项：五内置齐全/capabilities 标志/未知 id 报错/用户覆盖内置同 id/缺省 version_args 与 capabilities/坏文件静默忽略/探测缺失命令与首行解析）。`supercode detect` 实机输出：
   ```

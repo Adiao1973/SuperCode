@@ -19,6 +19,7 @@ export const DEFAULT_WORKSPACE = "default";
 export const FALLBACK_CWD = "/tmp/supercode-p13";
 
 export interface SessionDraft {
+  agentId: string;
   prompt: string;
   cwd: string;
   rulesText: string;
@@ -82,6 +83,7 @@ function makeEntry(workspace?: Workspace | null): SessionEntry {
     // 项目空间 cwd 预填空间路径（可临时覆盖）；默认空间不绑路径
     workspaceId: workspace?.id ?? DEFAULT_WORKSPACE,
     draft: {
+      agentId: "opencode",
       prompt: "",
       cwd: workspace?.path ?? FALLBACK_CWD,
       rulesText: DEFAULT_RULES,
@@ -171,7 +173,7 @@ export function sessionsReducer(
           acpSessionId: session.agent_session_id,
           title: session.title || "历史会话",
           workspaceId: session.workspace_id || DEFAULT_WORKSPACE,
-          draft: { prompt: "", cwd: session.cwd, rulesText: DEFAULT_RULES, mode: "ask" },
+          draft: { agentId: session.agent_id, prompt: "", cwd: session.cwd, rulesText: DEFAULT_RULES, mode: "ask" },
           stream: initialStream,
           invokeError: null,
           pendingApprovals: [],
