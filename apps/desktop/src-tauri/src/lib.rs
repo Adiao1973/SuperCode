@@ -791,6 +791,26 @@ async fn probe_row(def: registry::AgentDefinition, is_user_defined: bool) -> Age
     }
 }
 
+/// 会话选择器只需要注册表定义；不在挂载时执行 npx 探测，避免与运行启动争用 npm 缓存。
+#[tauri::command]
+fn list_agent_definitions() -> Vec<AgentRow> {
+    let user_ids = user_defined_ids();
+    registry::AgentRegistry::load()
+        .entries()
+        .iter()
+        .map(|def| AgentRow {
+            id: def.id.clone(),
+            display_name: def.display_name.clone(),
+            driver_kind: def.driver_kind,
+            command: def.command.clone(),
+            version_args: def.version_args.clone(),
+            capabilities: def.capabilities.clone(),
+            is_user_defined: user_ids.contains(&def.id),
+            installed_version: None,
+        })
+        .collect()
+}
+
 #[tauri::command]
 async fn list_agents() -> Result<Vec<AgentRow>, String> {
     let reg = registry::AgentRegistry::load();
@@ -858,6 +878,7 @@ pub fn run() {
             update_task,
             delete_task,
             list_agents,
+            list_agent_definitions,
             add_agent,
             update_agent,
             delete_agent
