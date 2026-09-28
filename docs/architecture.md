@@ -496,6 +496,17 @@ driver ──AgentEvent──► events::Aggregator（Rust 侧）
 - 前端纪律：已完成的 message/chunk 必须 memo 化，只有活动中的 chunk 触发重渲染。
 - 该层为**硬性架构约束**，任何"先直连后面再优化"的 shortcuts 都不允许。
 
+### P2-4 Codex ACP 适配边界
+
+Codex 注册表条目继续使用 `npx -y @agentclientprotocol/codex-acp`，按 §4.4
+`AcpDriver` 处理。适配器启动 Codex App Server；SuperCode 只处理标准 ACP
+`initialize/session/new/session/load/session/prompt`、`session/update` 与
+`session/request_permission`。扩展能力（推荐模型、沙箱模式、原生子会话等）
+本任务不接入。认证由适配器/Codex 管理；UI 只读探测 Node/npx，不读取或保存凭证。
+Codex 会话的 `agent_id` 须入库，恢复时保持原 agent、cwd 与 ACP session id；
+同一宿主中并行运行的 Codex/Claude 必须各自有独立事件 Channel、broker 和
+recorder。任何适配器不经 ACP 请求而自行执行的操作不属于 SuperCode 审批管辖。
+
 ### P2-3 多 Agent 运行与恢复
 
 - `run_prompt` 新增 `agent_id: Option<String>`（缺省 opencode），按注册表解析；仅 ACP 驱动可运行，其他驱动明确报错。
