@@ -240,7 +240,7 @@ async fn run_prompt(
         }
     });
 
-    let driver = AcpDriver::new(def.command);
+    let driver = AcpDriver::new(def.command).with_process_cwd(def.acp_process_cwd);
     let cleanup_session = session_of_run.clone();
     let app_for_cleanup = app.clone();
     tauri::async_runtime::spawn(async move {
@@ -708,6 +708,7 @@ struct AgentRow {
     driver_kind: registry::DriverKind,
     command: String,
     version_args: Vec<String>,
+    acp_process_cwd: bool,
     capabilities: registry::Capabilities,
     /// id 出现在用户文件（含覆盖内置）
     is_user_defined: bool,
@@ -725,6 +726,8 @@ struct AgentInput {
     driver_kind: String,
     command: String,
     version_args: Vec<String>,
+    #[serde(default)]
+    acp_process_cwd: bool,
     supports_load_session: bool,
     supports_diff: bool,
     supports_permission: bool,
@@ -761,6 +764,7 @@ impl AgentInput {
             driver_kind,
             command,
             version_args,
+            acp_process_cwd: self.acp_process_cwd,
             capabilities: registry::Capabilities {
                 supports_load_session: self.supports_load_session,
                 supports_diff: self.supports_diff,
@@ -785,6 +789,7 @@ async fn probe_row(def: registry::AgentDefinition, is_user_defined: bool) -> Age
         driver_kind: def.driver_kind,
         command: def.command,
         version_args: def.version_args,
+        acp_process_cwd: def.acp_process_cwd,
         capabilities: def.capabilities,
         is_user_defined,
         installed_version,
@@ -804,6 +809,7 @@ fn list_agent_definitions() -> Vec<AgentRow> {
             driver_kind: def.driver_kind,
             command: def.command.clone(),
             version_args: def.version_args.clone(),
+            acp_process_cwd: def.acp_process_cwd,
             capabilities: def.capabilities.clone(),
             is_user_defined: user_ids.contains(&def.id),
             installed_version: None,
@@ -900,6 +906,7 @@ mod tests {
             "driverKind": "acp",
             "command": "my-agent --acp",
             "versionArgs": ["--version"],
+            "acpProcessCwd": true,
             "supportsLoadSession": true,
             "supportsDiff": true,
             "supportsPermission": false
@@ -913,6 +920,7 @@ mod tests {
 
         let def = input.into_definition().unwrap();
         assert_eq!(def.command, "my-agent --acp");
+        assert!(def.acp_process_cwd);
         assert_eq!(def.driver_kind, registry::DriverKind::Acp);
     }
 

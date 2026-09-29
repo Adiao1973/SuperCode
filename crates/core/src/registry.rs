@@ -47,6 +47,10 @@ fn default_version_args() -> Vec<String> {
     vec!["--version".into()]
 }
 
+fn is_false(value: &bool) -> bool {
+    !*value
+}
+
 /// 一个 agent 的接入声明（serde 双向：内置常量 + 用户自定义文件）。
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct AgentDefinition {
@@ -58,6 +62,9 @@ pub struct AgentDefinition {
     /// 版本探测参数（跟在 program 之后；缺省 `--version`）
     #[serde(default = "default_version_args")]
     pub version_args: Vec<String>,
+    /// ACP 子进程必须从会话 cwd 启动（MiMo 服务限制 session/new 目录）。
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub acp_process_cwd: bool,
     #[serde(default)]
     pub capabilities: Capabilities,
 }
@@ -116,6 +123,7 @@ impl AgentRegistry {
                 driver_kind: DriverKind::Acp,
                 command: "opencode acp".into(),
                 version_args: vec!["--version".into()],
+                acp_process_cwd: false,
                 capabilities: cap.clone(),
             },
             AgentDefinition {
@@ -129,6 +137,7 @@ impl AgentRegistry {
                     "@agentclientprotocol/claude-agent-acp".into(),
                     "--version".into(),
                 ],
+                acp_process_cwd: false,
                 capabilities: cap.clone(),
             },
             AgentDefinition {
@@ -141,6 +150,7 @@ impl AgentRegistry {
                     "@agentclientprotocol/codex-acp".into(),
                     "--version".into(),
                 ],
+                acp_process_cwd: false,
                 capabilities: cap.clone(),
             },
             AgentDefinition {
@@ -149,6 +159,7 @@ impl AgentRegistry {
                 driver_kind: DriverKind::Acp,
                 command: "mimo acp".into(),
                 version_args: vec!["--version".into()],
+                acp_process_cwd: true,
                 capabilities: cap.clone(),
             },
             AgentDefinition {
@@ -157,6 +168,7 @@ impl AgentRegistry {
                 driver_kind: DriverKind::StreamJson,
                 command: "zcode -p --output-format stream-json --mode yolo".into(),
                 version_args: vec!["--version".into()],
+                acp_process_cwd: false,
                 // 受限支持：yolo 预授权，无法外部审批（architecture §4.4 / ADR-0006 管辖边界）
                 capabilities: Capabilities {
                     supports_load_session: false,
@@ -339,6 +351,10 @@ mod tests {
         let oc = reg.find("opencode").unwrap();
         assert!(oc.capabilities.supports_permission);
         assert_eq!(oc.driver_kind, DriverKind::Acp);
+        assert!(!oc.acp_process_cwd);
+
+        let mimo = reg.find("mimo").unwrap();
+        assert!(mimo.acp_process_cwd);
     }
 
     #[test]
@@ -387,6 +403,7 @@ mod tests {
 
         let custom = reg.find("custom-agent").unwrap();
         assert_eq!(custom.driver_kind, DriverKind::Acp);
+        assert!(!custom.acp_process_cwd, "旧版用户配置保持兼容");
         assert_eq!(
             custom.version_args,
             vec!["--version".to_string()],
@@ -427,6 +444,7 @@ mod tests {
             driver_kind: DriverKind::Acp,
             command: "definitely-not-installed-xyz".into(),
             version_args: vec!["--version".into()],
+            acp_process_cwd: false,
             capabilities: Capabilities::default(),
         };
         assert!(def.detect_version().await.is_none());
@@ -441,6 +459,7 @@ mod tests {
             driver_kind: DriverKind::Acp,
             command: "echo".into(),
             version_args: vec!["1.2.3-stub".into()],
+            acp_process_cwd: false,
             capabilities: Capabilities::default(),
         };
         assert_eq!(def.detect_version().await.as_deref(), Some("1.2.3-stub"));
@@ -459,6 +478,7 @@ mod tests {
             driver_kind: DriverKind::Acp,
             command: command.into(),
             version_args: vec!["--version".into()],
+            acp_process_cwd: false,
             capabilities: Capabilities::default(),
         }
     }
