@@ -118,6 +118,8 @@
 
 ### Phase 2 验收与偏差记录
 
+- **P2-5 阶段进度（未验收）**：MiMo CLI 0.1.15 的 ACP 服务要求进程从会话 cwd 启动，已通过注册表可选 `acp_process_cwd` 与 driver 启动封装修复，CLI/UI 的建会话、`session/load`、安装探测和历史归属已实测。MiMo Auto 免费 API 返回服务已结束，真实写/读及审批剧本待可用模型；ACP 空 EndTurn 已改为失败提示，避免误报。详见 `docs/acceptance/p2-5.md`。
+
 - **P2-3 验收**：桌面/CLI 注册表驱动 agent 选择、真实归属落库与历史恢复；续聊校验 agent/cwd/能力，服务端 load 能力协商；Node/npx 探测与安装/登录/API Key 引导。`just verify` 68 测试全绿（1 既有 ignored），真实 Claude adapter 0.81.2 流式回复、Write 审批允许、Read、跨进程暗号续聊均通过。macOS WebKit 完成选择/依赖引导/内联审批/续聊/重启归属核对；完整输出与范围说明见 `docs/acceptance/p2-3.md`。无新增包依赖；CLI 新增 `run --agent` 支持验收，`resume` 使用存档 agent。Codex/MiMo 专项验收仍按后续任务推进。
 
 - **P2-1 验收**：`just verify` 全绿（58 测试，registry 新增 7 项：五内置齐全/capabilities 标志/未知 id 报错/用户覆盖内置同 id/缺省 version_args 与 capabilities/坏文件静默忽略/探测缺失命令与首行解析）。`supercode detect` 实机输出：
