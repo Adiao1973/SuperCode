@@ -509,6 +509,18 @@ recorder。会话选择器读取注册表定义时不执行 npx 版本探测（�
 `list_agent_definitions` IPC，返回 `AgentRow` 且 `installed_version=None`）；设置页的
 `list_agents` 才执行探测，避免选择器挂载时与运行中 npx 冷启动争用 npm 缓存。任何适配器不经 ACP 请求而自行执行的操作不属于 SuperCode 审批管辖。
 
+### P2-5 MiMo ACP 适配边界
+
+MiMo Code 使用注册表中预留的 `mimo acp` 原生 ACP 入口，继续走现有
+`AcpDriver`、会话持久化和 `session/load` 路径。MiMo 的安装、认证、默认模型与
+供应商配置由 MiMo CLI 自身管理；SuperCode 只探测 `mimo --version`、提供官方
+安装与认证引导，不读取或保存凭证。桌面选择器使用 P2-4 的无探测注册表 IPC。
+本阶段以真实 CLI 的 `initialize → session/new → session/prompt → session/load`
+链路验证兼容性；若 MiMo 的 ACP 事件或权限选项与现有映射有差异，先添加契约
+测试，再作最小协议修正。与其他 agent 并行时继续按每会话独立 Channel、broker
+和 recorder 隔离。MiMo CLI 自行执行且未通过 ACP 请求的操作不在 SuperCode
+审批范围内。
+
 ### P2-3 多 Agent 运行与恢复
 
 - `run_prompt` 新增 `agent_id: Option<String>`（缺省 opencode），按注册表解析；仅 ACP 驱动可运行，其他驱动明确报错。

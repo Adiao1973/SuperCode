@@ -100,7 +100,7 @@
 | P2-2 | 设置 UI：agent 管理页（列表 + 安装徽标/版本 + 自定义 agent CRUD + 安装引导可复制） | `pnpm tauri dev` 设置页可见全部注册 agent；未安装项给出可复制安装命令；新增自定义 agent 后出现在列表且重启保留 | ✅ 已验收 2026-09-28 |
 | P2-3 | claude-code 接入：`npx -y @agentclientprotocol/claude-agent-acp` 走 AcpDriver；Node/npx 依赖探测引导 | 真实任务跑通（流式消息 + 工具时间线 + 审批应答）；npx/Node 未装时给出可复制安装指引；续聊 session/load 生效；自动/手动步骤见 `docs/acceptance/p2-3.md` | ✅ 已验收 2026-09-28 |
 | P2-4 | codex 接入：`npx -y @agentclientprotocol/codex-acp` 走 AcpDriver | 同 P2-3 剧本在 codex 上通过（两 agent 并行会话互不串台）；具体命令与预期见 `docs/acceptance/p2-4.md` | ✅ 已验收 2026-09-28 |
-| P2-5 | mimo 接入：`mimo acp` 走 AcpDriver | 同 P2-3 剧本在 mimo 上通过 | 待办 |
+| P2-5 | mimo 接入：`mimo acp` 走 AcpDriver | 同 P2-3 剧本在 mimo 上通过；具体命令与预期见 `docs/acceptance/p2-5.md` | 进行中 |
 | P2-6 | StreamJsonDriver + zcode 受限支持：headless `--mode yolo` 预授权流解析；UI 标注"该 agent 无法外部审批" | zcode 任务跑通消息/工具事件；UI 可见受限标注；权限模式选择器对 zcode 置灰 | 待办 |
 | P2-7 | git worktree 任务隔离：每任务独立 worktree + 分支、`.worktreeinclude` 复制、孤儿清扫（worktree 会话归属原项目空间，ADR-0007） | 从项目空间任务一键建 worktree 会话；改动不影响主工作区；孤儿 worktree 可清扫；会话仍归原项目空间 | 待办 |
 | P2-8 | 完整看板：dnd-kit 拖拽跨列/跨空间移动任务 | 拖拽改变状态即时落库；重启保留；拖拽不破坏绑定会话引用 | 待办 |
