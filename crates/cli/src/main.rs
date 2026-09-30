@@ -326,7 +326,7 @@ async fn run_session(
         }
     });
 
-    let driver = AcpDriver::new(def.command).with_process_cwd(def.acp_process_cwd);
+    let driver = AcpDriver::new(def.launch_command()).with_process_cwd(def.acp_process_cwd);
     let start = match agent_session_id {
         Some(agent_sid) => StartMode::Load(agent_sid),
         None => StartMode::New,

@@ -398,11 +398,12 @@ export function RunConsole({ session, dispatch }: RunConsoleProps) {
             <details>
               <summary className="cursor-pointer">MiMo Code 安装与模型指引</summary>
               <div className="mt-2 space-y-2">
-                <p>安装官方 MiMo Code CLI，并确认应用启动环境的 PATH 能找到 mimo。</p>
+                <p>安装官方 MiMo Code CLI。SuperCode 可识别 PATH 中的 mimo，也可识别官方安装器的 ~/.mimocode/bin/mimo。</p>
                 <CopyableBlock text="npm install -g @mimo-ai/cli" />
                 <CopyableBlock text="mimo --version" />
-                <p>首次使用时在终端配置可用模型与供应商。MiMo Auto 的可用性以 MiMo 当前服务状态为准；SuperCode 不读取或保存凭证。</p>
+                <p>模型与供应商由 MiMo 自己管理。现有配置可先用 mimo run 验证；若 ACP 默认选择了不可用模型，可在工作目录的 .mimocode/mimocode.jsonc 中设置 model。MiMo Auto 的可用性以 MiMo 当前服务状态为准；SuperCode 不读取或保存凭证。</p>
                 <CopyableBlock text="mimo providers login" />
+                <CopyableBlock text='{"model":"<provider>/<model>"}' />
               </div>
             </details>
           </div>

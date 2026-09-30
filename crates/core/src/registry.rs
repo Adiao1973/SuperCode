@@ -70,10 +70,39 @@ pub struct AgentDefinition {
 }
 
 impl AgentDefinition {
+    /// 官方安装器把 MiMo 放在 ~/.mimocode/bin；图形应用的 PATH 常不含该目录。
+    fn mimo_fallback_program(&self) -> Option<PathBuf> {
+        if self.id != "mimo" || self.command != "mimo acp" {
+            return None;
+        }
+        let on_path = std::env::var_os("PATH")
+            .map(|paths| std::env::split_paths(&paths).any(|dir| dir.join("mimo").is_file()))
+            .unwrap_or(false);
+        if on_path {
+            return None;
+        }
+        let path = dirs::home_dir()?.join(".mimocode/bin/mimo");
+        path.is_file().then_some(path)
+    }
+
+    /// 实际启动命令；只有原样内置 MiMo 条目会使用官方安装器路径回退。
+    pub fn launch_command(&self) -> String {
+        match self.mimo_fallback_program() {
+            Some(path) => format!("'{}' acp", path.to_string_lossy().replace('\'', "'\\''")),
+            None => self.command.clone(),
+        }
+    }
+
     /// 探测本机安装：执行 `program <version_args...>`，返回版本号首行；
     /// 未安装 / 超时 / 非零退出 → None。
     pub async fn detect_version(&self) -> Option<String> {
-        let program = self.command.split_whitespace().next()?;
+        let fallback = self.mimo_fallback_program();
+        let program = fallback.as_deref().map(std::ffi::OsStr::new).or_else(|| {
+            self.command
+                .split_whitespace()
+                .next()
+                .map(std::ffi::OsStr::new)
+        })?;
         let fut = async {
             let output = tokio::process::Command::new(program)
                 .args(&self.version_args)
