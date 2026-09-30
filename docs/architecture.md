@@ -694,7 +694,7 @@ P1-8 落地迁移 0003（workspaces + sessions.workspace_id，历史会话按 di
 
 ### P2-8 看板拖拽
 
-采用 `@dnd-kit/core` DndContext/useDraggable/useDroppable：每个空间的四列为 drop target；任务专用拖拽把手支持 PointerSensor（6px 激活距离）和 KeyboardSensor（空格拾取、方向键选择列、空格放下、Escape 取消）。DragOverlay 跨空间显示，空列可接收，取消或落在区域外不写入；同列放下不改变顺序。当前不引入列内持久化排序。
+采用 `@dnd-kit/core` DndContext/useDraggable/useDroppable：每个空间的四列为 drop target；任务专用拖拽把手支持 MouseSensor（6px 激活距离）、TouchSensor（150ms 长按、5px 容差）和 KeyboardSensor（空格拾取、方向键选择列、空格放下、Escape 取消）。DragOverlay 跨空间显示，空列可接收，取消或落在区域外不写入；同列放下不改变顺序。当前不引入列内持久化排序。
 
 新增 IPC `move_task(id, workspace_id, status)` → TaskDto；SQLite 一条 UPDATE 同时写 workspace_id/status/updated_at，校验目标空间和四态，失败不改变任意字段。session_id/title/cwd 均保持；空间移动仅整理看板，不迁移会话或执行目录。前端松手后即时乐观显示，单次移动等待落库时禁用新拖拽与同卡修改；失败恢复原卡片并显示错误。其他任务操作在保存期间禁用，避免旧结果覆盖新结果。
 

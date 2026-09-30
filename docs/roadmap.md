@@ -103,7 +103,7 @@
 | P2-5 | mimo 接入：`mimo acp` 走 AcpDriver | 同 P2-3 剧本在 mimo 上通过；具体命令与预期见 `docs/acceptance/p2-5.md` | ✅ 已验收 2026-09-30 |
 | P2-6 | StreamJsonDriver + zcode 受限支持：headless `--mode yolo` 预授权流解析；UI 标注"该 agent 无法外部审批" | zcode 任务跑通消息/工具事件；UI 可见受限标注；权限模式选择器对 zcode 置灰 | 延期补验（无有效 key，用户授权跳过） |
 | P2-7 | git worktree 任务隔离：每任务独立 worktree + 分支、`.worktreeinclude` 复制、孤儿清扫（worktree 会话归属原项目空间，ADR-0007） | 从项目空间任务一键建 worktree 会话；改动不影响主工作区；孤儿 worktree 可清扫；会话仍归原项目空间；完整步骤与结果见 `docs/acceptance/p2-7.md` | ✅ 已验收 2026-10-01 |
-| P2-8 | 完整看板：dnd-kit 拖拽跨列/跨空间移动任务 | 拖拽改变状态即时落库；重启保留；拖拽不破坏绑定会话引用；完整剧本见 `docs/acceptance/p2-8.md` | 进行中 |
+| P2-8 | 完整看板：dnd-kit 拖拽跨列/跨空间移动任务 | 拖拽改变状态即时落库；重启保留；拖拽不破坏绑定会话引用；完整剧本见 `docs/acceptance/p2-8.md` | ✅ 已验收 2026-10-01 |
 | P2-9 | xterm 终端嵌入（≥5.3.0，禁透明 canvas）：会话内嵌终端（cwd=会话 cwd） | 会话视图可开终端；输入输出正常；WebKit 无绿伪影；关终端不残留进程 | 待办 |
 | P2-10 | Phase 2 整体验收 + tag v0.3.0 合入 main | 验收剧本（P2-10 前预写进 docs/acceptance/phase2.md）逐条留痕；`just verify` 全绿；`git tag v0.3.0` | 待办 |
 
@@ -155,3 +155,5 @@
 - **P2-6 延期授权（2026-09-30）**：用户无有效 key，允许跳过；实现和自动验收记录见 `docs/acceptance/p2-6.md`，保留独立分支待补验，继续 P2-7。
 
 - **P2-7 验收（2026-10-01）**：任务托管 worktree/分支与原项目空间绑定、include 文件清单复制、孤儿保守清扫已完成。macOS 真实 OpenCode 写读完成，主目录不变，任务自动绑定会话并进入进行中；干净孤儿可清扫、脏目录及历史引用保留，重启历史归属正确。`just verify` 全绿（核心 69/协议 4/桌面 2，1 既有 ignored），无新增依赖或 schema 变更，详见 `docs/acceptance/p2-7.md`。
+
+- **P2-8 验收（2026-10-01）**：看板鼠标/键盘跨列跨空间拖拽、原子保存与失败回滚、重启恢复通过；绑定会话及 worktree 原执行归属保持，移动后真实 OpenCode 运行成功。`just verify` 全绿（core 70/协议 4/desktop 3，1 既有 ignored）。新增 dnd-kit core 6.3.1，无 schema 变更；完整留痕见 `docs/acceptance/p2-8.md`。下一步 P2-9，P2-6 继续延期补验。
