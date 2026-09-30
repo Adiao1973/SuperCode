@@ -100,7 +100,7 @@
 | P2-2 | 设置 UI：agent 管理页（列表 + 安装徽标/版本 + 自定义 agent CRUD + 安装引导可复制） | `pnpm tauri dev` 设置页可见全部注册 agent；未安装项给出可复制安装命令；新增自定义 agent 后出现在列表且重启保留 | ✅ 已验收 2026-09-28 |
 | P2-3 | claude-code 接入：`npx -y @agentclientprotocol/claude-agent-acp` 走 AcpDriver；Node/npx 依赖探测引导 | 真实任务跑通（流式消息 + 工具时间线 + 审批应答）；npx/Node 未装时给出可复制安装指引；续聊 session/load 生效；自动/手动步骤见 `docs/acceptance/p2-3.md` | ✅ 已验收 2026-09-28 |
 | P2-4 | codex 接入：`npx -y @agentclientprotocol/codex-acp` 走 AcpDriver | 同 P2-3 剧本在 codex 上通过（两 agent 并行会话互不串台）；具体命令与预期见 `docs/acceptance/p2-4.md` | ✅ 已验收 2026-09-28 |
-| P2-5 | mimo 接入：`mimo acp` 走 AcpDriver | 同 P2-3 剧本在 mimo 上通过；具体命令与预期见 `docs/acceptance/p2-5.md` | 进行中 |
+| P2-5 | mimo 接入：`mimo acp` 走 AcpDriver | 同 P2-3 剧本在 mimo 上通过；具体命令与预期见 `docs/acceptance/p2-5.md` | ✅ 已验收 2026-09-30 |
 | P2-6 | StreamJsonDriver + zcode 受限支持：headless `--mode yolo` 预授权流解析；UI 标注"该 agent 无法外部审批" | zcode 任务跑通消息/工具事件；UI 可见受限标注；权限模式选择器对 zcode 置灰 | 待办 |
 | P2-7 | git worktree 任务隔离：每任务独立 worktree + 分支、`.worktreeinclude` 复制、孤儿清扫（worktree 会话归属原项目空间，ADR-0007） | 从项目空间任务一键建 worktree 会话；改动不影响主工作区；孤儿 worktree 可清扫；会话仍归原项目空间 | 待办 |
 | P2-8 | 完整看板：dnd-kit 拖拽跨列/跨空间移动任务 | 拖拽改变状态即时落库；重启保留；拖拽不破坏绑定会话引用 | 待办 |
@@ -118,7 +118,7 @@
 
 ### Phase 2 验收与偏差记录
 
-- **P2-5 阶段进度（未验收）**：MiMo CLI 0.1.15 的 ACP 服务要求进程从会话 cwd 启动，已通过注册表可选 `acp_process_cwd` 与 driver 启动封装修复，CLI/UI 的建会话、`session/load`、安装探测和历史归属已实测。MiMo Auto 免费 API 返回服务已结束，真实写/读及审批剧本待可用模型；ACP 空 EndTurn 已改为失败提示，避免误报。详见 `docs/acceptance/p2-5.md`。
+- **P2-5 验收**：MiMo Code 0.1.15 的 ACP 服务要求从会话 cwd 启动；内置 MiMo 支持官方安装器路径回退。真实模型在 CLI/桌面完成文件写读、流式工具事件、目录外审批、跨进程及桌面重启续聊；与 OpenCode 并行会话归属独立。桌面审批裁决现写入 SQLite；ACP 空 EndTurn 识别为失败。`just verify` 全绿，完整命令与输出见 `docs/acceptance/p2-5.md`。
 
 - **P2-3 验收**：桌面/CLI 注册表驱动 agent 选择、真实归属落库与历史恢复；续聊校验 agent/cwd/能力，服务端 load 能力协商；Node/npx 探测与安装/登录/API Key 引导。`just verify` 68 测试全绿（1 既有 ignored），真实 Claude adapter 0.81.2 流式回复、Write 审批允许、Read、跨进程暗号续聊均通过。macOS WebKit 完成选择/依赖引导/内联审批/续聊/重启归属核对；完整输出与范围说明见 `docs/acceptance/p2-3.md`。无新增包依赖；CLI 新增 `run --agent` 支持验收，`resume` 使用存档 agent。Codex/MiMo 专项验收仍按后续任务推进。
 

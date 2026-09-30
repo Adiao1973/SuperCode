@@ -515,6 +515,10 @@ MiMo Code 使用注册表中预留的 `mimo acp` 原生 ACP 入口，继续走�
 `AcpDriver`、会话持久化和 `session/load` 路径。MiMo 的安装、认证、默认模型与
 供应商配置由 MiMo CLI 自身管理；SuperCode 只探测 `mimo --version`、提供官方
 安装与认证引导，不读取或保存凭证。桌面选择器使用 P2-4 的无探测注册表 IPC。
+若内置 `mimo acp` 不在宿主 PATH 中，但官方安装器的
+`~/.mimocode/bin/mimo` 存在，则版本探测和启动使用该可执行文件；PATH 中的
+`mimo` 优先。用户自定义 MiMo 命令不做此回退。模型仍由 MiMo 配置决定，
+SuperCode 不覆盖全局或项目模型设置。
 MiMo ACP 服务将 `session/new` 的 cwd 限制在服务**进程当前目录**之内；其
 `--cwd` 参数在 0.1.15 中并不改变服务根目录。注册表新增可选
 `acp_process_cwd`，内置 MiMo 设为 true；driver 在 Unix 上经 `sh` 的独立参数
@@ -524,7 +528,8 @@ MiMo ACP 服务将 `session/new` 的 cwd 限制在服务**进程当前目录**�
 链路验证兼容性；若 MiMo 的 ACP 事件或权限选项与现有映射有差异，先添加契约
 测试，再作最小协议修正。与其他 agent 并行时继续按每会话独立 Channel、broker
 和 recorder 隔离。MiMo CLI 自行执行且未通过 ACP 请求的操作不在 SuperCode
-审批范围内。若 `session/prompt` 返回 EndTurn 而本轮没有消息、工具或计划事件，
+审批范围内。桌面 broker 的裁决广播同时写入当前会话的 SQLite approvals，
+与 CLI 的审批留痕行为一致。若 `session/prompt` 返回 EndTurn 而本轮没有消息、工具或计划事件，
 `AcpDriver` 将其视为模型服务/认证异常，发 `DriverError` 并标记会话失败；
 `session/load` 的历史重放不计入本轮活动。
 
