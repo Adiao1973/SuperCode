@@ -691,3 +691,13 @@ P1-8 落地迁移 0003（workspaces + sessions.workspace_id，历史会话按 di
 看板项目任务提供“隔离会话”按钮，预填任务标题和 worktree cwd，workspace_id 始终为原项目。新增 IPC：`create_task_worktree(task_id)` → TaskWorktree（task_id/workspace_id/project/path/branch）；`cleanup_task_worktrees(workspace_id)` → removed/skipped 字符串列表。`run_prompt` 可携 task_id，宿主校验其托管 cwd 与原空间一致；SessionStarted 落库后绑定任务并更新为进行中。新建隔离草稿不自动调用模型。
 
 “清扫孤儿”只处理当前项目托管记录：任务已不存在且无历史会话使用该 cwd、无活跃运行，且 Git status（含 ignored/untracked）为空才移除目录与记录。保留分支及提交；脏目录明确跳过，不使用 force，不触碰其他 worktree。操作由宿主互斥锁串行化；默认空间及非 Git 项目明确报错。
+
+### P2-8 看板拖拽
+
+采用 `@dnd-kit/core` DndContext/useDraggable/useDroppable：每个空间的四列为 drop target；任务专用拖拽把手支持 MouseSensor（6px 激活距离）、TouchSensor（150ms 长按、5px 容差）和 KeyboardSensor（空格拾取、方向键选择列、空格放下、Escape 取消）。DragOverlay 跨空间显示，空列可接收，取消或落在区域外不写入；同列放下不改变顺序。当前不引入列内持久化排序。
+
+新增 IPC `move_task(id, workspace_id, status)` → TaskDto；SQLite 一条 UPDATE 同时写 workspace_id/status/updated_at，校验目标空间和四态，失败不改变任意字段。session_id/title/cwd 均保持；空间移动仅整理看板，不迁移会话或执行目录。前端松手后即时乐观显示，单次移动等待落库时禁用新拖拽与同卡修改；失败恢复原卡片并显示错误。其他任务操作在保存期间禁用，避免旧结果覆盖新结果。
+
+P2-7 托管 worktree 的原空间记录继续作为执行归属：创建/恢复隔离会话按 task_id 在现有项目托管记录查找，移动后复用原目录、原 workspace_id；run_prompt 按该记录而非看板归属验证。已绑定会话跳转不变；未隔离的新任务在当前项目创建 worktree。默认空间允许恢复已有隔离记录，新建隔离仍需 Git 项目。
+
+依赖依据：[dnd-kit 官方 DndContext](https://dndkit.com/legacy/api-documentation/context-provider/dnd-context/) 与 [useDraggable](https://dndkit.com/legacy/api-documentation/draggable/use-draggable/)。不变更数据库 schema。

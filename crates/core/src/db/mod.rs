@@ -2,6 +2,7 @@
 //! Store 为连接池薄封装（Clone 廉价）；事件流落库经 [`recorder::SessionRecorder`]。
 
 mod recorder;
+mod task_move;
 
 pub use recorder::SessionRecorder;
 

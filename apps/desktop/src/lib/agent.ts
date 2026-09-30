@@ -238,3 +238,7 @@ export function createTaskWorktree(taskId: string): Promise<TaskWorktree> {
 export function cleanupTaskWorktrees(workspaceId: string): Promise<{ removed: string[]; skipped: string[] }> {
   return invoke("cleanup_task_worktrees", { workspaceId });
 }
+
+export function moveTask(id: string, workspaceId: string, status: TaskEntry["status"]): Promise<TaskEntry> {
+  return invoke("move_task", { id, workspaceId, status });
+}

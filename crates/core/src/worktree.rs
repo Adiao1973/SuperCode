@@ -111,7 +111,7 @@ impl TaskWorktree {
         let (project, root) = root(project).await?;
         let (path, record, branch) = names(&root, task)?;
         if record.exists() {
-            let existing = Self::read(&project, &root, &record).await?;
+            let existing = Self::read(&root, &record).await?;
             if existing.workspace_id != workspace || !existing.path.is_dir() {
                 return Err(invalid("已有 worktree 的空间或目录不匹配"));
             }
@@ -175,11 +175,13 @@ impl TaskWorktree {
         }
         Ok(entry)
     }
-    async fn read(project: &Path, root: &Path, record: &Path) -> Result<Self> {
+    async fn read(directory: &Path, record: &Path) -> Result<Self> {
         let entry: Self = serde_json::from_slice(&tokio::fs::read(record).await?)
             .map_err(|e| invalid(e.to_string()))?;
-        let (path, expected, branch) = names(root, &entry.task_id)?;
-        if entry.project != project
+        let (path, expected, branch) = names(directory, &entry.task_id)?;
+        let (origin, common_directory) = root(&entry.project).await?;
+        if entry.project != origin
+            || common_directory != directory
             || entry.path != path
             || entry.branch != branch
             || expected != record
@@ -214,7 +216,7 @@ impl TaskWorktree {
         Ok(())
     }
     pub async fn list(project: &Path) -> Result<Vec<Self>> {
-        let (project, root) = root(project).await?;
+        let (_, root) = root(project).await?;
         let mut directory = match tokio::fs::read_dir(&root).await {
             Ok(value) => value,
             Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Ok(vec![]),
@@ -223,7 +225,7 @@ impl TaskWorktree {
         let mut entries = Vec::new();
         while let Some(file) = directory.next_entry().await? {
             if file.path().extension().is_some_and(|ext| ext == "json") {
-                entries.push(Self::read(&project, &root, &file.path()).await?);
+                entries.push(Self::read(&root, &file.path()).await?);
             }
         }
         Ok(entries)

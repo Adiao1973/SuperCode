@@ -1,9 +1,9 @@
 /**
- * 简版任务看板（P1-9）：按工作空间分节，每节四列（待办/进行/评审/完成）。
+ * 任务看板（P2-8）：按工作空间分节，每节四列（待办/进行/评审/完成）。
  * 任务 = 标题 + 空间 + 绑定会话 + 状态；绑定会话可跳转，状态按流转序推进/回退。
- * dnd-kit 拖拽与更丰富卡片留待 Phase 2 完整看板。
+ * 拖拽改变状态与看板空间，执行目录和会话引用保持。
  */
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -15,11 +15,14 @@ import {
   listTasks,
   listWorkspaces,
   updateTask,
+  moveTask,
   type TaskEntry,
   type Workspace,
 } from "@/lib/agent";
-import { cn } from "@/lib/utils";
-import { Check, ChevronLeft, ChevronRight, Link2, Plus, Trash2, X } from "lucide-react";
+import { DndContext, DragOverlay, KeyboardSensor, MouseSensor, TouchSensor, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core";
+import { KanbanColumn, boardCollision, boardKeyboardCoordinates } from "@/components/kanban-dnd";
+import { TaskCard } from "@/components/KanbanTaskCard";
+import { Check, Plus, X } from "lucide-react";
 
 const COLUMNS: { status: TaskEntry["status"]; label: string }[] = [
   { status: "backlog", label: "待办" },
@@ -37,6 +40,21 @@ interface KanbanViewProps {
 }
 
 export function KanbanView({ onOpenSession, onWorktreeSession, bindableSessions }: KanbanViewProps) {
+  const saving = useRef(false);
+  const revision = useRef(0);
+  const keyboardDrag = useRef(false);
+  const pointer = useRef<{ x: number; y: number } | null>(null);
+  useEffect(() => {
+    const capture = (event: Event) => {
+      const point = event instanceof MouseEvent ? event : (event as TouchEvent).changedTouches?.[0];
+      if (point) pointer.current = { x: point.clientX, y: point.clientY };
+    };
+    const events = ["mousemove", "mouseup", "touchmove", "touchend"];
+    events.forEach((name) => window.addEventListener(name, capture, true));
+    return () => events.forEach((name) => window.removeEventListener(name, capture, true));
+  }, []);
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const sensors = useSensors(useSensor(MouseSensor, { activationConstraint: { distance: 6 } }), useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 5 } }), useSensor(KeyboardSensor, { coordinateGetter: boardKeyboardCoordinates }));
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [tasks, setTasks] = useState<TaskEntry[]>([]);
@@ -47,12 +65,14 @@ export function KanbanView({ onOpenSession, onWorktreeSession, bindableSessions 
   const [bindMenuFor, setBindMenuFor] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
+    const request = ++revision.current;
     try {
       const [t, w] = await Promise.all([listTasks(), listWorkspaces()]);
+      if (request !== revision.current) return;
       setTasks(t);
       setWorkspaces(w);
     } catch (e) {
-      setError(String(e));
+      if (request === revision.current) setError(String(e));
     }
   }, []);
 
@@ -62,9 +82,10 @@ export function KanbanView({ onOpenSession, onWorktreeSession, bindableSessions 
 
   const create = useCallback(
     async (workspaceId: string) => {
-      if (!newTitle.trim()) {
+      if (saving.current || !newTitle.trim()) {
         return;
       }
+      saving.current = true; revision.current += 1; setBusy(true);
       try {
         await createTask(newTitle.trim(), workspaceId);
         setNewTitle("");
@@ -72,7 +93,7 @@ export function KanbanView({ onOpenSession, onWorktreeSession, bindableSessions 
         await refresh();
       } catch (e) {
         setError(String(e));
-      }
+      } finally { saving.current = false; setBusy(false); }
     },
     [newTitle, refresh],
   );
@@ -84,24 +105,28 @@ export function KanbanView({ onOpenSession, onWorktreeSession, bindableSessions 
       if (!next) {
         return;
       }
+      if (saving.current) return;
+      saving.current = true; revision.current += 1; setBusy(true);
       try {
         await updateTask(task.id, { status: next.status });
         await refresh();
       } catch (e) {
         setError(String(e));
-      }
+      } finally { saving.current = false; setBusy(false); }
     },
     [refresh],
   );
 
   const remove = useCallback(
     async (id: string) => {
+      if (saving.current) return;
+      saving.current = true; revision.current += 1; setBusy(true);
       try {
         await deleteTask(id);
         await refresh();
       } catch (e) {
         setError(String(e));
-      }
+      } finally { saving.current = false; setBusy(false); }
     },
     [refresh],
   );
@@ -109,32 +134,74 @@ export function KanbanView({ onOpenSession, onWorktreeSession, bindableSessions 
   const bind = useCallback(
     async (taskId: string, acpSessionId: string) => {
       setBindMenuFor(null);
+      if (saving.current) return;
+      saving.current = true; revision.current += 1; setBusy(true);
       try {
         await updateTask(taskId, { sessionId: acpSessionId });
         await refresh();
       } catch (e) {
         setError(String(e));
-      }
+      } finally { saving.current = false; setBusy(false); }
     },
     [refresh],
   );
 
-  const isolated = async (workspace: Workspace, task: TaskEntry) => {
-    if (busy) return;
-    setBusy(true);
-    try { onWorktreeSession?.(workspace, task, await createTaskWorktree(task.id)); }
+  const isolated = async (task: TaskEntry) => {
+    if (saving.current) return;
+    saving.current = true; revision.current += 1; setBusy(true);
+    try {
+      const entry = await createTaskWorktree(task.id);
+      const owner = workspaces.find((item) => item.id === entry.workspace_id);
+      if (!owner) throw new Error("原项目空间不存在，请刷新看板");
+      onWorktreeSession?.(owner, task, entry);
+    }
     catch (e) { setError(String(e)); }
-    finally { setBusy(false); }
+    finally { saving.current = false; setBusy(false); }
   };
   const cleanup = async (workspaceId: string) => {
-    if (busy) return;
-    setBusy(true);
+    if (saving.current) return;
+    saving.current = true; revision.current += 1; setBusy(true);
     try {
       const result = await cleanupTaskWorktrees(workspaceId);
       setNotice(`已清扫 ${result.removed.length} 个孤儿；保留 ${result.skipped.length} 个。${result.skipped.join("；")}`);
     } catch (e) { setError(String(e)); }
-    finally { setBusy(false); }
+    finally { saving.current = false; setBusy(false); }
   };
+
+  const targetFor = (over: DragEndEvent["over"]) => {
+    let target = over?.data.current;
+    if (!keyboardDrag.current) {
+      // WebKit 原生快速松手时 over 可能仍是上一帧；以 mouseup/touchend 最终坐标命中列。
+      const point = pointer.current;
+      const column = point && document.elementsFromPoint(point.x, point.y)
+        .map((element) => element.closest<HTMLElement>("[data-kanban-column]"))
+        .find((element) => element != null);
+      target = column ? { workspaceId: column.dataset.workspaceId, status: column.dataset.taskStatus } : undefined;
+    }
+    return target;
+  };
+  const targetLabel = (over: DragEndEvent["over"]) => {
+    const target = targetFor(over);
+    return target ? `${workspaces.find((workspace) => workspace.id === target.workspaceId)?.name ?? "空间"} · ${COLUMNS.find((column) => column.status === target.status)?.label ?? "任务列"}` : null;
+  };
+  const drop = async ({ active, over }: DragEndEvent) => {
+    setActiveId(null);
+    const original = tasks.find((task) => task.id === active.id);
+    const target = targetFor(over);
+    if (saving.current || !original || !target || (original.workspace_id === target.workspaceId && original.status === target.status)) return;
+    saving.current = true; revision.current += 1; setBusy(true); setError(null); setBindMenuFor(null); setNotice("正在保存任务位置…");
+    setTasks((items) => items.map((task) => task.id === original.id ? { ...task, workspace_id: target.workspaceId, status: target.status } : task));
+    try {
+      const stored = await moveTask(original.id, target.workspaceId, target.status);
+      setTasks((items) => items.map((task) => task.id === stored.id ? stored : task));
+      setNotice(`已保存：${workspaces.find((workspace) => workspace.id === stored.workspace_id)?.name ?? "空间"} · ${COLUMNS.find((column) => column.status === stored.status)?.label}`);
+    } catch (e) {
+      setTasks((items) => items.map((task) => task.id === original.id ? original : task));
+      setNotice(null);
+      setError(String(e));
+    } finally { saving.current = false; setBusy(false); }
+  };
+  const activeTask = tasks.find((task) => task.id === activeId);
 
   const groups = useMemo(() => {
     const list = workspaces.length
@@ -147,15 +214,26 @@ export function KanbanView({ onOpenSession, onWorktreeSession, bindableSessions 
   }, [workspaces, tasks]);
 
   return (
+    <DndContext sensors={sensors} collisionDetection={boardCollision} onDragStart={({ active, activatorEvent }) => {
+      keyboardDrag.current = activatorEvent instanceof KeyboardEvent;
+      const point = activatorEvent instanceof MouseEvent ? activatorEvent : (activatorEvent as TouchEvent).changedTouches?.[0];
+      pointer.current = point ? { x: point.clientX, y: point.clientY } : null;
+      setActiveId(String(active.id)); setBindMenuFor(null); }} onDragCancel={() => setActiveId(null)} onDragEnd={(event) => void drop(event)} accessibility={{ announcements: {
+      onDragStart: ({ active }) => `已拾取任务：${active.data.current?.title}`,
+      onDragOver: ({ over }) => over ? `目标：${over.data.current?.label}` : "当前不在任务列内",
+      onDragEnd: ({ over }) => { const label = targetLabel(over); return label ? `已放下，正在保存至 ${label}` : "已取消移动"; },
+      onDragCancel: () => "已取消移动",
+    }, screenReaderInstructions: { draggable: "空格拾取任务，左右切换列，上下切换空间，空格放下，Escape 取消。" } }}>
     <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
       <div className="mx-auto flex max-w-5xl flex-col gap-6">
-        {notice && <p className="text-muted-foreground text-xs">{notice}</p>}
+        {notice && <p role="status" className="text-muted-foreground text-xs">{notice}</p>}
         {error && (
-          <p className="text-destructive text-xs" onClick={() => setError(null)}>
+          <p role="alert" className="text-destructive text-xs" onClick={() => setError(null)}>
             {error}（点击清除）
           </p>
         )}
-        {groups.map(({ workspace, tasks: wsTasks }) => (
+        <p className="text-muted-foreground text-xs">拖动把手跨列或跨空间；键盘：空格拾取，左右切列，上下切空间，Escape 取消。会话与执行目录保持原归属。</p>
+        {groups.map(({ workspace, tasks: wsTasks }, row) => (
           <section key={workspace.id}>
             <div className="mb-2 flex items-center gap-2">
               <h2 className="text-sm font-medium">{workspace.name}</h2>
@@ -164,6 +242,7 @@ export function KanbanView({ onOpenSession, onWorktreeSession, bindableSessions 
               )}
               {workspace.kind === "project" && <Button size="sm" variant="ghost" disabled={busy} onClick={() => void cleanup(workspace.id)}>清扫孤儿</Button>}
               <Button
+                disabled={busy}
                 size="sm"
                 variant="ghost"
                 className="text-muted-foreground ml-auto h-6 px-2 text-[11px]"
@@ -197,10 +276,10 @@ export function KanbanView({ onOpenSession, onWorktreeSession, bindableSessions 
             )}
 
             <div className="grid grid-cols-4 gap-2">
-              {COLUMNS.map((col) => {
+              {COLUMNS.map((col, column) => {
                 const cards = wsTasks.filter((t) => t.status === col.status);
                 return (
-                  <div key={col.status} className="bg-muted/30 flex flex-col gap-2 rounded-lg border p-2">
+                  <KanbanColumn key={col.status} workspaceId={workspace.id} status={col.status} row={row} column={column} label={`${workspace.name} · ${col.label}`} disabled={busy}>
                     <div className="flex items-center gap-1.5 px-1">
                       <span className="text-muted-foreground text-[11px] font-medium">{col.label}</span>
                       <span className="text-muted-foreground/60 text-[10px] tabular-nums">{cards.length}</span>
@@ -216,7 +295,7 @@ export function KanbanView({ onOpenSession, onWorktreeSession, bindableSessions 
                         onBind={() => setBindMenuFor(bindMenuFor === task.id ? null : task.id)}
                         onOpenSession={onOpenSession}
                         onDelete={() => void remove(task.id)}
-                        onIsolate={workspace.kind === "project" && !task.session_id ? () => void isolated(workspace, task) : undefined}
+                        onIsolate={!task.session_id ? () => void isolated(task) : undefined}
                         busy={busy}
                       />
                     ))}
@@ -247,7 +326,7 @@ export function KanbanView({ onOpenSession, onWorktreeSession, bindableSessions 
                     {cards.length === 0 && (
                       <p className="text-muted-foreground/40 px-1 py-3 text-center text-[10px]">—</p>
                     )}
-                  </div>
+                  </KanbanColumn>
                 );
               })}
             </div>
@@ -255,95 +334,7 @@ export function KanbanView({ onOpenSession, onWorktreeSession, bindableSessions 
         ))}
       </div>
     </div>
-  );
-}
-
-function TaskCard({
-  task,
-  canBack,
-  canAdvance,
-  onAdvance,
-  onBack,
-  onBind,
-  onOpenSession,
-  onDelete,
-  onIsolate,
-  busy,
-}: {
-  task: TaskEntry;
-  canBack: boolean;
-  canAdvance: boolean;
-  onAdvance: () => void;
-  onBack: () => void;
-  onBind: () => void;
-  onOpenSession?: (agentSessionId: string) => void;
-  onDelete: () => void;
-  onIsolate?: () => void;
-  busy: boolean;
-}) {
-  return (
-    <div className="group rounded-md border bg-background px-2.5 py-2 shadow-sm">
-      <div className="flex items-start gap-1">
-        <p className="min-w-0 flex-1 text-[12px] leading-snug break-words">{task.title}</p>
-        <button
-          type="button"
-          title="删除任务"
-          onClick={onDelete}
-          className="text-muted-foreground/40 hover:text-destructive shrink-0 px-0.5"
-        >
-          <Trash2 className="size-3" />
-        </button>
-      </div>
-      {onIsolate && <Button size="sm" variant="ghost" className="h-6 px-0 text-[10px]" disabled={busy} onClick={onIsolate}>隔离会话</Button>}
-      <div className="mt-1.5 flex items-center gap-1">
-        {task.session_id ? (
-          <button
-            type="button"
-            onClick={() => onOpenSession?.(task.session_id!)}
-            className="text-primary hover:underline flex min-w-0 items-center gap-1 text-[10px]"
-            title="跳转到该会话"
-          >
-            <Link2 className="size-3 shrink-0" />
-            <code className="truncate">…{task.session_id.slice(-6)}</code>
-          </button>
-        ) : (
-          <button
-            type="button"
-            onClick={onBind}
-            className="text-muted-foreground/60 hover:text-foreground text-[10px]"
-            title="绑定会话"
-          >
-            <Link2 className="size-3" />
-            绑定
-          </button>
-        )}
-        <span className="ml-auto flex shrink-0 items-center gap-0.5">
-          <button
-            type="button"
-            onClick={onBack}
-            disabled={!canBack}
-            className={cn(
-              "text-muted-foreground hover:text-foreground rounded px-0.5",
-              !canBack && "invisible",
-            )}
-            title="回退一列"
-          >
-            <ChevronLeft className="size-3.5" />
-          </button>
-          <button
-            type="button"
-            onClick={onAdvance}
-            disabled={!canAdvance}
-            className={cn(
-              "text-muted-foreground hover:text-foreground rounded px-0.5",
-              !canAdvance && "invisible",
-            )}
-            title="推进一列"
-          >
-            <ChevronRight className="size-3.5" />
-          </button>
-        </span>
-      </div>
-    </div>
+    <DragOverlay dropAnimation={null}>{activeTask && <div className="rounded-md border bg-background px-3 py-2 text-xs shadow-lg">{activeTask.title}</div>}</DragOverlay>
+    </DndContext>
   );
 }
