@@ -28,6 +28,7 @@ export interface SessionDraft {
 }
 
 export interface SessionEntry {
+  taskId?: string;
   /** 客户端会话键：事件路由的稳定标识（ACP session_id 建立前事件就已到达） */
   key: string;
   /** ACP 侧会话 id（SessionStarted 后可用；cancel_run 需要） */
@@ -51,7 +52,7 @@ export interface SessionsState {
 }
 
 export type SessionsAction =
-  | { type: "new"; workspace?: Workspace | null }
+  | { type: "new"; workspace?: Workspace | null; taskId?: string; cwd?: string; prompt?: string }
   | { type: "activate"; key: string }
   | { type: "patchDraft"; key: string; patch: Partial<SessionDraft> }
   | { type: "batch"; key: string; batch: AgentEvent[] }
@@ -120,6 +121,9 @@ export function sessionsReducer(
   switch (action.type) {
     case "new": {
       const entry = makeEntry(action.workspace);
+      entry.taskId = action.taskId;
+      if (action.cwd) entry.draft.cwd = action.cwd;
+      if (action.prompt) { entry.draft.prompt = action.prompt; entry.title = action.prompt; }
       return { items: [...state.items, entry], activeKey: entry.key };
     }
     case "activate":
