@@ -599,6 +599,23 @@ async fn update_task(
 }
 
 #[tauri::command]
+async fn move_task(
+    app: tauri::AppHandle,
+    id: String,
+    workspace_id: String,
+    status: String,
+) -> Result<TaskDto, String> {
+    let _gate = worktrees::GATE.lock().await;
+    app.state::<AppState>()
+        .store()
+        .await
+        .move_task(&id, &workspace_id, &status)
+        .await
+        .map(Into::into)
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
 async fn delete_task(app: tauri::AppHandle, id: String) -> Result<(), String> {
     let state = app.state::<AppState>();
     let store = state.store().await;
@@ -922,6 +939,7 @@ pub fn run() {
             worktrees::create_task_worktree,
             worktrees::cleanup_task_worktrees,
             update_task,
+            move_task,
             delete_task,
             list_agents,
             list_agent_definitions,
