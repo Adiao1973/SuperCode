@@ -701,3 +701,10 @@ P1-8 落地迁移 0003（workspaces + sessions.workspace_id，历史会话按 di
 P2-7 托管 worktree 的原空间记录继续作为执行归属：创建/恢复隔离会话按 task_id 在现有项目托管记录查找，移动后复用原目录、原 workspace_id；run_prompt 按该记录而非看板归属验证。已绑定会话跳转不变；未隔离的新任务在当前项目创建 worktree。默认空间允许恢复已有隔离记录，新建隔离仍需 Git 项目。
 
 依赖依据：[dnd-kit 官方 DndContext](https://dndkit.com/legacy/api-documentation/context-provider/dnd-context/) 与 [useDraggable](https://dndkit.com/legacy/api-documentation/draggable/use-draggable/)。不变更数据库 schema。
+
+### P2-9 — 会话内嵌终端
+
+- 前端使用 `@xterm/xterm`（≥5.3）与 fit addon；不加载 canvas/WebGL addon，`allowTransparency=false`，不透明背景，ResizeObserver 同步字符行列。终端由会话详情显式打开，cwd 使用该会话 draft 的实际执行目录（包括 worktree），不使用看板分组路径；目录变更、切换会话/页面、关闭面板会销毁终端，重开为新 shell，不持久化 shell 状态。
+- 桌面端使用 portable-pty 启动用户 shell 的交互实例；独立 PTY 不经过 agent 或审批队列。`open_terminal(id,cwd,cols,rows,onOutput)` / `write_terminal(id,data)` / `resize_terminal(id,cols,rows)` / `close_terminal(id)`；随机客户端 id 在异步启动前确定，关闭与启动共享注册表锁，前端即使在启动中卸载也等待启动结果后关闭，避免泄漏。IPC 使用 Tauri Channel 输出字节块（UTF-8 跨块由 xterm 解码），输出采用逐块应答背压，限制输入和尺寸；命令不阻塞 Tauri 主线程。
+- 后端注册表只拥有本应用创建的 PTY；自然退出回收句柄并通知前端；关闭显式终止 shell 及其子进程并 wait 回收。应用退出/窗口销毁执行同样清理，Unix 子进程按自身树收集并终止，Windows 专项仍属 Phase 3。终端仅在目录存在且为绝对路径时启动；失败显示错误，不自动创建目录。
+- 不改数据库/schema。新增依赖理由：xterm 提供 ANSI/VT 解析和可访问输入，fit addon 匹配面板尺寸；portable-pty 提供真实 PTY/交互 shell 与窗口 resize，替代不支持 job control 的普通管道。
