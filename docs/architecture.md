@@ -688,6 +688,6 @@ P1-8 落地迁移 0003（workspaces + sessions.workspace_id，历史会话按 di
 
 `.worktreeinclude` 每行一个相对文件路径（空行及 # 注释忽略，不解释 glob）；只允许项目内真实普通文件，拒绝绝对路径、..、符号链接及 .git，先校验全部文件再建 worktree，复制到新目录时不覆盖受 Git 跟踪的文件。失败回滚本次 worktree 和新分支，原项目不变。
 
-看板项目任务提供“隔离会话”按钮，预填任务标题和 worktree cwd，workspace_id 始终为原项目。`run_prompt` 可携 task_id，宿主校验其托管 cwd 与原空间一致；SessionStarted 落库后绑定任务并更新为进行中。新建隔离草稿不自动调用模型。
+看板项目任务提供“隔离会话”按钮，预填任务标题和 worktree cwd，workspace_id 始终为原项目。新增 IPC：`create_task_worktree(task_id)` → TaskWorktree（task_id/workspace_id/project/path/branch）；`cleanup_task_worktrees(workspace_id)` → removed/skipped 字符串列表。`run_prompt` 可携 task_id，宿主校验其托管 cwd 与原空间一致；SessionStarted 落库后绑定任务并更新为进行中。新建隔离草稿不自动调用模型。
 
 “清扫孤儿”只处理当前项目托管记录：任务已不存在且无历史会话使用该 cwd、无活跃运行，且 Git status（含 ignored/untracked）为空才移除目录与记录。保留分支及提交；脏目录明确跳过，不使用 force，不触碰其他 worktree。操作由宿主互斥锁串行化；默认空间及非 Git 项目明确报错。

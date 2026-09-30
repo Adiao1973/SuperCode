@@ -102,7 +102,7 @@
 | P2-4 | codex 接入：`npx -y @agentclientprotocol/codex-acp` 走 AcpDriver | 同 P2-3 剧本在 codex 上通过（两 agent 并行会话互不串台）；具体命令与预期见 `docs/acceptance/p2-4.md` | ✅ 已验收 2026-09-28 |
 | P2-5 | mimo 接入：`mimo acp` 走 AcpDriver | 同 P2-3 剧本在 mimo 上通过；具体命令与预期见 `docs/acceptance/p2-5.md` | ✅ 已验收 2026-09-30 |
 | P2-6 | StreamJsonDriver + zcode 受限支持：headless `--mode yolo` 预授权流解析；UI 标注"该 agent 无法外部审批" | zcode 任务跑通消息/工具事件；UI 可见受限标注；权限模式选择器对 zcode 置灰 | 延期补验（无有效 key，用户授权跳过） |
-| P2-7 | git worktree 任务隔离：每任务独立 worktree + 分支、`.worktreeinclude` 复制、孤儿清扫（worktree 会话归属原项目空间，ADR-0007） | 从项目空间任务一键建 worktree 会话；改动不影响主工作区；孤儿 worktree 可清扫；会话仍归原项目空间 | 进行中 |
+| P2-7 | git worktree 任务隔离：每任务独立 worktree + 分支、`.worktreeinclude` 复制、孤儿清扫（worktree 会话归属原项目空间，ADR-0007） | 从项目空间任务一键建 worktree 会话；改动不影响主工作区；孤儿 worktree 可清扫；会话仍归原项目空间；完整步骤与结果见 `docs/acceptance/p2-7.md` | ✅ 已验收 2026-10-01 |
 | P2-8 | 完整看板：dnd-kit 拖拽跨列/跨空间移动任务 | 拖拽改变状态即时落库；重启保留；拖拽不破坏绑定会话引用 | 待办 |
 | P2-9 | xterm 终端嵌入（≥5.3.0，禁透明 canvas）：会话内嵌终端（cwd=会话 cwd） | 会话视图可开终端；输入输出正常；WebKit 无绿伪影；关终端不残留进程 | 待办 |
 | P2-10 | Phase 2 整体验收 + tag v0.3.0 合入 main | 验收剧本（P2-10 前预写进 docs/acceptance/phase2.md）逐条留痕；`just verify` 全绿；`git tag v0.3.0` | 待办 |
@@ -134,7 +134,7 @@
 - **P2-2 验收**：设置页「Agent 管理」区块实机核对（用户截图）——五条注册 agent 列出；OpenCode ✓1.18.30 / Claude Code ✓0.81.2 / Codex ✓adapter 1.13.1；MiMo/ZCode 未安装项展示琥珀徽标 + 可复制安装指引；自定义 CRUD 写 `~/.supercode/agents.json` 重启保留。`just verify` 全绿（core 61 + desktop 2 = 63 测试）。
 - **P2-2 审查修复（独立审查发现 critical）**：`AgentInput` 嵌套入参 casing 不匹配——Tauri 仅映射顶层命令形参，嵌套 struct 走 serde 原样匹配，前端 camelCase vs Rust snake_case 导致 add/update_agent 反序列化必失败。修复：`#[serde(rename_all = "camelCase")]` + 2 条 serde JSON 回归测锁定字段名；前端 id 校验收紧 `^[a-z0-9-]+$` 与后端一致。复审 PASS。**教训**：项目首个嵌套命令入参即踩坑——嵌套 IPC 入参必须显式 rename_all 并配 serde 级单测（`just verify` 不覆盖 IPC 反序列化层）。
 - **P2-2 偏差（zcode 误报未安装，用户实机发现）**：本机装的是 **ZCode.app 桌面版**，CLI 嵌在 `/Applications/ZCode.app/Contents/Resources/glm/zcode.cjs`（Node 脚本，0.16.9），**不注册 PATH 命令**——`zcode --version` 失败故判未安装（探测逻辑正确，安装形态特殊）。处理：安装引导改为可复制软链命令（`ln -sf …/zcode.cjs ~/.local/bin/zcode`）；实机验证软链后 `detect` → `ZCode 0.16.9 ✓`。与 P1-10 GUI PATH 问题同类：环境形态差异由产品引导兜底。
-- **P2-6 预警（本次实证，P2-6 接入时处理）**：zcode 0.16.9 `--help` 实际输出格式为 `--json`，与 §4.4 内置表 `--output-format stream-json` 不符——StreamJsonDriver 落地前需以实测 help 为准更新 spawn 命令（架构表同步）。
+- **P2-6 实测更正**：0.16.9 help 遗漏 output-format，参数校验实际支持 stream-json；help 不能作为唯一判断依据。实现保留在 P2-6 分支，用户无有效 key，授权延期真实验收。
 
 ## Phase 3 — AI 指挥官与 Windows（概要）
 
@@ -153,3 +153,5 @@
 | v1.0.0 | Phase 3：AI 指挥官 + Windows | 双平台安装包 + 指挥官闭环 | — |
 
 - **P2-6 延期授权（2026-09-30）**：用户无有效 key，允许跳过；实现和自动验收记录见 `docs/acceptance/p2-6.md`，保留独立分支待补验，继续 P2-7。
+
+- **P2-7 验收（2026-10-01）**：任务托管 worktree/分支与原项目空间绑定、include 文件清单复制、孤儿保守清扫已完成。macOS 真实 OpenCode 写读完成，主目录不变，任务自动绑定会话并进入进行中；干净孤儿可清扫、脏目录及历史引用保留，重启历史归属正确。`just verify` 全绿（核心 69/协议 4/桌面 2，1 既有 ignored），无新增依赖或 schema 变更，详见 `docs/acceptance/p2-7.md`。
