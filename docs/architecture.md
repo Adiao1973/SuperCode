@@ -681,3 +681,13 @@ P1-8 落地迁移 0003（workspaces + sessions.workspace_id，历史会话按 di
 | 2026-09-24 | 0.1 | Step 0 初版：分层架构、AgentDriver/AgentEvent/ApprovalBroker/Registry 接口、事件管道、数据模型、进程与安全约定 |
 | 2026-09-25 | 0.3 | P1-1 脚手架落地：apps/desktop 为 Tauri v2 壳（crate `supercode-desktop` 并入 cargo workspace；pnpm-workspace 管理 apps/*）；前端 React 19 + Tailwind v4 + shadcn/ui（radix-nova 预设）；§5 事件管道与命令接入自 P1-2 起 |
 | 2026-09-24 | 0.2 | Phase 0 落地（v0.1.0）：§4.1 对齐 ACP v1 实际 schema（ThoughtChunk、Option 字段、ToolKind 全集）；§4.3 规则引擎 + 留痕流；§4.5 ProcessManager；§4.6 EventAggregator；§4.2 StartMode 与 trait 化节奏；§6 迁移 0001 六表 + SessionRecorder；§7 取消链路与 SDK 托管进程组 |
+
+### P2-7 任务 worktree 隔离
+
+`core::worktree` 用 Git 参数数组创建 `supercode/task-<task UUID>` 分支，基于项目 HEAD（不复制未提交源码）。托管目录及独立 JSON 记录位于 Git common dir 的 `supercode-worktrees/` 下；任务 UUID 唯一，重复请求复用既有目录，不替换已有同名分支。记录 task_id/workspace_id/project/path/branch，重启可恢复，不新增数据库表。
+
+`.worktreeinclude` 每行一个相对文件路径（空行及 # 注释忽略，不解释 glob）；只允许项目内真实普通文件，拒绝绝对路径、..、符号链接及 .git，先校验全部文件再建 worktree，复制到新目录时不覆盖受 Git 跟踪的文件。失败回滚本次 worktree 和新分支，原项目不变。
+
+看板项目任务提供“隔离会话”按钮，预填任务标题和 worktree cwd，workspace_id 始终为原项目。新增 IPC：`create_task_worktree(task_id)` → TaskWorktree（task_id/workspace_id/project/path/branch）；`cleanup_task_worktrees(workspace_id)` → removed/skipped 字符串列表。`run_prompt` 可携 task_id，宿主校验其托管 cwd 与原空间一致；SessionStarted 落库后绑定任务并更新为进行中。新建隔离草稿不自动调用模型。
+
+“清扫孤儿”只处理当前项目托管记录：任务已不存在且无历史会话使用该 cwd、无活跃运行，且 Git status（含 ignored/untracked）为空才移除目录与记录。保留分支及提交；脏目录明确跳过，不使用 force，不触碰其他 worktree。操作由宿主互斥锁串行化；默认空间及非 Git 项目明确报错。

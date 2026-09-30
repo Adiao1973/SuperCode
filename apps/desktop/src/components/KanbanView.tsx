@@ -8,6 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   createTask,
+  createTaskWorktree,
+  cleanupTaskWorktrees,
+  type TaskWorktree,
   deleteTask,
   listTasks,
   listWorkspaces,
@@ -28,11 +31,14 @@ const COLUMNS: { status: TaskEntry["status"]; label: string }[] = [
 interface KanbanViewProps {
   /** 绑定会话跳转：切回会话视图并激活对应会话（找不到时提示） */
   onOpenSession?: (agentSessionId: string) => void;
+  onWorktreeSession?: (workspace: Workspace, task: TaskEntry, entry: TaskWorktree) => void;
   /** 可绑定的会话清单（key/标题/ACP id），由 App 从 sessions store 传入 */
   bindableSessions: { key: string; title: string; acpSessionId: string | null }[];
 }
 
-export function KanbanView({ onOpenSession, bindableSessions }: KanbanViewProps) {
+export function KanbanView({ onOpenSession, onWorktreeSession, bindableSessions }: KanbanViewProps) {
+  const [busy, setBusy] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
   const [tasks, setTasks] = useState<TaskEntry[]>([]);
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [creatingIn, setCreatingIn] = useState<string | null>(null);
@@ -113,6 +119,23 @@ export function KanbanView({ onOpenSession, bindableSessions }: KanbanViewProps)
     [refresh],
   );
 
+  const isolated = async (workspace: Workspace, task: TaskEntry) => {
+    if (busy) return;
+    setBusy(true);
+    try { onWorktreeSession?.(workspace, task, await createTaskWorktree(task.id)); }
+    catch (e) { setError(String(e)); }
+    finally { setBusy(false); }
+  };
+  const cleanup = async (workspaceId: string) => {
+    if (busy) return;
+    setBusy(true);
+    try {
+      const result = await cleanupTaskWorktrees(workspaceId);
+      setNotice(`已清扫 ${result.removed.length} 个孤儿；保留 ${result.skipped.length} 个。${result.skipped.join("；")}`);
+    } catch (e) { setError(String(e)); }
+    finally { setBusy(false); }
+  };
+
   const groups = useMemo(() => {
     const list = workspaces.length
       ? workspaces
@@ -126,6 +149,7 @@ export function KanbanView({ onOpenSession, bindableSessions }: KanbanViewProps)
   return (
     <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
       <div className="mx-auto flex max-w-5xl flex-col gap-6">
+        {notice && <p className="text-muted-foreground text-xs">{notice}</p>}
         {error && (
           <p className="text-destructive text-xs" onClick={() => setError(null)}>
             {error}（点击清除）
@@ -138,6 +162,7 @@ export function KanbanView({ onOpenSession, bindableSessions }: KanbanViewProps)
               {workspace.path && (
                 <code className="text-muted-foreground truncate text-[11px]">{workspace.path}</code>
               )}
+              {workspace.kind === "project" && <Button size="sm" variant="ghost" disabled={busy} onClick={() => void cleanup(workspace.id)}>清扫孤儿</Button>}
               <Button
                 size="sm"
                 variant="ghost"
@@ -191,6 +216,8 @@ export function KanbanView({ onOpenSession, bindableSessions }: KanbanViewProps)
                         onBind={() => setBindMenuFor(bindMenuFor === task.id ? null : task.id)}
                         onOpenSession={onOpenSession}
                         onDelete={() => void remove(task.id)}
+                        onIsolate={workspace.kind === "project" && !task.session_id ? () => void isolated(workspace, task) : undefined}
+                        busy={busy}
                       />
                     ))}
                     {bindMenuFor && cards.some((t) => t.id === bindMenuFor) && (
@@ -240,6 +267,8 @@ function TaskCard({
   onBind,
   onOpenSession,
   onDelete,
+  onIsolate,
+  busy,
 }: {
   task: TaskEntry;
   canBack: boolean;
@@ -249,6 +278,8 @@ function TaskCard({
   onBind: () => void;
   onOpenSession?: (agentSessionId: string) => void;
   onDelete: () => void;
+  onIsolate?: () => void;
+  busy: boolean;
 }) {
   return (
     <div className="group rounded-md border bg-background px-2.5 py-2 shadow-sm">
@@ -258,11 +289,12 @@ function TaskCard({
           type="button"
           title="删除任务"
           onClick={onDelete}
-          className="text-muted-foreground/40 hover:text-destructive hidden shrink-0 px-0.5 group-hover:block"
+          className="text-muted-foreground/40 hover:text-destructive shrink-0 px-0.5"
         >
           <Trash2 className="size-3" />
         </button>
       </div>
+      {onIsolate && <Button size="sm" variant="ghost" className="h-6 px-0 text-[10px]" disabled={busy} onClick={onIsolate}>隔离会话</Button>}
       <div className="mt-1.5 flex items-center gap-1">
         {task.session_id ? (
           <button

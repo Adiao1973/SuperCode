@@ -21,6 +21,7 @@ export function runPrompt(options: {
   resumeSessionId?: string | null;
   /** 归属工作空间（P1-8，ADR-0007）；缺省 → 默认空间 */
   workspaceId?: string | null;
+  taskId?: string | null;
   onEvents: (batch: AgentEvent[]) => void;
 }): Promise<RunInfo> {
   const channel = new Channel<AgentEvent[]>();
@@ -34,6 +35,7 @@ export function runPrompt(options: {
     mode: options.mode,
     resumeSessionId: options.resumeSessionId ?? null,
     workspaceId: options.workspaceId ?? null,
+    taskId: options.taskId ?? null,
     onEvents: channel,
   });
 }
@@ -221,4 +223,18 @@ export interface NodeEnvReport {
 }
 export function checkNodeEnv(): Promise<NodeEnvReport> {
   return invoke("check_node_env");
+}
+
+export interface TaskWorktree {
+  task_id: string;
+  workspace_id: string;
+  project: string;
+  path: string;
+  branch: string;
+}
+export function createTaskWorktree(taskId: string): Promise<TaskWorktree> {
+  return invoke("create_task_worktree", { taskId });
+}
+export function cleanupTaskWorktrees(workspaceId: string): Promise<{ removed: string[]; skipped: string[] }> {
+  return invoke("cleanup_task_worktrees", { workspaceId });
 }

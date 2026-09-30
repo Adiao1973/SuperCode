@@ -132,6 +132,7 @@ export function RunConsole({ session, dispatch }: RunConsoleProps) {
         resumeSessionId: resume ? session.acpSessionId : null,
         // 归属工作空间（P1-8）：落库与侧栏分组一致
         workspaceId: session.workspaceId,
+        taskId: session.taskId,
         // 事件按客户端会话键路由；acpSessionId 由 session_started 事件带入 store
         onEvents: (batch) => dispatch({ type: "batch", key, batch }),
       });
@@ -143,7 +144,7 @@ export function RunConsole({ session, dispatch }: RunConsoleProps) {
         batch: [{ type: "driver_error", message: String(e) }],
       });
     }
-  }, [session.key, session.resumable, session.acpSessionId, session.workspaceId, draft, stream.running, dispatch]);
+  }, [session.taskId, session.key, session.resumable, session.acpSessionId, session.workspaceId, draft, stream.running, dispatch]);
 
   // P1-6：历史会话首次进入时加载落库消息
   useEffect(() => {
@@ -279,7 +280,7 @@ export function RunConsole({ session, dispatch }: RunConsoleProps) {
             ))}
           </select>
           <Input
-            disabled={stream.running || session.acpSessionId != null}
+            disabled={stream.running || session.acpSessionId != null || session.taskId != null}
             value={draft.cwd}
             onChange={(e) =>
               dispatch({

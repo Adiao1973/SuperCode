@@ -1,6 +1,8 @@
 //! SuperCode 桌面壳（Tauri v2）。
 //! P1-5：审批中心——权限模式热切换、待决请求转发应答、规则库 SQLite 持久化（§5.1）。
 
+mod worktrees;
+
 use std::{collections::HashMap, path::PathBuf, sync::Arc, time::Duration};
 
 use supercode_core::approval::{ApprovalBroker, PermissionMode, PermissionRules, RuleEffect};
@@ -65,13 +67,37 @@ async fn run_prompt(
     resume_session_id: Option<String>,
     // P1-8：会话归属工作空间（ADR-0007）；None → 默认空间
     workspace_id: Option<String>,
+    task_id: Option<String>,
     on_events: Channel<Vec<AgentEvent>>,
 ) -> Result<RunInfo, String> {
+    let _worktree_gate = worktrees::GATE.lock().await;
     let def = registry::AgentDefinition::find(agent_id.as_deref().unwrap_or("opencode"))
         .map_err(|e| e.to_string())?;
     let permission_mode = parse_mode(&mode)?;
     let state = app.state::<AppState>();
     let store = state.store().await;
+    if let Some(task) = &task_id {
+        worktrees::validate_task(
+            store,
+            task,
+            workspace_id.as_deref(),
+            &cwd,
+            resume_session_id.as_deref(),
+        )
+        .await?;
+    }
+    let task_id = match task_id {
+        Some(id)
+            if store
+                .get_task(&id)
+                .await
+                .map_err(|e| e.to_string())?
+                .is_some() =>
+        {
+            Some(id)
+        }
+        _ => None,
+    };
     let existing = if let Some(id) = &resume_session_id {
         let local_id = store
             .find_session_by_agent(id)
@@ -182,7 +208,7 @@ async fn run_prompt(
     // recorder 跑在独立任务（有界通道缓冲）——逐事件 DB 写不得阻塞事件转发（§5 管线）
     let recorder_store = state.store().await.clone();
     let mut recorder = SessionRecorder::new(
-        recorder_store,
+        recorder_store.clone(),
         supercode_session,
         &def.id,
         &cwd,
@@ -200,6 +226,14 @@ async fn run_prompt(
     tauri::async_runtime::spawn(async move {
         while let Some(event) = rec_rx.recv().await {
             recorder.handle_event(&event).await;
+            if let (Some(task), AgentEvent::SessionStarted { session_id }) = (&task_id, &event) {
+                if let Err(error) = recorder_store
+                    .update_task(task, Some("in_progress"), Some(session_id))
+                    .await
+                {
+                    eprintln!("任务会话绑定失败：{error}");
+                }
+            }
         }
     });
 
@@ -885,6 +919,8 @@ pub fn run() {
             delete_workspace,
             list_tasks,
             create_task,
+            worktrees::create_task_worktree,
+            worktrees::cleanup_task_worktrees,
             update_task,
             delete_task,
             list_agents,

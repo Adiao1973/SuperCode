@@ -152,6 +152,12 @@ function App() {
         {nav === "settings" && <SettingsView />}
         {nav === "kanban" && (
           <KanbanView
+            onWorktreeSession={(workspace, task, worktree) => {
+              const existing = sessions.items.find((entry) => entry.taskId === task.id);
+              setNav("sessions");
+              if (existing) dispatch({ type: "activate", key: existing.key });
+              else dispatch({ type: "new", workspace, taskId: task.id, cwd: worktree.path, prompt: task.title });
+            }}
             bindableSessions={sessions.items.map((it) => ({
               key: it.key,
               title: it.title,
