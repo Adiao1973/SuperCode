@@ -509,6 +509,30 @@ recorder。会话选择器读取注册表定义时不执行 npx 版本探测（�
 `list_agent_definitions` IPC，返回 `AgentRow` 且 `installed_version=None`）；设置页的
 `list_agents` 才执行探测，避免选择器挂载时与运行中 npx 冷启动争用 npm 缓存。任何适配器不经 ACP 请求而自行执行的操作不属于 SuperCode 审批管辖。
 
+### P2-5 MiMo ACP 适配边界
+
+MiMo Code 使用注册表中预留的 `mimo acp` 原生 ACP 入口，继续走现有
+`AcpDriver`、会话持久化和 `session/load` 路径。MiMo 的安装、认证、默认模型与
+供应商配置由 MiMo CLI 自身管理；SuperCode 只探测 `mimo --version`、提供官方
+安装与认证引导，不读取或保存凭证。桌面选择器使用 P2-4 的无探测注册表 IPC。
+若内置 `mimo acp` 不在宿主 PATH 中，但官方安装器的
+`~/.mimocode/bin/mimo` 存在，则版本探测和启动使用该可执行文件；PATH 中的
+`mimo` 优先。用户自定义 MiMo 命令不做此回退。模型仍由 MiMo 配置决定，
+SuperCode 不覆盖全局或项目模型设置。
+MiMo ACP 服务将 `session/new` 的 cwd 限制在服务**进程当前目录**之内；其
+`--cwd` 参数在 0.1.15 中并不改变服务根目录。注册表新增可选
+`acp_process_cwd`，内置 MiMo 设为 true；driver 在 Unix 上经 `sh` 的独立参数
+安全切换至会话 cwd 后 `exec` agent，保留其环境变量，进程组清理语义不变。
+其余 agent 缺省 false，旧版用户注册表 JSON 保持兼容；CLI 和桌面共用该字段。
+本阶段以真实 CLI 的 `initialize → session/new → session/prompt → session/load`
+链路验证兼容性；若 MiMo 的 ACP 事件或权限选项与现有映射有差异，先添加契约
+测试，再作最小协议修正。与其他 agent 并行时继续按每会话独立 Channel、broker
+和 recorder 隔离。MiMo CLI 自行执行且未通过 ACP 请求的操作不在 SuperCode
+审批范围内。桌面 broker 的裁决广播同时写入当前会话的 SQLite approvals，
+与 CLI 的审批留痕行为一致。若 `session/prompt` 返回 EndTurn 而本轮没有消息、工具或计划事件，
+`AcpDriver` 将其视为模型服务/认证异常，发 `DriverError` 并标记会话失败；
+`session/load` 的历史重放不计入本轮活动。
+
 ### P2-3 多 Agent 运行与恢复
 
 - `run_prompt` 新增 `agent_id: Option<String>`（缺省 opencode），按注册表解析；仅 ACP 驱动可运行，其他驱动明确报错。
@@ -639,6 +663,7 @@ P1-8 落地迁移 0003（workspaces + sessions.workspace_id，历史会话按 di
 
 | 日期 | 版本 | 摘要 |
 |---|---|---|
+| 2026-09-29 | 0.18 | P2-5：MiMo ACP 进程 cwd 约束与注册表可选启动选项；ACP 空轮次失败识别及桌面安装/模型指引 |
 | 2026-09-28 | 0.17 | P2-4：会话选择器新增无探测注册表 IPC，Codex ACP 认证/权限/并行边界与 npm 缓存争用规避 |
 | 2026-09-28 | 0.16 | P2-3：注册表驱动运行、历史 agent 归属、续聊校验与运行时 load 能力协商；Node/npx 探测；CLI --agent；API Key 认证引导 |
 | 2026-09-28 | 0.15 | P2-2 小设计：§4.4 补用户自定义写路径（load_user_entries/save/upsert/remove，原子写）；§5.1 新增 list/add/update/delete_agent 与 AgentRow |

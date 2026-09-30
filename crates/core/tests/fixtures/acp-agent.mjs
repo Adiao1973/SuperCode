@@ -21,6 +21,10 @@ for await (const line of lines) {
       reply(request.id, {});
       break;
     case 'session/prompt':
+      if (process.argv[2] === 'empty') {
+        reply(request.id, { stopReason: 'end_turn' });
+        break;
+      }
       promptId = request.id;
       update({ sessionUpdate: 'tool_call', toolCallId: 'edit-1', title: 'Write hello.txt', kind: 'edit', status: 'pending', rawInput: { file_path: '/tmp/hello.txt', content: 'hi' } });
       send({ id: 'permission-1', method: 'session/request_permission', params: {

@@ -393,6 +393,21 @@ export function RunConsole({ session, dispatch }: RunConsoleProps) {
             </details>
           </div>
         )}
+        {draft.agentId === "mimo" && (
+          <div className="space-y-2 rounded-md border px-3 py-2 text-xs">
+            <details>
+              <summary className="cursor-pointer">MiMo Code 安装与模型指引</summary>
+              <div className="mt-2 space-y-2">
+                <p>安装官方 MiMo Code CLI。SuperCode 可识别 PATH 中的 mimo，也可识别官方安装器的 ~/.mimocode/bin/mimo。</p>
+                <CopyableBlock text="npm install -g @mimo-ai/cli" />
+                <CopyableBlock text="mimo --version" />
+                <p>模型与供应商由 MiMo 自己管理。现有配置可先用 mimo run 验证；若 ACP 默认选择了不可用模型，可在工作目录的 .mimocode/mimocode.jsonc 中设置 model。MiMo Auto 的可用性以 MiMo 当前服务状态为准；SuperCode 不读取或保存凭证。</p>
+                <CopyableBlock text="mimo providers login" />
+                <CopyableBlock text='{"model":"<provider>/<model>"}' />
+              </div>
+            </details>
+          </div>
+        )}
 
         {/* P1-7 opencode 环境联检：未安装 → 红色引导；宽松 → 琥珀警告 + 可复制收紧片段 */}
         {!stream.running && envFresh && envReport && !envReport.installed && (

@@ -21,7 +21,7 @@ const INSTALL_COMMANDS: Record<string, string> = {
   opencode: "curl -fsSL https://opencode.ai/install | bash",
   "claude-code": "npm i -g @agentclientprotocol/claude-agent-acp   # 需 Node/npx",
   codex: "npm i -g @agentclientprotocol/codex-acp   # 需 Node/npx",
-  mimo: "# 见 MiMo Code 官方安装说明（需本机 mimo 可执行文件）",
+  mimo: "npm install -g @mimo-ai/cli",
   // ZCode 桌面版自带 CLI（zcode.cjs）但不注册 PATH 命令——软链后探测与 spawn 才可见
   zcode: `# ZCode.app 已装但 CLI 未进 PATH，执行以下命令后点「刷新」：
 mkdir -p ~/.local/bin && \\
@@ -48,6 +48,7 @@ const emptyForm: AgentInput = {
   driverKind: "acp",
   command: "",
   versionArgs: [],
+  acpProcessCwd: false,
   supportsLoadSession: true,
   supportsDiff: true,
   supportsPermission: true,
@@ -191,6 +192,16 @@ export function AgentsSection() {
             </select>
           </div>
           <div className="flex flex-wrap gap-3 text-[11px]">
+            {form.driverKind === "acp" && (
+              <label className="flex items-center gap-1.5">
+                <input
+                  type="checkbox"
+                  checked={form.acpProcessCwd}
+                  onChange={(e) => setForm((f) => ({ ...f, acpProcessCwd: e.target.checked }))}
+                />
+                从会话目录启动
+              </label>
+            )}
             {(
               [
                 ["supportsLoadSession", "支持续聊"],

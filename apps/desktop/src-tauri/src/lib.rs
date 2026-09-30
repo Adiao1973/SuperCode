@@ -90,6 +90,10 @@ async fn run_prompt(
     };
     supercode_core::orchestrator::validate_launch(&def, existing.as_ref(), &cwd)
         .map_err(|e| e.to_string())?;
+    let supercode_session = match &existing {
+        Some(row) => SessionUuid::parse_str(&row.id).map_err(|e| e.to_string())?,
+        None => SessionUuid::new_v4(),
+    };
     std::fs::create_dir_all(&cwd).map_err(|e| format!("创建工作目录失败：{e}"))?;
     store
         .upsert_agent(&def.id, &def.display_name, "acp", None)
@@ -122,6 +126,7 @@ async fn run_prompt(
 
     // broker → 前端事件转发：待决请求 / 裁决留痕（§5.1）
     let app_for_relay = app.clone();
+    let store_for_relay = store.clone();
     let broker_for_relay = broker.clone();
     let mut pending_rx = broker_for_relay.subscribe();
     let mut decisions_rx = broker_for_relay.subscribe_decisions();
@@ -146,6 +151,9 @@ async fn run_prompt(
                 record = decisions_rx.recv() => {
                     match record {
                         Ok(record) => {
+                            if let Err(err) = store_for_relay.insert_approval(supercode_session, &record).await {
+                                eprintln!("[p2-5] 审批持久化失败: {err}");
+                            }
                             let _ = app_for_relay.emit("decision-record", &record);
                         }
                         Err(tokio::sync::broadcast::error::RecvError::Lagged(_)) => continue,
@@ -173,10 +181,6 @@ async fn run_prompt(
     // insert_session OR IGNORE 幂等；本轮提示词作为新用户消息记录。
     // recorder 跑在独立任务（有界通道缓冲）——逐事件 DB 写不得阻塞事件转发（§5 管线）
     let recorder_store = state.store().await.clone();
-    let supercode_session = match &existing {
-        Some(row) => SessionUuid::parse_str(&row.id).map_err(|e| e.to_string())?,
-        None => SessionUuid::new_v4(),
-    };
     let mut recorder = SessionRecorder::new(
         recorder_store,
         supercode_session,
@@ -240,7 +244,7 @@ async fn run_prompt(
         }
     });
 
-    let driver = AcpDriver::new(def.command);
+    let driver = AcpDriver::new(def.launch_command()).with_process_cwd(def.acp_process_cwd);
     let cleanup_session = session_of_run.clone();
     let app_for_cleanup = app.clone();
     tauri::async_runtime::spawn(async move {
@@ -708,6 +712,7 @@ struct AgentRow {
     driver_kind: registry::DriverKind,
     command: String,
     version_args: Vec<String>,
+    acp_process_cwd: bool,
     capabilities: registry::Capabilities,
     /// id 出现在用户文件（含覆盖内置）
     is_user_defined: bool,
@@ -725,6 +730,8 @@ struct AgentInput {
     driver_kind: String,
     command: String,
     version_args: Vec<String>,
+    #[serde(default)]
+    acp_process_cwd: bool,
     supports_load_session: bool,
     supports_diff: bool,
     supports_permission: bool,
@@ -761,6 +768,7 @@ impl AgentInput {
             driver_kind,
             command,
             version_args,
+            acp_process_cwd: self.acp_process_cwd,
             capabilities: registry::Capabilities {
                 supports_load_session: self.supports_load_session,
                 supports_diff: self.supports_diff,
@@ -785,6 +793,7 @@ async fn probe_row(def: registry::AgentDefinition, is_user_defined: bool) -> Age
         driver_kind: def.driver_kind,
         command: def.command,
         version_args: def.version_args,
+        acp_process_cwd: def.acp_process_cwd,
         capabilities: def.capabilities,
         is_user_defined,
         installed_version,
@@ -804,6 +813,7 @@ fn list_agent_definitions() -> Vec<AgentRow> {
             driver_kind: def.driver_kind,
             command: def.command.clone(),
             version_args: def.version_args.clone(),
+            acp_process_cwd: def.acp_process_cwd,
             capabilities: def.capabilities.clone(),
             is_user_defined: user_ids.contains(&def.id),
             installed_version: None,
@@ -900,6 +910,7 @@ mod tests {
             "driverKind": "acp",
             "command": "my-agent --acp",
             "versionArgs": ["--version"],
+            "acpProcessCwd": true,
             "supportsLoadSession": true,
             "supportsDiff": true,
             "supportsPermission": false
@@ -913,6 +924,7 @@ mod tests {
 
         let def = input.into_definition().unwrap();
         assert_eq!(def.command, "my-agent --acp");
+        assert!(def.acp_process_cwd);
         assert_eq!(def.driver_kind, registry::DriverKind::Acp);
     }
 

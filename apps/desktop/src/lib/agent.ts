@@ -167,6 +167,7 @@ export interface AgentRow {
   driver_kind: "acp" | "stream_json" | "native";
   command: string;
   version_args: string[];
+  acp_process_cwd: boolean;
   capabilities: {
     supports_load_session: boolean;
     supports_diff: boolean;
@@ -184,6 +185,7 @@ export interface AgentInput {
   driverKind: "acp" | "stream_json" | "native";
   command: string;
   versionArgs: string[];
+  acpProcessCwd: boolean;
   supportsLoadSession: boolean;
   supportsDiff: boolean;
   supportsPermission: boolean;

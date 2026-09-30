@@ -7,13 +7,9 @@ use supercode_core::{
 use tokio::sync::mpsc;
 use tokio_util::sync::CancellationToken;
 
-async fn exercise(mode: StartMode, accept: bool, no_load: bool) -> (bool, Vec<AgentEvent>) {
+async fn exercise(mode: StartMode, accept: bool, fixture_mode: &str) -> (bool, Vec<AgentEvent>) {
     let fixture = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/acp-agent.mjs");
-    let driver = AcpDriver::new(format!(
-        "node '{}' {}",
-        fixture.display(),
-        if no_load { "no-load" } else { "" }
-    ));
+    let driver = AcpDriver::new(format!("node '{}' {}", fixture.display(), fixture_mode));
     let (tx, mut rx) = mpsc::channel(64);
     let permissions: PermissionHandler = Arc::new(move |request| {
         Box::pin(async move {
@@ -49,7 +45,7 @@ async fn exercise(mode: StartMode, accept: bool, no_load: bool) -> (bool, Vec<Ag
 #[tokio::test]
 async fn acp_new_session_streams_tools_and_permission_decisions() {
     for accept in [true, false] {
-        let (ok, events) = exercise(StartMode::New, accept, false).await;
+        let (ok, events) = exercise(StartMode::New, accept, "").await;
         assert!(ok);
         assert!(matches!(
             events.first(),
@@ -71,12 +67,7 @@ async fn acp_new_session_streams_tools_and_permission_decisions() {
 
 #[tokio::test]
 async fn acp_load_replays_history_before_session_started() {
-    let (ok, events) = exercise(
-        StartMode::Load("claude-fixture-session".into()),
-        true,
-        false,
-    )
-    .await;
+    let (ok, events) = exercise(StartMode::Load("claude-fixture-session".into()), true, "").await;
     assert!(ok);
     assert!(
         matches!(events.first(), Some(AgentEvent::MessageChunk { text, .. }) if text == "replayed history")
@@ -88,7 +79,29 @@ async fn acp_load_replays_history_before_session_started() {
 
 #[tokio::test]
 async fn acp_load_requires_negotiated_capability() {
-    let (ok, events) = exercise(StartMode::Load("claude-fixture-session".into()), true, true).await;
+    let (ok, events) = exercise(
+        StartMode::Load("claude-fixture-session".into()),
+        true,
+        "no-load",
+    )
+    .await;
     assert!(!ok);
     assert!(events.is_empty());
+}
+
+#[tokio::test]
+async fn acp_empty_end_turn_reports_model_failure() {
+    let (ok, events) = exercise(StartMode::New, true, "empty").await;
+    assert!(!ok);
+    assert!(
+        events
+            .iter()
+            .any(|event| matches!(event, AgentEvent::DriverError { message }
+        if message.contains("空轮次")))
+    );
+    assert!(
+        !events
+            .iter()
+            .any(|event| matches!(event, AgentEvent::TurnCompleted { .. }))
+    );
 }
