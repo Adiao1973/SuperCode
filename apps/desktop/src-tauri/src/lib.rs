@@ -1,6 +1,7 @@
 //! SuperCode 桌面壳（Tauri v2）。
 //! P1-5：审批中心——权限模式热切换、待决请求转发应答、规则库 SQLite 持久化（§5.1）。
 
+mod terminal;
 mod worktrees;
 
 use std::{collections::HashMap, path::PathBuf, sync::Arc, time::Duration};
@@ -912,12 +913,18 @@ pub fn run() {
     supercode_core::envcheck::augment_gui_path();
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .manage(terminal::Terminals::default())
         .manage(AppState {
             runs: tokio::sync::Mutex::new(HashMap::new()),
             pending: tokio::sync::Mutex::new(HashMap::new()),
             store: tokio::sync::OnceCell::new(),
         })
         .invoke_handler(tauri::generate_handler![
+            terminal::open_terminal,
+            terminal::write_terminal,
+            terminal::resize_terminal,
+            terminal::ack_terminal,
+            terminal::close_terminal,
             run_prompt,
             cancel_run,
             read_text_file,
@@ -947,8 +954,20 @@ pub fn run() {
             update_agent,
             delete_agent
         ])
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!())
+        .expect("error while building tauri application")
+        .run(|app, event| {
+            if matches!(
+                event,
+                tauri::RunEvent::Exit
+                    | tauri::RunEvent::WindowEvent {
+                        event: tauri::WindowEvent::Destroyed,
+                        ..
+                    }
+            ) {
+                app.state::<terminal::Terminals>().close_all();
+            }
+        });
 }
 
 #[cfg(test)]
