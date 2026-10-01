@@ -1,6 +1,6 @@
 [package]
 name = "supercode-desktop"
-version = "0.1.0"
+version = "0.3.0"
 description = "SuperCode 多 Agent 桌面总控客户端（Tauri 壳）"
 authors = ["Adiao1973"]
 edition = "2021"

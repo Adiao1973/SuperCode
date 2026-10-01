@@ -714,3 +714,5 @@ P2-9 依赖选择与实测：5.5.0 在 React StrictMode/面板销毁后存在 vi
 ### P2-10 — 整体验收发现的宿主收尾修复
 
 CLI 与桌面宿主一致：driver 返回 `Err` 时，在关闭事件通道、等待 recorder 排空之前补发 `DriverError`，让已有会话落库为 failed；会话未建立时不制造伪档案。新建和续聊均用真实 CLI + 无网络 ACP 对端回归验证。release 版本徽标读取 Tauri 实际 app version，`dev` 后缀仅开发构建显示，不再硬编码版本。Phase 2 tag/main 出口仍受未完成 P2-6 限制。
+
+- **2026-10-01 v0.3.0 范围调整**：用户授权提前发布多 ACP agent、worktree、看板与终端；ZCode StreamJson/Start Plan 真实验收延期，独立任务分支不合入本版，发布版保留禁选状态。

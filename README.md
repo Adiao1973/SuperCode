@@ -17,7 +17,7 @@
 - **审批是第一公民**：所有 agent 的权限请求汇入统一审批中心（会话级权限模式 + 预授权规则 + 人工裁决 + fail-closed）
 - **Mac 优先**，后续兼容 Windows；桌面端 Tauri v2 + Rust 核心 + React 19
 
-## 当前状态：v0.2.0（Phase 1 · 桌面 MVP）
+## 当前状态：v0.3.0（多 Agent · worktree · 看板 · 终端）
 
 ✅ **桌面端全功能已在真实 opencode + GLM 上验收通过**（[Phase 1 验收记录](docs/acceptance/phase1.md)）：
 
@@ -33,7 +33,7 @@
 
 v0.1.0（Phase 0 · CLI 原型）的 ACP 全链路验收见 [docs/acceptance/phase0.md](docs/acceptance/phase0.md)。
 
-`dev` 已完成 Phase 2 的 Claude Code、Codex、MiMo ACP 接入、Agent 管理、任务 worktree 隔离、看板拖拽与会话内嵌终端；当前进行整体验收。ZCode StreamJson 实现保留在独立分支，等待有效模型配置补验，尚未包含在 dev/发布版中。v0.3.0 尚未发布，进度与出口见 [Phase 2 验收](docs/acceptance/phase2.md) 和 [路线图](docs/roadmap.md)。
+v0.3.0 包含 Claude Code、Codex、MiMo ACP 接入、Agent 管理、任务 worktree 隔离、看板拖拽与会话内嵌终端。用户授权本版跳过 ZCode：其 StreamJson 实现保留独立分支，当前 Start Plan 未能通过 headless CLI 验收，发布版不能运行 ZCode。详见 [Phase 2 验收](docs/acceptance/phase2.md) 和 [路线图](docs/roadmap.md)。
 
 开发版可在设置页管理 Agent，在会话中选择已安装并完成认证的 ACP agent。任务看板可跨列/空间拖拽，已有会话及 worktree 保持原执行归属；「隔离会话」建立独立任务目录；会话底部「打开终端」使用实际 cwd，关闭或切换会话/页面会结束 shell。
 
@@ -41,7 +41,7 @@ v0.1.0（Phase 0 · CLI 原型）的 ACP 全链路验收见 [docs/acceptance/pha
 
 - macOS（Phase 3 起支持 Windows）
 - Rust ≥ 1.88（edition 2024）、Node + pnpm
-- [opencode](https://opencode.ai) ≥ 1.18 已安装并完成认证（v0.2.0 发布版的 agent；dev 也支持 Claude Code/Codex/MiMo，按设置页指引安装 CLI/ACP adapter 并完成各自认证）
+- [opencode](https://opencode.ai) ≥ 1.18 已安装并完成认证；也可选择 Claude Code/Codex/MiMo，按设置页指引安装相应 CLI/ACP adapter 并完成各自认证
   - 注意：需在 `~/.config/opencode/opencode.jsonc` 显式固定默认模型（ACP 会话不继承登录态默认模型，会回退到 zen 免费模型并限流），例如：
     ```jsonc
     { "model": "zhipuai-coding-plan/glm-5.3-flash" }
