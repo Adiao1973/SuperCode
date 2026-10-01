@@ -1,4 +1,5 @@
 import { useEffect, useReducer, useState } from "react";
+import { getVersion } from "@tauri-apps/api/app";
 import { Badge } from "@/components/ui/badge";
 import { ApprovalsView } from "@/components/ApprovalsView";
 import { KanbanView } from "@/components/KanbanView";
@@ -27,6 +28,8 @@ const NAV_ITEMS = [
 type NavId = (typeof NAV_ITEMS)[number]["id"];
 
 function App() {
+  const [version, setVersion] = useState<string | null>(null);
+  useEffect(() => { void getVersion().then(setVersion).catch(() => {}); }, []);
   const [nav, setNav] = useState<NavId>("sessions");
   const [sessions, dispatch] = useReducer(
     sessionsReducer,
@@ -101,7 +104,7 @@ function App() {
             SuperCode
           </span>
           <Badge variant="secondary" className="ml-auto text-[10px]">
-            v0.2 dev
+            {version ? `v${version}` : ""}{import.meta.env.DEV ? " dev" : ""}
           </Badge>
         </div>
         <div className="border-t" />
@@ -130,7 +133,7 @@ function App() {
           <div className="border-t py-3" />
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <span className="size-2 rounded-full bg-emerald-500" />
-            opencode · 已接入（环境面板见设置）
+            ACP Agents · 在会话中选择（管理与环境见设置）
           </div>
         </div>
       </aside>
@@ -152,6 +155,12 @@ function App() {
         {nav === "settings" && <SettingsView />}
         {nav === "kanban" && (
           <KanbanView
+            onWorktreeSession={(workspace, task, worktree) => {
+              const existing = sessions.items.find((entry) => entry.taskId === task.id);
+              setNav("sessions");
+              if (existing) dispatch({ type: "activate", key: existing.key });
+              else dispatch({ type: "new", workspace, taskId: task.id, cwd: worktree.path, prompt: task.title });
+            }}
             bindableSessions={sessions.items.map((it) => ({
               key: it.key,
               title: it.title,

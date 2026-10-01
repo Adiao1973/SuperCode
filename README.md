@@ -17,7 +17,7 @@
 - **审批是第一公民**：所有 agent 的权限请求汇入统一审批中心（会话级权限模式 + 预授权规则 + 人工裁决 + fail-closed）
 - **Mac 优先**，后续兼容 Windows；桌面端 Tauri v2 + Rust 核心 + React 19
 
-## 当前状态：v0.2.0（Phase 1 · 桌面 MVP）
+## 当前状态：v0.3.0（多 Agent · worktree · 看板 · 终端）
 
 ✅ **桌面端全功能已在真实 opencode + GLM 上验收通过**（[Phase 1 验收记录](docs/acceptance/phase1.md)）：
 
@@ -33,13 +33,15 @@
 
 v0.1.0（Phase 0 · CLI 原型）的 ACP 全链路验收见 [docs/acceptance/phase0.md](docs/acceptance/phase0.md)。
 
-🚧 规划中：Phase 2 多 agent（claude-code/codex/MiMo 官方 ACP adapter、StreamJsonDriver 接 zcode、worktree 隔离、dnd-kit 看板）→ Phase 3 AI 指挥官 + Windows。完整路线见 [docs/roadmap.md](docs/roadmap.md)。
+v0.3.0 包含 Claude Code、Codex、MiMo ACP 接入、Agent 管理、任务 worktree 隔离、看板拖拽与会话内嵌终端。用户授权本版跳过 ZCode：其 StreamJson 实现保留独立分支，当前 Start Plan 未能通过 headless CLI 验收，发布版不能运行 ZCode。详见 [Phase 2 验收](docs/acceptance/phase2.md) 和 [路线图](docs/roadmap.md)。
+
+开发版可在设置页管理 Agent，在会话中选择已安装并完成认证的 ACP agent。任务看板可跨列/空间拖拽，已有会话及 worktree 保持原执行归属；「隔离会话」建立独立任务目录；会话底部「打开终端」使用实际 cwd，关闭或切换会话/页面会结束 shell。
 
 ## 环境要求
 
 - macOS（Phase 3 起支持 Windows）
 - Rust ≥ 1.88（edition 2024）、Node + pnpm
-- [opencode](https://opencode.ai) ≥ 1.18 已安装并完成认证（当前唯一内置 agent）
+- [opencode](https://opencode.ai) ≥ 1.18 已安装并完成认证；也可选择 Claude Code/Codex/MiMo，按设置页指引安装相应 CLI/ACP adapter 并完成各自认证
   - 注意：需在 `~/.config/opencode/opencode.jsonc` 显式固定默认模型（ACP 会话不继承登录态默认模型，会回退到 zen 免费模型并限流），例如：
     ```jsonc
     { "model": "zhipuai-coding-plan/glm-5.3-flash" }
@@ -51,7 +53,7 @@ v0.1.0（Phase 0 · CLI 原型）的 ACP 全链路验收见 [docs/acceptance/pha
 
 ```bash
 git clone <repo> && cd SuperCode
-just verify          # fmt/clippy/50 测试全绿
+just verify          # 前端构建 + fmt/clippy/全部测试
 just dev             # 桌面端开发模式（Tauri dev）
 just build           # 打包 .app 与 .dmg（target/release/bundle/）
 ```
@@ -88,7 +90,7 @@ bash(git diff *) 通配（* 跨空格；尾通配宽容：也匹配无参的 git
 - [docs/roadmap.md](docs/roadmap.md) —— 分期任务清单（每任务带验收要点与偏差记录）
 - [docs/development-process.md](docs/development-process.md) —— 闭环开发流程：文档先行 → 实现 → 验证 → 归档；分支模型 `feat/fix → dev → tag → main`
 - [docs/adr/](docs/adr/) —— 架构决策记录（ACP 选型 / Tauri+Rust / React+shadcn / opencode 先行 / 分支模型 / 权限模式 / 工作空间模型）
-- [docs/acceptance/](docs/acceptance/) —— 分期验收记录（phase0 / phase1）
+- [docs/acceptance/](docs/acceptance/) —— 分期与任务验收记录（phase0 / phase1 / phase2）
 
 ```
 crates/core    # supercode-core：driver 适配层、审批、事件、进程、注册表、envcheck、SQLite

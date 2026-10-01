@@ -1,6 +1,9 @@
 //! SuperCode 桌面壳（Tauri v2）。
 //! P1-5：审批中心——权限模式热切换、待决请求转发应答、规则库 SQLite 持久化（§5.1）。
 
+mod terminal;
+mod worktrees;
+
 use std::{collections::HashMap, path::PathBuf, sync::Arc, time::Duration};
 
 use supercode_core::approval::{ApprovalBroker, PermissionMode, PermissionRules, RuleEffect};
@@ -56,6 +59,7 @@ fn parse_mode(mode: &str) -> Result<PermissionMode, String> {
 async fn run_prompt(
     app: tauri::AppHandle,
     prompt: String,
+    agent_id: Option<String>,
     cwd: String,
     allow: Vec<String>,
     deny: Vec<String>,
@@ -64,19 +68,64 @@ async fn run_prompt(
     resume_session_id: Option<String>,
     // P1-8：会话归属工作空间（ADR-0007）；None → 默认空间
     workspace_id: Option<String>,
+    task_id: Option<String>,
     on_events: Channel<Vec<AgentEvent>>,
 ) -> Result<RunInfo, String> {
-    let def = registry::AgentDefinition::find("opencode").map_err(|e| e.to_string())?;
+    let _worktree_gate = worktrees::GATE.lock().await;
+    let def = registry::AgentDefinition::find(agent_id.as_deref().unwrap_or("opencode"))
+        .map_err(|e| e.to_string())?;
     let permission_mode = parse_mode(&mode)?;
-    // 默认目录可能不存在（新用户首跑）：自动创建，避免 agent 侧会话建立失败
-    std::fs::create_dir_all(&cwd).map_err(|e| format!("创建工作目录失败：{e}"))?;
-
-    // 规则库（SQLite 持久）∪ 本次 draft 规则，合成 broker 规则集
     let state = app.state::<AppState>();
     let store = state.store().await;
-    let _ = store
-        .upsert_agent("opencode", "OpenCode", "acp", None)
-        .await;
+    if let Some(task) = &task_id {
+        worktrees::validate_task(
+            store,
+            task,
+            workspace_id.as_deref(),
+            &cwd,
+            resume_session_id.as_deref(),
+        )
+        .await?;
+    }
+    let task_id = match task_id {
+        Some(id)
+            if store
+                .get_task(&id)
+                .await
+                .map_err(|e| e.to_string())?
+                .is_some() =>
+        {
+            Some(id)
+        }
+        _ => None,
+    };
+    let existing = if let Some(id) = &resume_session_id {
+        let local_id = store
+            .find_session_by_agent(id)
+            .await
+            .map_err(|e| e.to_string())?
+            .ok_or("续聊会话不存在")?;
+        Some(
+            store
+                .get_session(local_id)
+                .await
+                .map_err(|e| e.to_string())?
+                .ok_or("续聊会话不存在")?,
+        )
+    } else {
+        None
+    };
+    supercode_core::orchestrator::validate_launch(&def, existing.as_ref(), &cwd)
+        .map_err(|e| e.to_string())?;
+    let supercode_session = match &existing {
+        Some(row) => SessionUuid::parse_str(&row.id).map_err(|e| e.to_string())?,
+        None => SessionUuid::new_v4(),
+    };
+    std::fs::create_dir_all(&cwd).map_err(|e| format!("创建工作目录失败：{e}"))?;
+    store
+        .upsert_agent(&def.id, &def.display_name, "acp", None)
+        .await
+        .map_err(|e| e.to_string())?;
     let mut rules = PermissionRules::new(allow, deny);
     for entry in store
         .list_permission_rules()
@@ -104,6 +153,7 @@ async fn run_prompt(
 
     // broker → 前端事件转发：待决请求 / 裁决留痕（§5.1）
     let app_for_relay = app.clone();
+    let store_for_relay = store.clone();
     let broker_for_relay = broker.clone();
     let mut pending_rx = broker_for_relay.subscribe();
     let mut decisions_rx = broker_for_relay.subscribe_decisions();
@@ -128,6 +178,9 @@ async fn run_prompt(
                 record = decisions_rx.recv() => {
                     match record {
                         Ok(record) => {
+                            if let Err(err) = store_for_relay.insert_approval(supercode_session, &record).await {
+                                eprintln!("[p2-5] 审批持久化失败: {err}");
+                            }
                             let _ = app_for_relay.emit("decision-record", &record);
                         }
                         Err(tokio::sync::broadcast::error::RecvError::Lagged(_)) => continue,
@@ -155,21 +208,10 @@ async fn run_prompt(
     // insert_session OR IGNORE 幂等；本轮提示词作为新用户消息记录。
     // recorder 跑在独立任务（有界通道缓冲）——逐事件 DB 写不得阻塞事件转发（§5 管线）
     let recorder_store = state.store().await.clone();
-    let supercode_session = match &resume_session_id {
-        Some(agent_id) => match recorder_store.find_session_by_agent(agent_id).await {
-            Ok(Some(existing)) => existing,
-            Ok(None) => SessionUuid::new_v4(),
-            Err(e) => {
-                eprintln!("[p1-6] 会话反查失败，回退新行：{e}");
-                SessionUuid::new_v4()
-            }
-        },
-        None => SessionUuid::new_v4(),
-    };
     let mut recorder = SessionRecorder::new(
-        recorder_store,
+        recorder_store.clone(),
         supercode_session,
-        "opencode",
+        &def.id,
         &cwd,
         &prompt.chars().take(24).collect::<String>(),
         &prompt,
@@ -185,6 +227,14 @@ async fn run_prompt(
     tauri::async_runtime::spawn(async move {
         while let Some(event) = rec_rx.recv().await {
             recorder.handle_event(&event).await;
+            if let (Some(task), AgentEvent::SessionStarted { session_id }) = (&task_id, &event) {
+                if let Err(error) = recorder_store
+                    .update_task(task, Some("in_progress"), Some(session_id))
+                    .await
+                {
+                    eprintln!("任务会话绑定失败：{error}");
+                }
+            }
         }
     });
 
@@ -229,7 +279,7 @@ async fn run_prompt(
         }
     });
 
-    let driver = AcpDriver::new(def.command);
+    let driver = AcpDriver::new(def.launch_command()).with_process_cwd(def.acp_process_cwd);
     let cleanup_session = session_of_run.clone();
     let app_for_cleanup = app.clone();
     tauri::async_runtime::spawn(async move {
@@ -352,6 +402,7 @@ async fn list_history_sessions(app: tauri::AppHandle) -> Result<Vec<HistorySessi
     Ok(rows
         .into_iter()
         .map(|row| HistorySession {
+            agent_id: row.agent_id,
             agent_session_id: row.agent_session_id,
             cwd: row.cwd,
             title: row.title,
@@ -383,6 +434,7 @@ async fn delete_session(app: tauri::AppHandle, agent_session_id: String) -> Resu
 /// 历史会话 DTO（Tauri IPC 返回类型需本地 Serialize）
 #[derive(serde::Serialize)]
 struct HistorySession {
+    agent_id: String,
     agent_session_id: String,
     cwd: String,
     title: String,
@@ -548,14 +600,36 @@ async fn update_task(
 }
 
 #[tauri::command]
+async fn move_task(
+    app: tauri::AppHandle,
+    id: String,
+    workspace_id: String,
+    status: String,
+) -> Result<TaskDto, String> {
+    let _gate = worktrees::GATE.lock().await;
+    app.state::<AppState>()
+        .store()
+        .await
+        .move_task(&id, &workspace_id, &status)
+        .await
+        .map(Into::into)
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
 async fn delete_task(app: tauri::AppHandle, id: String) -> Result<(), String> {
     let state = app.state::<AppState>();
     let store = state.store().await;
     store.delete_task(&id).await.map_err(|e| e.to_string())
 }
 
-/// opencode 环境探测（P1-7，architecture §4.7）：安装/版本 + 全局与项目配置解析 + 严格判定。
-/// 只读不改用户配置；引导文案在前端。
+/// Claude ACP 的 Node/npx 依赖探测，只返回事实，不访问认证配置。
+#[tauri::command]
+async fn check_node_env() -> supercode_core::envcheck::NodeEnvReport {
+    supercode_core::envcheck::check_node().await
+}
+
+/// OpenCode 安装/配置联检（只读）。
 #[tauri::command]
 async fn check_opencode_env(
     cwd: Option<String>,
@@ -680,6 +754,157 @@ async fn read_text_file(path: String) -> Result<String, String> {
     Ok(String::from_utf8_lossy(&bytes).into_owned())
 }
 
+// ── Agent 管理（P2-2，§5.1）：注册表合并视图 + 用户自定义 CRUD ──
+
+#[derive(serde::Serialize)]
+#[serde(rename_all = "snake_case")]
+struct AgentRow {
+    id: String,
+    display_name: String,
+    driver_kind: registry::DriverKind,
+    command: String,
+    version_args: Vec<String>,
+    acp_process_cwd: bool,
+    capabilities: registry::Capabilities,
+    /// id 出现在用户文件（含覆盖内置）
+    is_user_defined: bool,
+    installed_version: Option<String>,
+}
+
+/// 新增/更新入参。Tauri 仅映射**顶层**命令形参（camelCase↔snake_case），
+/// 嵌套 struct 走 serde 原样匹配——故这里显式 rename_all=camelCase 对齐前端
+/// `AgentInput`（审查 critical：否则 add/update_agent 反序列化必失败）。
+#[derive(serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct AgentInput {
+    id: String,
+    display_name: String,
+    driver_kind: String,
+    command: String,
+    version_args: Vec<String>,
+    #[serde(default)]
+    acp_process_cwd: bool,
+    supports_load_session: bool,
+    supports_diff: bool,
+    supports_permission: bool,
+}
+
+impl AgentInput {
+    fn into_definition(self) -> Result<registry::AgentDefinition, String> {
+        let driver_kind = match self.driver_kind.as_str() {
+            "acp" => registry::DriverKind::Acp,
+            "stream_json" => registry::DriverKind::StreamJson,
+            "native" => registry::DriverKind::Native,
+            other => return Err(format!("未知 driver_kind: {other}")),
+        };
+        let id = self.id.trim().to_string();
+        if id.is_empty()
+            || !id
+                .chars()
+                .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-')
+        {
+            return Err("id 须为 [a-z0-9-]+".into());
+        }
+        let command = self.command.trim().to_string();
+        if command.is_empty() {
+            return Err("command 不能为空".into());
+        }
+        let version_args = if self.version_args.is_empty() {
+            vec!["--version".into()]
+        } else {
+            self.version_args
+        };
+        Ok(registry::AgentDefinition {
+            id,
+            display_name: self.display_name.trim().to_string(),
+            driver_kind,
+            command,
+            version_args,
+            acp_process_cwd: self.acp_process_cwd,
+            capabilities: registry::Capabilities {
+                supports_load_session: self.supports_load_session,
+                supports_diff: self.supports_diff,
+                supports_permission: self.supports_permission,
+            },
+        })
+    }
+}
+
+fn user_defined_ids() -> std::collections::HashSet<String> {
+    registry::AgentRegistry::load_user_entries()
+        .into_iter()
+        .map(|e| e.id)
+        .collect()
+}
+
+async fn probe_row(def: registry::AgentDefinition, is_user_defined: bool) -> AgentRow {
+    let installed_version = def.detect_version().await;
+    AgentRow {
+        id: def.id,
+        display_name: def.display_name,
+        driver_kind: def.driver_kind,
+        command: def.command,
+        version_args: def.version_args,
+        acp_process_cwd: def.acp_process_cwd,
+        capabilities: def.capabilities,
+        is_user_defined,
+        installed_version,
+    }
+}
+
+/// 会话选择器只需要注册表定义；不在挂载时执行 npx 探测，避免与运行启动争用 npm 缓存。
+#[tauri::command]
+fn list_agent_definitions() -> Vec<AgentRow> {
+    let user_ids = user_defined_ids();
+    registry::AgentRegistry::load()
+        .entries()
+        .iter()
+        .map(|def| AgentRow {
+            id: def.id.clone(),
+            display_name: def.display_name.clone(),
+            driver_kind: def.driver_kind,
+            command: def.command.clone(),
+            version_args: def.version_args.clone(),
+            acp_process_cwd: def.acp_process_cwd,
+            capabilities: def.capabilities.clone(),
+            is_user_defined: user_ids.contains(&def.id),
+            installed_version: None,
+        })
+        .collect()
+}
+
+#[tauri::command]
+async fn list_agents() -> Result<Vec<AgentRow>, String> {
+    let reg = registry::AgentRegistry::load();
+    let user_ids = user_defined_ids();
+    // 并行探测（npx 类冷启动可达 8s 超时，串行会卡设置页）
+    let futs = reg.entries().iter().map(|def| {
+        let def = def.clone();
+        let is_user = user_ids.contains(&def.id);
+        async move { probe_row(def, is_user).await }
+    });
+    Ok(futures::future::join_all(futs).await)
+}
+
+#[tauri::command]
+async fn add_agent(input: AgentInput) -> Result<AgentRow, String> {
+    let def = input.into_definition()?;
+    registry::AgentRegistry::upsert_user_agent(def.clone()).map_err(|e| e.to_string())?;
+    Ok(probe_row(def, true).await)
+}
+
+#[tauri::command]
+async fn update_agent(input: AgentInput) -> Result<AgentRow, String> {
+    let def = input.into_definition()?;
+    registry::AgentRegistry::upsert_user_agent(def.clone()).map_err(|e| e.to_string())?;
+    Ok(probe_row(def, true).await)
+}
+
+#[tauri::command]
+async fn delete_agent(id: String) -> Result<(), String> {
+    registry::AgentRegistry::remove_user_agent(&id).map_err(|e| e.to_string())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     // GUI PATH 修正（P1-10，§4.7）：Finder/Dock 启动的 .app 只拿 launchd 的
@@ -688,12 +913,18 @@ pub fn run() {
     supercode_core::envcheck::augment_gui_path();
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .manage(terminal::Terminals::default())
         .manage(AppState {
             runs: tokio::sync::Mutex::new(HashMap::new()),
             pending: tokio::sync::Mutex::new(HashMap::new()),
             store: tokio::sync::OnceCell::new(),
         })
         .invoke_handler(tauri::generate_handler![
+            terminal::open_terminal,
+            terminal::write_terminal,
+            terminal::resize_terminal,
+            terminal::ack_terminal,
+            terminal::close_terminal,
             run_prompt,
             cancel_run,
             read_text_file,
@@ -706,14 +937,84 @@ pub fn run() {
             add_rule,
             delete_rule,
             check_opencode_env,
+            check_node_env,
             list_workspaces,
             create_workspace,
             delete_workspace,
             list_tasks,
             create_task,
+            worktrees::create_task_worktree,
+            worktrees::cleanup_task_worktrees,
             update_task,
-            delete_task
+            move_task,
+            delete_task,
+            list_agents,
+            list_agent_definitions,
+            add_agent,
+            update_agent,
+            delete_agent
         ])
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!())
+        .expect("error while building tauri application")
+        .run(|app, event| {
+            if matches!(
+                event,
+                tauri::RunEvent::Exit
+                    | tauri::RunEvent::WindowEvent {
+                        event: tauri::WindowEvent::Destroyed,
+                        ..
+                    }
+            ) {
+                app.state::<terminal::Terminals>().close_all();
+            }
+        });
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// 前端 invoke 以 camelCase 发嵌套 input——serde 必须能对上（审查 critical 回归）。
+    #[test]
+    fn agent_input_accepts_camel_case_from_frontend() {
+        let json = r#"{
+            "id": "my-agent",
+            "displayName": "My Agent",
+            "driverKind": "acp",
+            "command": "my-agent --acp",
+            "versionArgs": ["--version"],
+            "acpProcessCwd": true,
+            "supportsLoadSession": true,
+            "supportsDiff": true,
+            "supportsPermission": false
+        }"#;
+        let input: AgentInput = serde_json::from_str(json).expect("camelCase 反序列化应成功");
+        assert_eq!(input.id, "my-agent");
+        assert_eq!(input.display_name, "My Agent");
+        assert_eq!(input.driver_kind, "acp");
+        assert_eq!(input.version_args, vec!["--version".to_string()]);
+        assert!(!input.supports_permission);
+
+        let def = input.into_definition().unwrap();
+        assert_eq!(def.command, "my-agent --acp");
+        assert!(def.acp_process_cwd);
+        assert_eq!(def.driver_kind, registry::DriverKind::Acp);
+    }
+
+    #[test]
+    fn agent_input_rejects_bad_id_and_empty_command() {
+        let bad_id: AgentInput = serde_json::from_str(
+            r#"{"id":"Bad_ID","displayName":"x","driverKind":"acp","command":"x",
+                "versionArgs":[],"supportsLoadSession":true,"supportsDiff":true,"supportsPermission":true}"#,
+        )
+        .unwrap();
+        assert!(bad_id.into_definition().is_err());
+
+        let empty_cmd: AgentInput = serde_json::from_str(
+            r#"{"id":"ok","displayName":"x","driverKind":"acp","command":"  ",
+                "versionArgs":[],"supportsLoadSession":true,"supportsDiff":true,"supportsPermission":true}"#,
+        )
+        .unwrap();
+        assert!(empty_cmd.into_definition().is_err());
+    }
 }

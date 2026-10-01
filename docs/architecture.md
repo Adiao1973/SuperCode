@@ -291,31 +291,91 @@ SQLite approvals 表持久化在 P0-8 落地（表结构见 §6，decision_by = 
 ### 4.4 `AgentDefinition` 与 `AgentRegistry`
 
 ```rust
-/// 一个 agent 的接入声明。Phase 2 起，新增 agent = 在注册表加一条配置，AcpDriver 零改动。
-pub struct AgentDefinition {
-    pub id: String,               // "opencode" | "claude-code" | "codex" | ...
-    pub display_name: String,
-    pub driver_kind: DriverKind,  // Acp | StreamJson | Native
-    pub spawn: SpawnSpec,         // command + args + env（如 ["opencode","acp"]）
-    pub capabilities: Capabilities, // supports_load_session / supports_diff / ...
+/// 一个 agent 的接入声明。新增 agent = 在注册表加一条配置，AcpDriver 零改动。
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum DriverKind { Acp, StreamJson, Native }
+
+/// agent 能力位（UI 展示与功能开关；P2-1 先落字段，消费方随各接入任务展开）
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Capabilities {
+    pub supports_load_session: bool,  // 续聊 session/load
+    pub supports_diff: bool,          // 工具事件携带结构化 diff
+    pub supports_permission: bool,    // 可外部审批（zcode=false，受限支持）
 }
 
-pub struct AgentRegistry { /* 内置定义 + 用户自定义 (~/.supercode/agents.json) */ }
+/// 一个 agent 的接入声明（serde 双向：内置常量 + ~/.supercode/agents.json 用户自定义）。
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AgentDefinition {
+    pub id: String,               // "opencode" | "claude-code" | "codex" | "mimo" | "zcode" | 自定义
+    pub display_name: String,
+    pub driver_kind: DriverKind,  // Acp | StreamJson | Native
+    /// spawn 命令（shell-words 语法，如 "opencode acp"、"npx -y @agentclientprotocol/claude-agent-acp"）
+    pub command: String,
+    /// 版本探测命令参数（默认 `<program> --version`）
+    #[serde(default = "default_version_args")]
+    pub version_args: Vec<String>,
+    pub capabilities: Capabilities,
+}
+
+/// 注册表 = 内置定义 + 用户自定义；同 id 用户条目覆盖内置。
+pub struct AgentRegistry { /* entries: Vec<AgentDefinition> */ }
 impl AgentRegistry {
-    pub fn builtin() -> Self;                        // Phase 0：仅 opencode
-    pub async fn probe_installed(&self) -> Vec<(AgentDefinition, Option<String>)>; // 探测安装与版本
+    /// 内置注册表（P2-1 起五条齐备，见下表）
+    pub fn builtin() -> Self;
+    /// 从 `~/.supercode/agents.json` 读用户自定义（文件缺失/解析失败 → 空，不阻塞启动）；
+    /// 与 builtin 合并，同 id 用户覆盖内置。
+    pub fn load() -> Self;
+    /// 按 id 查找（load 后的合并视图）
+    pub fn find(&self, id: &str) -> Result<&AgentDefinition>;
+    /// 全部条目（内置顺序 + 用户新增）
+    pub fn entries(&self) -> &[AgentDefinition];
+    /// 批量探测安装与版本：`(definition, Option<version>)`
+    pub async fn probe_installed(&self) -> Vec<(AgentDefinition, Option<String>)>;
+}
+
+// ── 用户自定义写路径（P2-2：设置 UI agent 管理） ──
+impl AgentRegistry {
+    /// 仅用户文件中的条目（不含内置；文件缺失/解析失败 → 空）
+    pub fn load_user_entries() -> Vec<AgentDefinition>;
+    /// 原子写回用户文件（`~/.supercode/` 自动创建；临时文件 + rename）
+    pub fn save_user_entries(entries: &[AgentDefinition]) -> Result<()>;
+    /// upsert 进用户文件（同 id 覆盖；覆盖内置 id = 用户覆盖语义）
+    pub fn upsert_user_agent(def: AgentDefinition) -> Result<()>;
+    /// 从用户文件移除：纯自定义即消失，覆盖内置则恢复内置条目；
+    /// 用户文件中不存在该 id → Err
+    pub fn remove_user_agent(id: &str) -> Result<()>;
 }
 ```
 
-内置注册表（随 Phase 演进）：
+**用户自定义格式**（`~/.supercode/agents.json`，JSON 数组；只读合并，写入由设置 UI 负责）：
 
-| id | spawn | driver | 接入阶段 |
-|---|---|---|---|
-| opencode | `opencode acp` | Acp | Phase 0 |
-| claude-code | `npx -y @agentclientprotocol/claude-agent-acp` | Acp | Phase 2 |
-| codex | `npx -y @agentclientprotocol/codex-acp` | Acp | Phase 2 |
-| mimo | `mimo acp` | Acp | Phase 2 |
-| zcode | `zcode -p --output-format stream-json --mode yolo` | StreamJson | Phase 2（**受限支持**：无外部权限审批） |
+```jsonc
+[
+  {
+    "id": "my-agent",
+    "display_name": "My Agent",
+    "driver_kind": "acp",
+    "command": "my-agent --acp",
+    "version_args": ["--version"],
+    "capabilities": {
+      "supports_load_session": true,
+      "supports_diff": true,
+      "supports_permission": true
+    }
+  }
+]
+```
+
+内置注册表（P2-1 起五条齐备；接入阶段指该条目被宿主真实驱动的里程碑）：
+
+| id | command | driver_kind | supports_permission | 接入阶段 |
+|---|---|---|---|---|
+| opencode | `opencode acp` | Acp | ✓ | Phase 0 |
+| claude-code | `npx -y @agentclientprotocol/claude-agent-acp` | Acp | ✓ | P2-3 |
+| codex | `npx -y @agentclientprotocol/codex-acp` | Acp | ✓ | P2-4 |
+| mimo | `mimo acp` | Acp | ✓ | P2-5 |
+| zcode | `zcode -p --output-format stream-json --mode yolo` | StreamJson | ✗（受限支持：`--mode yolo` 预授权，UI 明确标注） | P2-6 |
 
 ### 4.5 进程管理器 `ProcessManager`（`proc` 模块）
 
@@ -436,23 +496,76 @@ driver ──AgentEvent──► events::Aggregator（Rust 侧）
 - 前端纪律：已完成的 message/chunk 必须 memo 化，只有活动中的 chunk 触发重渲染。
 - 该层为**硬性架构约束**，任何"先直连后面再优化"的 shortcuts 都不允许。
 
+### P2-4 Codex ACP 适配边界
+
+Codex 注册表条目继续使用 `npx -y @agentclientprotocol/codex-acp`，按 §4.4
+`AcpDriver` 处理。适配器启动 Codex App Server；SuperCode 只处理标准 ACP
+`initialize/session/new/session/load/session/prompt`、`session/update` 与
+`session/request_permission`。扩展能力（推荐模型、沙箱模式、原生子会话等）
+本任务不接入。认证由适配器/Codex 管理；UI 只读探测 Node/npx，不读取或保存凭证。
+Codex 会话的 `agent_id` 须入库，恢复时保持原 agent、cwd 与 ACP session id；
+同一宿主中并行运行的 Codex/Claude 必须各自有独立事件 Channel、broker 和
+recorder。会话选择器读取注册表定义时不执行 npx 版本探测（新增
+`list_agent_definitions` IPC，返回 `AgentRow` 且 `installed_version=None`）；设置页的
+`list_agents` 才执行探测，避免选择器挂载时与运行中 npx 冷启动争用 npm 缓存。任何适配器不经 ACP 请求而自行执行的操作不属于 SuperCode 审批管辖。
+
+### P2-5 MiMo ACP 适配边界
+
+MiMo Code 使用注册表中预留的 `mimo acp` 原生 ACP 入口，继续走现有
+`AcpDriver`、会话持久化和 `session/load` 路径。MiMo 的安装、认证、默认模型与
+供应商配置由 MiMo CLI 自身管理；SuperCode 只探测 `mimo --version`、提供官方
+安装与认证引导，不读取或保存凭证。桌面选择器使用 P2-4 的无探测注册表 IPC。
+若内置 `mimo acp` 不在宿主 PATH 中，但官方安装器的
+`~/.mimocode/bin/mimo` 存在，则版本探测和启动使用该可执行文件；PATH 中的
+`mimo` 优先。用户自定义 MiMo 命令不做此回退。模型仍由 MiMo 配置决定，
+SuperCode 不覆盖全局或项目模型设置。
+MiMo ACP 服务将 `session/new` 的 cwd 限制在服务**进程当前目录**之内；其
+`--cwd` 参数在 0.1.15 中并不改变服务根目录。注册表新增可选
+`acp_process_cwd`，内置 MiMo 设为 true；driver 在 Unix 上经 `sh` 的独立参数
+安全切换至会话 cwd 后 `exec` agent，保留其环境变量，进程组清理语义不变。
+其余 agent 缺省 false，旧版用户注册表 JSON 保持兼容；CLI 和桌面共用该字段。
+本阶段以真实 CLI 的 `initialize → session/new → session/prompt → session/load`
+链路验证兼容性；若 MiMo 的 ACP 事件或权限选项与现有映射有差异，先添加契约
+测试，再作最小协议修正。与其他 agent 并行时继续按每会话独立 Channel、broker
+和 recorder 隔离。MiMo CLI 自行执行且未通过 ACP 请求的操作不在 SuperCode
+审批范围内。桌面 broker 的裁决广播同时写入当前会话的 SQLite approvals，
+与 CLI 的审批留痕行为一致。若 `session/prompt` 返回 EndTurn 而本轮没有消息、工具或计划事件，
+`AcpDriver` 将其视为模型服务/认证异常，发 `DriverError` 并标记会话失败；
+`session/load` 的历史重放不计入本轮活动。
+
+### P2-3 多 Agent 运行与恢复
+
+- `run_prompt` 新增 `agent_id: Option<String>`（缺省 opencode），按注册表解析；仅 ACP 驱动可运行，其他驱动明确报错。
+- 新会话持久化真实 agent id/name；历史 DTO 带 `agent_id`，前端草稿默认 opencode，历史恢复原 agent。已有会话锁定 agent 与 cwd；服务端续聊必须找到本地记录、校验 agent/cwd 与支持 load 的能力，不允许回退新建。
+- `check_node_env` 返回 `{ node_version: Option<String>, npx_version: Option<String> }`，并行执行 `node --version` / `npx --version`，5 秒超时、kill_on_drop。仅检测运行依赖，不代表认证或模型服务可用。
+- Claude 会话显示 Node/npx 探测与可复制安装/登录指引；OpenCode permission 配置检查仅在 OpenCode 会话启用。鉴权仍由 agent 管理。
+- CLI `run --agent <id>` 使用同一注册表，`resume` 按数据库 agent 归属恢复，便于真实链路验收。
+
 ### 5.1 Tauri IPC 契约（P1-2 起，桌面宿主命令面）
 
 supercode-desktop 对渲染层暴露的命令（invoke）；事件经 `tauri::ipc::Channel` 批量推送，载荷为 `Vec<AgentEvent>`（JSON 序列化沿用 §4.1 的 `tag=type, snake_case`，前端 TS 类型与其镜像）：
 
 | 命令 | 参数 | 返回 | 语义 |
 |---|---|---|---|
-| `run_prompt` | `prompt`、`cwd`、`allow`、`deny`、`mode`、`resume_session_id: Option`（P1-6：Some → StartMode::Load 续聊）、`workspace_id: Option`（P1-8：会话归属空间，None → 默认空间）、`on_events: Channel<Vec<AgentEvent>>` | `RunInfo { session_id }`（错误为 String） | 一轮任务。宿主内部：driver events → tap（捕获 SessionStarted）→ EventAggregator(16ms) → Channel 批量推送；tap 同时喂 SessionRecorder（落库 sessions/messages，resume 复用原 agent_session_id，OR IGNORE 幂等）；规则库（SQLite）与本次 draft 规则合并后建 ApprovalBroker（初始 mode） |
+| `run_prompt` | `agent_id: Option`（P2-3，缺省 opencode）、`prompt`、`cwd`、`allow`、`deny`、`mode`、`resume_session_id: Option`（P1-6：Some → StartMode::Load 续聊）、`workspace_id: Option`（P1-8：会话归属空间，None → 默认空间）、`on_events: Channel<Vec<AgentEvent>>` | `RunInfo { session_id }`（错误为 String） | 一轮任务。宿主内部：driver events → tap（捕获 SessionStarted）→ EventAggregator(16ms) → Channel 批量推送；tap 同时喂 SessionRecorder（落库 sessions/messages，resume 复用原 agent_session_id，OR IGNORE 幂等）；规则库（SQLite）与本次 draft 规则合并后建 ApprovalBroker（初始 mode） |
 | `cancel_run` | `session_id` | `()` | 触发协议级取消链（§7：session/cancel → Cancelled → CANCEL_GRACE 兜底） |
 | `set_permission_mode` | `session_id`、`mode` | `()` | 运行中热切换该会话的 PermissionMode（§4.3 管线） |
-| `list_history_sessions` | — | `Vec<SessionRow>`（P1-8 起含 `workspace_id`） | 历史会话列表（sessions 表，P1-6 启动时注入前端；按空间分组展示） |
+| `list_history_sessions` | — | `Vec<HistorySession>`（含 `agent_id`、`workspace_id`） | 历史会话列表（sessions 表，P1-6 启动时注入前端；按空间分组展示） |
 | `list_session_messages` | `agent_session_id` | `Vec<MessageRow>` | 单个会话的落库消息（P1-6 历史渲染） |
 | `respond_permission` | `request_id`、`option_id` | `()` | 审批中心应答待决请求（转发 broker.respond） |
 | `list_rules` / `add_rule` / `delete_rule` | — / `pattern`+`effect` / `id` | 规则列表 / `RuleEntry` / `()` | 规则库 CRUD（SQLite permission_rules 表，§6） |
 | `delete_session` | `agent_session_id` | `()` | 删除会话（SuperCode 侧级联删除 messages/tool_calls/approvals；运行中拒绝；P1-6） |
+| `check_node_env` | — | `NodeEnvReport { node_version, npx_version }` | Node/npx 并行版本探测（5 秒超时）；Claude 界面提示 Node ≥22，缺失时给安装引导 |
 | `check_opencode_env` | `cwd: Option`（P1-7：Some 时附检 `<cwd>` 项目级配置） | `OpencodeEnvReport`（§4.7） | opencode 环境探测：安装/版本、全局与项目配置的 permission/model 解析、严格判定。只读不改配置；引导文案在前端（设置页区块 + 运行框 cwd 联检） |
 | `list_workspaces` / `create_workspace` / `delete_workspace` | — / `path` / `id` | 空间列表 / `Workspace` / `()`（P1-8，ADR-0007） | 工作空间 CRUD：默认空间单例（kind=default）恒在排最后，project 空间按项目根绝对路径 UNIQUE 去重（name 取目录名）；删除仅限 project 空间，会话移入默认空间不级联删 |
 | `list_tasks` / `create_task` / `update_task` / `delete_task` | — / `title`+`workspace_id` / `id`+`status?`/`session_id?` / `id` | 任务列表 / `TaskEntry` / `TaskEntry` / `()`（P1-9 简版看板） | 任务=标题+空间+绑定会话+状态（backlog\|in_progress\|review\|done）；绑定会话随 delete_session 级联解绑；看板按空间分节四列展示（拖拽升级在 Phase 2） |
+| `list_agent_definitions` | — | `Vec<AgentRow>`（`installed_version=None`） | 仅取合并注册表定义供会话选择，不启动探测子进程 |
+| `list_agents` | — | `Vec<AgentRow>`（P2-2） | 注册表合并视图（内置顺序+用户新增）+ 并行探测安装版本；`is_user_defined` 标记用户文件条目（含覆盖内置） |
+| `add_agent` / `update_agent` | `id`、`display_name`、`driver_kind`、`command`、`version_args`、`capabilities`（update 带 `id`） | `AgentRow` | 写入 `~/.supercode/agents.json` 并返回探测后的行（同 id 覆盖=用户覆盖内置语义） |
+| `delete_agent` | `id` | `()` | 从用户文件移除：纯自定义消失，覆盖内置则恢复出厂条目；文件中无此 id 报错 |
+
+`AgentRow` = `AgentDefinition` 序列化字段 + `is_user_defined: bool` + `installed_version: Option<String>`
+（前端 TS 镜像；探测语义沿用 §4.4，`list_agents` 内并行探测）。
 
 - **权限事件（Tauri 全局事件，非 Channel）**：每个运行的 broker 经转发任务把
   `PendingPermission` / `DecisionRecord` 以 `permission-request` / `decision-record`
@@ -506,6 +619,7 @@ permission_rules(id TEXT PK, pattern TEXT NOT NULL,  -- 规则库（P1-5，全�
 ```
 
 迁移管理：`sqlx migrate`（`crates/core/migrations/`），迁移文件只增不改。
+P2-4：两个独立宿主首次并行打开同一新库时，sqlx SQLite migrator 可能遇到 SQLite busy、`_sqlx_migrations.version` 唯一键冲突，或并发建表/加列冲突；仅对这些瞬时迁移竞态做有限退避重试，其他迁移错误立即返回。
 P0-8 落地迁移 0001（六表）；P1-5 落地迁移 0002（permission_rules 规则库）；
 P1-8 落地迁移 0003（workspaces + sessions.workspace_id，历史会话按 distinct cwd
 回填为 project 空间并归类；删除空间不删会话，会话移入默认空间——ADR-0007）。
@@ -549,6 +663,11 @@ P1-8 落地迁移 0003（workspaces + sessions.workspace_id，历史会话按 di
 
 | 日期 | 版本 | 摘要 |
 |---|---|---|
+| 2026-09-29 | 0.18 | P2-5：MiMo ACP 进程 cwd 约束与注册表可选启动选项；ACP 空轮次失败识别及桌面安装/模型指引 |
+| 2026-09-28 | 0.17 | P2-4：会话选择器新增无探测注册表 IPC，Codex ACP 认证/权限/并行边界与 npm 缓存争用规避 |
+| 2026-09-28 | 0.16 | P2-3：注册表驱动运行、历史 agent 归属、续聊校验与运行时 load 能力协商；Node/npx 探测；CLI --agent；API Key 认证引导 |
+| 2026-09-28 | 0.15 | P2-2 小设计：§4.4 补用户自定义写路径（load_user_entries/save/upsert/remove，原子写）；§5.1 新增 list/add/update/delete_agent 与 AgentRow |
+| 2026-09-28 | 0.14 | P2-1 小设计：§4.4 AgentDefinition 落地形态（driver_kind/command/version_args/capabilities + serde 用户自定义）；AgentRegistry builtin/load/find/probe_installed；内置五条齐备（opencode/claude-code/codex/mimo/zcode） |
 | 2026-09-27 | 0.13 | P1-10 打包验收：版本号 v0.2.0 + just build 剧本；§4.7 增 GUI PATH 修正（launchd 不继承 shell PATH，探测与 spawn 双失效，宿主启动并入常见安装目录） |
 | 2026-09-27 | 0.12 | P1-9 简版任务看板：§5.1 IPC 增 list/create/update/delete_task（update 兼改状态与绑定会话）；tasks 表读写方法（绑定会话随 delete_session 解绑）；前端看板按空间分节四列 |
 | 2026-09-27 | 0.11 | P1-8 工作空间落地：§5.1 IPC 增 list/create/delete_workspace + run_prompt workspace_id + 历史行含 workspace_id；迁移 0003（workspaces 表 + sessions/tasks.workspace_id）与 Rust 回填（distinct cwd → project 空间，幂等） |
@@ -562,3 +681,38 @@ P1-8 落地迁移 0003（workspaces + sessions.workspace_id，历史会话按 di
 | 2026-09-24 | 0.1 | Step 0 初版：分层架构、AgentDriver/AgentEvent/ApprovalBroker/Registry 接口、事件管道、数据模型、进程与安全约定 |
 | 2026-09-25 | 0.3 | P1-1 脚手架落地：apps/desktop 为 Tauri v2 壳（crate `supercode-desktop` 并入 cargo workspace；pnpm-workspace 管理 apps/*）；前端 React 19 + Tailwind v4 + shadcn/ui（radix-nova 预设）；§5 事件管道与命令接入自 P1-2 起 |
 | 2026-09-24 | 0.2 | Phase 0 落地（v0.1.0）：§4.1 对齐 ACP v1 实际 schema（ThoughtChunk、Option 字段、ToolKind 全集）；§4.3 规则引擎 + 留痕流；§4.5 ProcessManager；§4.6 EventAggregator；§4.2 StartMode 与 trait 化节奏；§6 迁移 0001 六表 + SessionRecorder；§7 取消链路与 SDK 托管进程组 |
+
+### P2-7 任务 worktree 隔离
+
+`core::worktree` 用 Git 参数数组创建 `supercode/task-<task UUID>` 分支，基于项目 HEAD（不复制未提交源码）。托管目录及独立 JSON 记录位于 Git common dir 的 `supercode-worktrees/` 下；任务 UUID 唯一，重复请求复用既有目录，不替换已有同名分支。记录 task_id/workspace_id/project/path/branch，重启可恢复，不新增数据库表。
+
+`.worktreeinclude` 每行一个相对文件路径（空行及 # 注释忽略，不解释 glob）；只允许项目内真实普通文件，拒绝绝对路径、..、符号链接及 .git，先校验全部文件再建 worktree，复制到新目录时不覆盖受 Git 跟踪的文件。失败回滚本次 worktree 和新分支，原项目不变。
+
+看板项目任务提供“隔离会话”按钮，预填任务标题和 worktree cwd，workspace_id 始终为原项目。新增 IPC：`create_task_worktree(task_id)` → TaskWorktree（task_id/workspace_id/project/path/branch）；`cleanup_task_worktrees(workspace_id)` → removed/skipped 字符串列表。`run_prompt` 可携 task_id，宿主校验其托管 cwd 与原空间一致；SessionStarted 落库后绑定任务并更新为进行中。新建隔离草稿不自动调用模型。
+
+“清扫孤儿”只处理当前项目托管记录：任务已不存在且无历史会话使用该 cwd、无活跃运行，且 Git status（含 ignored/untracked）为空才移除目录与记录。保留分支及提交；脏目录明确跳过，不使用 force，不触碰其他 worktree。操作由宿主互斥锁串行化；默认空间及非 Git 项目明确报错。
+
+### P2-8 看板拖拽
+
+采用 `@dnd-kit/core` DndContext/useDraggable/useDroppable：每个空间的四列为 drop target；任务专用拖拽把手支持 MouseSensor（6px 激活距离）、TouchSensor（150ms 长按、5px 容差）和 KeyboardSensor（空格拾取、方向键选择列、空格放下、Escape 取消）。DragOverlay 跨空间显示，空列可接收，取消或落在区域外不写入；同列放下不改变顺序。当前不引入列内持久化排序。
+
+新增 IPC `move_task(id, workspace_id, status)` → TaskDto；SQLite 一条 UPDATE 同时写 workspace_id/status/updated_at，校验目标空间和四态，失败不改变任意字段。session_id/title/cwd 均保持；空间移动仅整理看板，不迁移会话或执行目录。前端松手后即时乐观显示，单次移动等待落库时禁用新拖拽与同卡修改；失败恢复原卡片并显示错误。其他任务操作在保存期间禁用，避免旧结果覆盖新结果。
+
+P2-7 托管 worktree 的原空间记录继续作为执行归属：创建/恢复隔离会话按 task_id 在现有项目托管记录查找，移动后复用原目录、原 workspace_id；run_prompt 按该记录而非看板归属验证。已绑定会话跳转不变；未隔离的新任务在当前项目创建 worktree。默认空间允许恢复已有隔离记录，新建隔离仍需 Git 项目。
+
+依赖依据：[dnd-kit 官方 DndContext](https://dndkit.com/legacy/api-documentation/context-provider/dnd-context/) 与 [useDraggable](https://dndkit.com/legacy/api-documentation/draggable/use-draggable/)。不变更数据库 schema。
+
+### P2-9 — 会话内嵌终端
+
+- 前端使用 `@xterm/xterm@6.0.0` 与 `@xterm/addon-fit@0.11.0`；不加载 canvas/WebGL addon，`allowTransparency=false`，不透明背景，ResizeObserver 同步字符行列。终端由会话详情显式打开，cwd 使用该会话 draft 的实际执行目录（包括 worktree），不使用看板分组路径；目录变更、切换会话/页面、关闭面板会销毁终端，重开为新 shell，不持久化 shell 状态。
+- 桌面端使用 portable-pty 启动用户 shell 的交互实例；独立 PTY 不经过 agent 或审批队列。`open_terminal(id,cwd,cols,rows,onOutput)` / `write_terminal(id,data)` / `resize_terminal(id,cols,rows)` / `close_terminal(id)` / `ack_terminal(id)`；随机客户端 id 在异步启动前确定，关闭与启动共享注册表锁，前端即使在启动中卸载也等待启动结果后关闭，避免泄漏。IPC 使用 Tauri Channel 输出字节块（UTF-8 跨块由 xterm 解码），输出采用逐块应答背压，限制输入和尺寸；命令不阻塞 Tauri 主线程。
+- 后端注册表只拥有本应用创建的 PTY；自然退出回收句柄并通知前端；关闭显式终止 shell 及其子进程并 wait 回收。应用退出/窗口销毁执行同样清理，Unix 通过原生 `getsid` 校验本 PTY 的独立 session，收集并终止各 job process group 中的进程（无法取得 session 时按自身树兜底），Windows 专项仍属 Phase 3。macOS 使用非阻塞 PTY 读取与可中断应答等待，关闭先释放 master/writer 再等待回收，避免 exiting 状态悬挂。终端仅在目录存在且为绝对路径时启动；失败显示错误，不自动创建目录。
+- 不改数据库/schema。新增依赖理由：xterm 提供 ANSI/VT 解析和可访问输入，fit addon 匹配面板尺寸；portable-pty 提供真实 PTY/交互 shell 与窗口 resize，替代不支持 job control 的普通管道。
+
+P2-9 依赖选择与实测：5.5.0 在 React StrictMode/面板销毁后存在 viewport 定时回调访问已销毁 renderer 的异常，改用 6.0.0 稳定版，重复开关/切换复测无异常。官方变更见 [xterm 6.0 发布说明](https://github.com/xtermjs/xterm.js/releases/tag/6.0.0)；PTY 读写/resize 使用 [portable-pty](https://github.com/wezterm/wezterm/tree/main/pty)。
+
+### P2-10 — 整体验收发现的宿主收尾修复
+
+CLI 与桌面宿主一致：driver 返回 `Err` 时，在关闭事件通道、等待 recorder 排空之前补发 `DriverError`，让已有会话落库为 failed；会话未建立时不制造伪档案。新建和续聊均用真实 CLI + 无网络 ACP 对端回归验证。release 版本徽标读取 Tauri 实际 app version，`dev` 后缀仅开发构建显示，不再硬编码版本。Phase 2 tag/main 出口仍受未完成 P2-6 限制。
+
+- **2026-10-01 v0.3.0 范围调整**：用户授权提前发布多 ACP agent、worktree、看板与终端；ZCode StreamJson/Start Plan 真实验收延期，独立任务分支不合入本版，发布版保留禁选状态。

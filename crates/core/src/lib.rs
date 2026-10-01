@@ -21,6 +21,7 @@ pub mod events;
 pub mod orchestrator;
 pub mod proc;
 pub mod registry;
+pub mod worktree;
 
 /// 核心 crate 版本，与 workspace 版本保持一致。
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");

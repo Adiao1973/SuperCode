@@ -5,9 +5,11 @@
 
 use std::path::PathBuf;
 use std::str::FromStr;
+use std::sync::Arc;
+use std::sync::atomic::{AtomicU64, Ordering};
 
 use agent_client_protocol::schema::v1 as acp;
-use agent_client_protocol::{AcpAgent, Agent, Client as AcpClient, ConnectionTo};
+use agent_client_protocol::{AcpAgent, AcpAgentConfig, Agent, Client as AcpClient, ConnectionTo};
 use tokio::sync::mpsc;
 use tokio_util::sync::CancellationToken;
 
@@ -39,6 +41,8 @@ fn acp_error(err: CoreError) -> agent_client_protocol::Error {
 pub struct AcpDriver {
     /// spawn 命令（shell-words 语法，如 "opencode acp"）
     pub command: String,
+    /// 某些 agent（MiMo）要求其进程当前目录与 ACP 会话 cwd 相同。
+    acp_process_cwd: bool,
 }
 
 /// 会话启动方式：新建或恢复既有 agent 会话。
@@ -54,6 +58,46 @@ impl AcpDriver {
     pub fn new(command: impl Into<String>) -> Self {
         Self {
             command: command.into(),
+            acp_process_cwd: false,
+        }
+    }
+
+    pub fn with_process_cwd(mut self, enabled: bool) -> Self {
+        self.acp_process_cwd = enabled;
+        self
+    }
+
+    fn agent_for_cwd(&self, cwd: &std::path::Path) -> Result<AcpAgent> {
+        let agent = AcpAgent::from_str(&self.command)
+            .map_err(|e| CoreError::Spawn(format!("{}: {e}", self.command)))?;
+        if !self.acp_process_cwd {
+            return Ok(agent);
+        }
+        #[cfg(unix)]
+        {
+            let config = agent.into_config();
+            // SDK 目前没有子进程 current_dir 选项。用位置参数传入路径和原命令，
+            // 由 sh 先 cd 再 exec；不将用户路径拼进脚本，避免 shell 注入。
+            let args = [
+                "-c".to_string(),
+                "cd \"$1\" && shift && exec \"$@\"".to_string(),
+                "sh".to_string(),
+                cwd.to_string_lossy().into_owned(),
+                config.command().to_string_lossy().into_owned(),
+            ]
+            .into_iter()
+            .chain(config.arguments().iter().cloned());
+            let wrapped = AcpAgentConfig::new("/bin/sh")
+                .args(args)
+                .envs(config.environment().clone());
+            Ok(AcpAgent::new(wrapped))
+        }
+        #[cfg(not(unix))]
+        {
+            let _ = cwd;
+            Err(CoreError::Spawn(
+                "当前平台尚不支持指定 ACP 子进程工作目录".into(),
+            ))
         }
     }
 
@@ -82,19 +126,29 @@ impl AcpDriver {
         permissions: PermissionHandler,
         cancel: CancellationToken,
     ) -> Result<StopReason> {
-        let agent = AcpAgent::from_str(&self.command)
-            .map_err(|e| CoreError::Spawn(format!("{}: {e}", self.command)))?;
+        let agent = self.agent_for_cwd(&cwd)?;
 
         let events_for_notification = events.clone();
         let permissions_for_request = permissions;
+        let activity = Arc::new(AtomicU64::new(0));
+        let activity_for_notification = activity.clone();
 
         let stop_reason = AcpClient
             .builder()
             .on_receive_notification(
                 move |notification: acp::SessionNotification, _cx| {
                     let events = events_for_notification.clone();
+                    let activity = activity_for_notification.clone();
                     async move {
                         if let Some(event) = convert_update(&notification.update) {
+                            if matches!(
+                                &event,
+                                AgentEvent::MessageChunk { .. }
+                                    | AgentEvent::ToolCall { .. }
+                                    | AgentEvent::Plan { .. }
+                            ) {
+                                activity.fetch_add(1, Ordering::Relaxed);
+                            }
                             let _ = events.send(event).await;
                         }
                         Ok::<(), agent_client_protocol::Error>(())
@@ -127,7 +181,7 @@ impl AcpDriver {
                 agent_client_protocol::on_receive_request!(),
             )
             .connect_with(agent, move |connection: ConnectionTo<Agent>| async move {
-                let _init = connection
+                let init = connection
                     .send_request(acp::InitializeRequest::new(
                         agent_client_protocol::schema::ProtocolVersion::V1,
                     ))
@@ -147,6 +201,11 @@ impl AcpDriver {
                         session.session_id
                     }
                     StartMode::Load(agent_session_id) => {
+                        if !init.agent_capabilities.load_session {
+                            return Err(acp_error(CoreError::Protocol(
+                                "agent 未声明 session/load 能力".into(),
+                            )));
+                        }
                         let session_id = acp::SessionId::from(agent_session_id);
                         // 重放的历史通知会先于响应流入 events 通道
                         connection
@@ -165,6 +224,9 @@ impl AcpDriver {
                         session_id: session_id.0.to_string(),
                     })
                     .await;
+
+                // session/load 的历史重放不算本轮输出。
+                let activity_before_prompt = activity.load(Ordering::Relaxed);
 
                 let prompt_task = connection
                     .send_request(acp::PromptRequest::new(
@@ -204,6 +266,17 @@ impl AcpDriver {
                 // 无论正常结束还是取消，轮次终点必须以 TurnCompleted 事件广播
                 //（宿主依赖它落库/收尾，不只是拿 run() 的返回值）
                 let stop_reason = StopReason::from(response.stop_reason);
+                if stop_reason == StopReason::EndTurn
+                    && activity.load(Ordering::Relaxed) == activity_before_prompt
+                {
+                    let message = "agent 返回空轮次（无消息、工具或计划）；请检查模型服务与认证";
+                    let _ = events
+                        .send(AgentEvent::DriverError {
+                            message: message.into(),
+                        })
+                        .await;
+                    return Err(acp_error(CoreError::Protocol(message.into())));
+                }
                 let _ = events.send(AgentEvent::TurnCompleted { stop_reason }).await;
 
                 Ok::<StopReason, agent_client_protocol::Error>(stop_reason)
@@ -424,6 +497,34 @@ impl From<acp::PermissionOptionKind> for PermissionOptionKind {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    #[cfg(unix)]
+    fn acp进程工作目录仅在声明时切换() {
+        let cwd = std::path::Path::new("/tmp/mimo space");
+        let mimo = AcpDriver::new("mimo acp").with_process_cwd(true);
+        let agent = mimo.agent_for_cwd(cwd).unwrap();
+        assert_eq!(agent.config().command(), std::path::Path::new("/bin/sh"));
+        assert_eq!(
+            agent.config().arguments(),
+            &[
+                "-c",
+                "cd \"$1\" && shift && exec \"$@\"",
+                "sh",
+                "/tmp/mimo space",
+                "mimo",
+                "acp"
+            ]
+        );
+        assert_eq!(
+            AcpDriver::new("opencode acp")
+                .agent_for_cwd(cwd)
+                .unwrap()
+                .config()
+                .arguments(),
+            &["acp"]
+        );
+    }
 
     fn text_chunk(text: &str) -> acp::ContentChunk {
         acp::ContentChunk::new(acp::ContentBlock::Text(acp::TextContent::new(text)))

@@ -11,6 +11,7 @@ export interface RunInfo {
 }
 
 export function runPrompt(options: {
+  agentId: string;
   prompt: string;
   cwd: string;
   allow: string[];
@@ -20,11 +21,13 @@ export function runPrompt(options: {
   resumeSessionId?: string | null;
   /** 归属工作空间（P1-8，ADR-0007）；缺省 → 默认空间 */
   workspaceId?: string | null;
+  taskId?: string | null;
   onEvents: (batch: AgentEvent[]) => void;
 }): Promise<RunInfo> {
   const channel = new Channel<AgentEvent[]>();
   channel.onmessage = options.onEvents;
   return invoke<RunInfo>("run_prompt", {
+    agentId: options.agentId,
     prompt: options.prompt,
     cwd: options.cwd,
     allow: options.allow,
@@ -32,6 +35,7 @@ export function runPrompt(options: {
     mode: options.mode,
     resumeSessionId: options.resumeSessionId ?? null,
     workspaceId: options.workspaceId ?? null,
+    taskId: options.taskId ?? null,
     onEvents: channel,
   });
 }
@@ -93,6 +97,7 @@ export function deleteTask(id: string): Promise<void> {
 }
 
 export interface HistorySession {
+  agent_id: string;
   agent_session_id: string;
   cwd: string;
   title: string;
@@ -155,4 +160,85 @@ export function deleteRule(id: string): Promise<void> {
 /** 读取文本文件（write 工具 diff 展开时从磁盘取内容，opencode ACP 事件不携带） */
 export function readTextFile(path: string): Promise<string> {
   return invoke("read_text_file", { path });
+}
+
+/** Agent 注册表行（P2-2，§5.1 AgentRow） */
+export interface AgentRow {
+  id: string;
+  display_name: string;
+  driver_kind: "acp" | "stream_json" | "native";
+  command: string;
+  version_args: string[];
+  acp_process_cwd: boolean;
+  capabilities: {
+    supports_load_session: boolean;
+    supports_diff: boolean;
+    supports_permission: boolean;
+  };
+  /** id 出现在用户自定义文件（含覆盖内置） */
+  is_user_defined: boolean;
+  installed_version: string | null;
+}
+
+/** 新增/更新自定义 agent 入参（能力位扁平化） */
+export interface AgentInput {
+  id: string;
+  displayName: string;
+  driverKind: "acp" | "stream_json" | "native";
+  command: string;
+  versionArgs: string[];
+  acpProcessCwd: boolean;
+  supportsLoadSession: boolean;
+  supportsDiff: boolean;
+  supportsPermission: boolean;
+}
+
+/** 注册表合并视图 + 并行安装探测 */
+export function listAgents(): Promise<AgentRow[]> {
+  return invoke("list_agents");
+}
+
+/** 会话选择器只读定义，不启动 npx 版本探测 */
+export function listAgentDefinitions(): Promise<AgentRow[]> {
+  return invoke("list_agent_definitions");
+}
+
+/** 新增（或同 id 覆盖）用户自定义 agent → ~/.supercode/agents.json */
+export function addAgent(input: AgentInput): Promise<AgentRow> {
+  return invoke("add_agent", { input });
+}
+
+export function updateAgent(input: AgentInput): Promise<AgentRow> {
+  return invoke("update_agent", { input });
+}
+
+/** 删除用户自定义条目；覆盖内置时恢复出厂定义 */
+export function deleteAgent(id: string): Promise<void> {
+  return invoke("delete_agent", { id });
+}
+
+export interface NodeEnvReport {
+  node_version: string | null;
+  npx_version: string | null;
+}
+export function checkNodeEnv(): Promise<NodeEnvReport> {
+  return invoke("check_node_env");
+}
+
+export interface TaskWorktree {
+  task_id: string;
+  workspace_id: string;
+  project: string;
+  path: string;
+  branch: string;
+}
+export function createTaskWorktree(taskId: string): Promise<TaskWorktree> {
+  return invoke("create_task_worktree", { taskId });
+}
+export function cleanupTaskWorktrees(workspaceId: string): Promise<{ removed: string[]; skipped: string[] }> {
+  return invoke("cleanup_task_worktrees", { workspaceId });
+}
+
+export function moveTask(id: string, workspaceId: string, status: TaskEntry["status"]): Promise<TaskEntry> {
+  return invoke("move_task", { id, workspaceId, status });
 }

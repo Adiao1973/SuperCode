@@ -3,6 +3,7 @@
  * 规则三形：`*`、`tool`、`tool(args)`（glob）；效果 allow / deny / ask。
  */
 import { useCallback, useEffect, useState } from "react";
+import { AgentsSection } from "@/components/AgentsSection";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -67,6 +68,7 @@ export function SettingsView() {
   return (
     <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
       <div className="mx-auto flex max-w-3xl flex-col gap-4">
+        <AgentsSection />
         <OpencodeEnvSection />
 
         <section>

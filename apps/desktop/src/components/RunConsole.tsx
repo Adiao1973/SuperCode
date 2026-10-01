@@ -11,10 +11,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
+import { SessionTerminal } from "./SessionTerminal";
 import { PendingCard } from "@/components/PendingCard";
 import { CopyableBlock } from "@/components/CopyableBlock";
 import {
   cancelRun,
+  listAgentDefinitions,
+  checkNodeEnv,
+  type AgentRow,
+  type NodeEnvReport,
   listSessionMessages,
   readTextFile,
   runPrompt,
@@ -85,8 +90,30 @@ export function RunConsole({ session, dispatch }: RunConsoleProps) {
   const { draft, stream } = session;
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  const [terminalOpen, setTerminalOpen] = useState(false);
+  const [agents, setAgents] = useState<AgentRow[]>([]);
+  const [agentsError, setAgentsError] = useState<string | null>(null);
+  const [nodeEnv, setNodeEnv] = useState<NodeEnvReport | null>(null);
+  const [nodeError, setNodeError] = useState<string | null>(null);
+  const [nodeTick, setNodeTick] = useState(0);
+  useEffect(() => {
+    let disposed = false;
+    listAgentDefinitions().then((rows) => { if (!disposed) setAgents(rows); })
+      .catch((error) => { if (!disposed) setAgentsError(String(error)); });
+    return () => { disposed = true; };
+  }, [session.key]);
+  useEffect(() => {
+    if (draft.agentId !== "claude-code" && draft.agentId !== "codex") return;
+    let disposed = false;
+    setNodeEnv(null);
+    setNodeError(null);
+    checkNodeEnv().then((report) => { if (!disposed) setNodeEnv(report); })
+      .catch((error) => { if (!disposed) setNodeError(String(error)); });
+    return () => { disposed = true; };
+  }, [draft.agentId, nodeTick]);
+
   const start = useCallback(async () => {
-    if (stream.running) {
+    if (stream.running || !draft.prompt.trim() || !draft.cwd.trim()) {
       return; // ⌘R 防重入：运行中不允许同一会话再起一轮
     }
     const key = session.key;
@@ -95,6 +122,7 @@ export function RunConsole({ session, dispatch }: RunConsoleProps) {
     dispatch({ type: "begin", key, resume });
     try {
       await runPrompt({
+        agentId: draft.agentId,
         prompt: draft.prompt,
         cwd: draft.cwd,
         allow: draft.rulesText
@@ -106,6 +134,7 @@ export function RunConsole({ session, dispatch }: RunConsoleProps) {
         resumeSessionId: resume ? session.acpSessionId : null,
         // 归属工作空间（P1-8）：落库与侧栏分组一致
         workspaceId: session.workspaceId,
+        taskId: session.taskId,
         // 事件按客户端会话键路由；acpSessionId 由 session_started 事件带入 store
         onEvents: (batch) => dispatch({ type: "batch", key, batch }),
       });
@@ -117,7 +146,7 @@ export function RunConsole({ session, dispatch }: RunConsoleProps) {
         batch: [{ type: "driver_error", message: String(e) }],
       });
     }
-  }, [session.key, draft, stream.running, dispatch]);
+  }, [session.taskId, session.key, session.resumable, session.acpSessionId, session.workspaceId, draft, stream.running, dispatch]);
 
   // P1-6：历史会话首次进入时加载落库消息
   useEffect(() => {
@@ -176,7 +205,7 @@ export function RunConsole({ session, dispatch }: RunConsoleProps) {
   const [envTick, setEnvTick] = useState(0);
   useEffect(() => {
     const cwd = draft.cwd.trim();
-    if (stream.running || !cwd) {
+    if (draft.agentId !== "opencode" || stream.running || !cwd) {
       setEnvReport(null);
       setEnvCwd(null);
       return;
@@ -198,12 +227,13 @@ export function RunConsole({ session, dispatch }: RunConsoleProps) {
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [draft.cwd, stream.running, envTick]);
-  const envFresh = envReport != null && envCwd != null && envCwd === draft.cwd.trim();
+  }, [draft.agentId, draft.cwd, stream.running, envTick]);
+  const envFresh = draft.agentId === "opencode" && envReport != null && envCwd != null && envCwd === draft.cwd.trim();
 
   // Cmd/Ctrl+R 运行、Cmd/Ctrl+. 停止：焦点免疫（仅作用于当前活动会话）
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      if ((e.target as HTMLElement | null)?.closest("[data-session-terminal]")) return;
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "r") {
         e.preventDefault();
         void start();
@@ -236,7 +266,24 @@ export function RunConsole({ session, dispatch }: RunConsoleProps) {
           autoFocus={stream.items.length === 0 && !stream.running}
         />
         <div className="flex gap-2">
+          <select
+            aria-label="Agent"
+            value={draft.agentId}
+            disabled={stream.running || session.acpSessionId != null}
+            onChange={(e) => dispatch({ type: "patchDraft", key: session.key, patch: { agentId: e.target.value } })}
+            className="h-9 max-w-44 rounded-md border px-2 text-xs"
+          >
+            {!agents.some((agent) => agent.id === draft.agentId) && (
+              <option value={draft.agentId}>{draft.agentId}</option>
+            )}
+            {agents.map((agent) => (
+              <option key={agent.id} value={agent.id} disabled={agent.driver_kind !== "acp"}>
+                {agent.display_name}{agent.driver_kind !== "acp" ? "（尚未接入）" : ""}
+              </option>
+            ))}
+          </select>
           <Input
+            disabled={stream.running || session.acpSessionId != null || session.taskId != null}
             value={draft.cwd}
             onChange={(e) =>
               dispatch({
@@ -308,6 +355,63 @@ export function RunConsole({ session, dispatch }: RunConsoleProps) {
             </Button>
           )}
         </div>
+
+        {agentsError && <p className="text-xs text-destructive">Agent 列表加载失败：{agentsError}</p>}
+        {(draft.agentId === "claude-code" || draft.agentId === "codex") && (
+          <div className="space-y-2 rounded-md border px-3 py-2 text-xs">
+            <div className="flex items-center justify-between gap-2">
+              <span>{nodeError ? `依赖探测失败：${nodeError}` : nodeEnv
+                ? `Node ${nodeEnv.node_version ?? "未检测到"} · npx ${nodeEnv.npx_version ?? "未检测到"}`
+                : "正在检测 Node / npx…"}</span>
+              <Button variant="ghost" size="sm" onClick={() => setNodeTick((tick) => tick + 1)}>重新检测</Button>
+            </div>
+            {draft.agentId === "claude-code" && nodeEnv?.node_version && Number(nodeEnv.node_version.replace(/^v/, "").split(".")[0]) < 22 && (
+              <p className="text-destructive">当前 Claude 适配器要求 Node.js ≥22，请升级后重启应用。</p>
+            )}
+            <details open={nodeEnv != null && (!nodeEnv.node_version || !nodeEnv.npx_version)}>
+              <summary className="cursor-pointer">
+                {draft.agentId === "codex" ? "Codex 安装与认证指引" : "Claude Code 安装与认证指引"}
+              </summary>
+              <div className="mt-2 space-y-2">
+                <p>{draft.agentId === "claude-code"
+                  ? "缺少 Node/npx 时安装 Node.js 22 或更高版本（macOS 可使用 Homebrew），随后重启应用。"
+                  : "缺少 Node/npx 时安装 Node.js（macOS 可使用 Homebrew），随后重启应用。"}</p>
+                <CopyableBlock text="brew install node" />
+                {draft.agentId === "codex" ? (
+                  <>
+                    <p>检查 Codex ACP 适配器；登录或 API Key 由 Codex 管理。</p>
+                    <CopyableBlock text="npx -y @agentclientprotocol/codex-acp --version" />
+                    <CopyableBlock text="codex login" />
+                    <p>也可在启动 SuperCode 的环境中设置 CODEX_API_KEY 或 OPENAI_API_KEY。SuperCode 不保存密钥。</p>
+                  </>
+                ) : (
+                  <>
+                    <p>检查适配器；需要登录时在终端完成认证后重试。</p>
+                    <CopyableBlock text="npx -y @agentclientprotocol/claude-agent-acp --version" />
+                    <CopyableBlock text="npx -y @agentclientprotocol/claude-agent-acp --cli auth login" />
+                    <p>也可使用 Anthropic API Key 按量计费，无需 Pro/Max 订阅。在启动 SuperCode 的环境中配置 ANTHROPIC_API_KEY；网关还需按供应商说明配置 ANTHROPIC_BASE_URL 与凭证。SuperCode 不保存密钥。</p>
+                  </>
+                )}
+                <p>从 Finder/Dock 启动不会继承终端临时变量；请从配置好环境的终端启动应用，或使用 agent 自身支持的配置方式。</p>
+              </div>
+            </details>
+          </div>
+        )}
+        {draft.agentId === "mimo" && (
+          <div className="space-y-2 rounded-md border px-3 py-2 text-xs">
+            <details>
+              <summary className="cursor-pointer">MiMo Code 安装与模型指引</summary>
+              <div className="mt-2 space-y-2">
+                <p>安装官方 MiMo Code CLI。SuperCode 可识别 PATH 中的 mimo，也可识别官方安装器的 ~/.mimocode/bin/mimo。</p>
+                <CopyableBlock text="npm install -g @mimo-ai/cli" />
+                <CopyableBlock text="mimo --version" />
+                <p>模型与供应商由 MiMo 自己管理。现有配置可先用 mimo run 验证；若 ACP 默认选择了不可用模型，可在工作目录的 .mimocode/mimocode.jsonc 中设置 model。MiMo Auto 的可用性以 MiMo 当前服务状态为准；SuperCode 不读取或保存凭证。</p>
+                <CopyableBlock text="mimo providers login" />
+                <CopyableBlock text='{"model":"<provider>/<model>"}' />
+              </div>
+            </details>
+          </div>
+        )}
 
         {/* P1-7 opencode 环境联检：未安装 → 红色引导；宽松 → 琥珀警告 + 可复制收紧片段 */}
         {!stream.running && envFresh && envReport && !envReport.installed && (
@@ -385,7 +489,7 @@ export function RunConsole({ session, dispatch }: RunConsoleProps) {
         )}
 
         <p className="text-muted-foreground text-[11px]">
-          fail-closed：未匹配预授权规则的权限请求自动拒绝（审批中心 P1-5 接管）
+          Agent 发起的权限请求按当前模式与规则处理；需确认时在会话内审批。
           {session.acpSessionId && (
             <>
               {" · 会话 "}
@@ -407,7 +511,7 @@ export function RunConsole({ session, dispatch }: RunConsoleProps) {
               ? "正在恢复上下文 / 等待 agent 响应…"
               : session.resumable
                 ? "输入新提示词继续此会话（将恢复上下文），或查看下方历史。"
-                : "点击「运行」驱动 opencode（ACP）执行任务，事件经 Rust 合帧 → Tauri Channel 到达这里。"}
+                : "选择 Agent 并输入任务，点击「运行」开始。"}
           </p>
         ) : (
           <Virtuoso
@@ -440,8 +544,11 @@ export function RunConsole({ session, dispatch }: RunConsoleProps) {
         </p>
       )}
 
+      {terminalOpen && <SessionTerminal key={draft.cwd} cwd={draft.cwd} onClose={() => setTerminalOpen(false)} />}
+
       {/* 状态条 */}
       <div className="text-muted-foreground flex h-8 shrink-0 items-center gap-3 border-t px-5 text-[11px]">
+        <button type="button" className="hover:text-primary" disabled={terminalOpen || !draft.cwd.trim()} onClick={() => setTerminalOpen(true)}>打开终端</button>
         {stream.running ? (
           <>
             <Loader2 className="text-primary size-3 animate-spin" />
