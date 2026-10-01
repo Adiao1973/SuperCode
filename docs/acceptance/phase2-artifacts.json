@@ -3,7 +3,7 @@
   "status": "release-v0.3.0-user-approved-scope",
   "source_code_commit": "c530c17",
   "version": "0.3.0",
-  "platform": "macOS aarch64",
+  "platform": "macOS aarch64 + x86_64",
   "excluded_tasks": [
     "P2-6"
   ],
@@ -17,6 +17,14 @@
       "path": "target/release/bundle/dmg/SuperCode_0.3.0_aarch64.dmg",
       "bytes": 8610201,
       "sha256": "c1b07e8316fb2b0ffc6f5634bc6b7e469b9d78a062aa29c8c18071db7e360e7b"
+    },
+    {
+      "path": "target/x86_64-apple-darwin/release/bundle/dmg/SuperCode_0.3.0_x64.dmg",
+      "release_asset_name": "SuperCode_0.3.0_x86_64.dmg",
+      "bytes": 8909694,
+      "sha256": "97a739ef4926c6b6e9e9ad5ff03f83ae327092c19a1057139572ba33d30ee8c0",
+      "validation": "cross-build, bundle version and Mach-O architecture; no Intel device UI test"
     }
-  ]
+  ],
+  "release_url": "https://github.com/Adiao1973/SuperCode/releases/tag/v0.3.0"
 }

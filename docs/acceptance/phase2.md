@@ -95,4 +95,8 @@ ZCode 0.16.9 ✓
 
 `just build` 退出 0，生成 SuperCode.app 与 SuperCode_0.3.0_aarch64.dmg；安装包源代码提交 c530c17，大小和 SHA-256 见 phase2-artifacts.json。独立 macOS release 测试应用原生 AX 确认 SuperCode v0.3.0、历史六会话恢复、ZCode（尚未接入）禁选，无 dev 后缀。P2-10 按用户批准的范围闭环：任务 --no-ff 合 dev，dev 完整检查后创建 annotated v0.3.0 tag，再 --no-ff 合 main；安装包本地交付，不包含远程上传。
 
-发布操作已完成：annotated tag `v0.3.0` 指向 dev 合并提交 `6d43e7b`；main 发布合并提交 `045de1f`。dev 最终 `just verify` 退出 0（`/tmp/sc-v030-dev-verify.log`）。main 与 tag 的发布文件树一致，安装包 SHA-256 与归档一致。远程推送与 GitHub Release 上传尚未执行。
+发布操作已完成：annotated tag `v0.3.0` 指向 dev 合并提交 `6d43e7b`；main 发布合并提交 `045de1f`。dev 最终 `just verify` 退出 0（`/tmp/sc-v030-dev-verify.log`）。main 与 tag 的发布文件树一致，安装包 SHA-256 与归档一致。远程推送和 GitHub Release 上传已完成，详见下方记录。
+
+## GitHub Release 交付（2026-10-01）
+
+[GitHub v0.3.0 Release](https://github.com/Adiao1973/SuperCode/releases/tag/v0.3.0) 已公开，非 prerelease，标为 Latest。main/dev/tag 已推送，附件为 Apple Silicon DMG、Intel DMG 与 SHA256SUMS.txt；GitHub 返回的两包 SHA-256 与本地归档一致。Intel 包通过 `pnpm tauri build --target x86_64-apple-darwin`，bundle 版本 0.3.0、Mach-O x86_64 核对通过；未声称 Intel 实机 UI 验收。原先“仅本地交付”的记录描述首次发布阶段。
