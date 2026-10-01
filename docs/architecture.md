@@ -3,6 +3,8 @@
 > 本文档是 SuperCode 接口设计的**单一事实源**：任何接口 / 数据模型变更，先改本文档再改代码。
 > 版本：0.8（P1-6 持久化与恢复落地）· 变更记录见文末。
 
+> v0.3.0 已发布：ACP 路径支持 OpenCode、Claude Code、Codex、MiMo；StreamJsonDriver 是延期设计，未包含在本版。
+
 ## 1. 项目概述
 
 SuperCode 是一个**多 Agent 桌面总控客户端**（Mac 优先，后续兼容 Windows）。它不重新实现 coding agent，而是站在各家成熟 agent CLI 的肩膀上：
@@ -25,9 +27,9 @@ SuperCode 是一个**多 Agent 桌面总控客户端**（Mac 优先，后续兼�
 │  ├─ orchestrator   编排核心：会话生命周期、任务调度            │
 │  ├─ approval       ApprovalBroker：统一审批队列 + 规则引擎     │
 │  ├─ driver         Agent 适配层：AgentDriver trait + 实现     │
-│  │   ├─ AcpDriver        （ACP 通用：opencode 原生，后续      │
+│  │   ├─ AcpDriver        （ACP：opencode / MiMo 原生，      │
 │  │   │                    claude/codex 经官方 adapter）       │
-│  │   ├─ StreamJsonDriver （headless 兜底：zcode 等，Phase 2） │
+│  │   ├─ StreamJsonDriver （ZCode 延期，独立分支） │
 │  │   └─ NativeDriver     （codex app-server 等，Phase 3）    │
 │  ├─ proc           进程管理器：spawn/进程组杀树/心跳/退出清理   │
 │  ├─ events         事件模型 + 帧级合帧聚合器                   │
@@ -37,7 +39,7 @@ SuperCode 是一个**多 Agent 桌面总控客户端**（Mac 优先，后续兼�
 │  supercode-cli（Phase 0 原型）   apps/desktop 的 Tauri 壳（Phase 1）│
 └──────────────────────────────────────────────────────────┘
         ↓ spawn 子进程 · stdio JSON-RPC（ACP）
-   opencode acp   （后续：npx @agentclientprotocol/claude-agent-acp
+   opencode acp   （已接入：npx @agentclientprotocol/claude-agent-acp
                    npx @agentclientprotocol/codex-acp · mimo acp）
 ```
 
