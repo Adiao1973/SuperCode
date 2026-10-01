@@ -19,6 +19,8 @@
 
 ## 当前状态：v0.3.0（多 Agent · worktree · 看板 · 终端）
 
+[下载 v0.3.0（macOS Apple Silicon / Intel）](https://github.com/Adiao1973/SuperCode/releases/tag/v0.3.0)
+
 ✅ **桌面端全功能已在真实 opencode + GLM 上验收通过**（[Phase 1 验收记录](docs/acceptance/phase1.md)）：
 
 | 能力 | 说明 |
