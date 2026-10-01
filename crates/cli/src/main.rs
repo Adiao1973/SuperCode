@@ -38,6 +38,11 @@ struct Cli {
 enum Cmd {
     /// 探测本机已安装的 agent
     Detect,
+    /// 检查指挥官任务计划（不执行任务）
+    Plan {
+        #[command(subcommand)]
+        cmd: PlanCmd,
+    },
     /// 运行一次性 agent 会话（默认 opencode）
     Run {
         /// 发给 agent 的任务提示词
@@ -76,6 +81,12 @@ enum Cmd {
 }
 
 #[derive(Subcommand)]
+enum PlanCmd {
+    /// 校验 JSON 计划并输出依赖执行批次
+    Validate { file: PathBuf },
+}
+
+#[derive(Subcommand)]
 enum SessionsCmd {
     /// 列出最近会话
     List,
@@ -86,6 +97,9 @@ async fn main() -> ExitCode {
     let cli = Cli::parse();
     match cli.cmd {
         Cmd::Detect => cmd_detect().await,
+        Cmd::Plan {
+            cmd: PlanCmd::Validate { file },
+        } => cmd_plan_validate(file),
         Cmd::Run {
             agent,
             prompt,
@@ -113,6 +127,46 @@ async fn main() -> ExitCode {
 enum Target {
     New { agent: String },
     Resume { id: Uuid },
+}
+
+fn cmd_plan_validate(file: PathBuf) -> ExitCode {
+    use std::io::Read as _;
+    use supercode_core::commander::{MAX_PLAN_BYTES, TaskPlan};
+    let result = (|| -> Result<String, String> {
+        if !std::fs::metadata(&file)
+            .map_err(|e| format!("读取计划失败: {e}"))?
+            .is_file()
+        {
+            return Err("计划输入必须为普通文件".into());
+        }
+        let file = std::fs::File::open(file).map_err(|e| format!("读取计划失败: {e}"))?;
+        if !file.metadata().map_err(|e| e.to_string())?.is_file() {
+            return Err("计划输入必须为普通文件".into());
+        }
+        let mut bytes = Vec::new();
+        file.take(MAX_PLAN_BYTES + 1)
+            .read_to_end(&mut bytes)
+            .map_err(|e| e.to_string())?;
+        if bytes.len() as u64 > MAX_PLAN_BYTES {
+            return Err("计划输入超过 1 MiB".into());
+        }
+        let plan: TaskPlan =
+            serde_json::from_slice(&bytes).map_err(|e| format!("计划 JSON 无效: {e}"))?;
+        let validated = plan
+            .validate(&registry::AgentRegistry::load())
+            .map_err(|e| e.to_string())?;
+        serde_json::to_string_pretty(&validated).map_err(|e| e.to_string())
+    })();
+    match result {
+        Ok(json) => {
+            println!("{json}");
+            ExitCode::SUCCESS
+        }
+        Err(error) => {
+            eprintln!("{error}");
+            ExitCode::FAILURE
+        }
+    }
 }
 
 async fn cmd_detect() -> ExitCode {

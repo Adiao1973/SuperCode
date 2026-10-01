@@ -136,12 +136,24 @@
 - **P2-2 偏差（zcode 误报未安装，用户实机发现）**：本机装的是 **ZCode.app 桌面版**，CLI 嵌在 `/Applications/ZCode.app/Contents/Resources/glm/zcode.cjs`（Node 脚本，0.16.9），**不注册 PATH 命令**——`zcode --version` 失败故判未安装（探测逻辑正确，安装形态特殊）。处理：安装引导改为可复制软链命令（`ln -sf …/zcode.cjs ~/.local/bin/zcode`）；实机验证软链后 `detect` → `ZCode 0.16.9 ✓`。与 P1-10 GUI PATH 问题同类：环境形态差异由产品引导兜底。
 - **P2-6 实测更正（2026-09-30 历史）**：0.16.9 help 遗漏 output-format，参数校验实际支持 stream-json；help 不能作为唯一判断依据。实现保留在 P2-6 分支，用户无有效 key，授权延期真实验收。
 
-## Phase 3 — AI 指挥官与 Windows（概要）
+## Phase 3 — AI 指挥官与 Windows
 
-- 总控 LLM：任务拆解 → 按 agent 强项派单 → 结果汇总（复用 AcpDriver，指挥官自身走直连 LLM API）。
-- NativeDriver：codex app-server（拿 ACP 外的原生能力，如运行时审批策略切换）。
-- Windows 构建与适配（taskkill /T、WebView2 CSS 双测、安装包）。
-- 里程碑：v1.0.0。
+指挥官使用直连 LLM API 生成结构化任务计划，经本地校验和用户确认后派给现有 ACP agent，保留各 agent 审批链路。每项独立任务分支闭环；P2-6 保持延期，不混入本阶段验收。
+
+| ID | 任务 | 验收与预期 | 状态 |
+|---|---|---|---|
+| P3-1 | 指挥官任务计划契约与 DAG 校验、CLI 计划检查入口 | `just verify`；合法依赖输出稳定执行批次；重复 id、空目标、未知/未接入 agent、缺失/重复/自身依赖、循环及超过 64 任务拒绝；CLI 合法文件退出 0、坏计划非 0，不启动 agent | ✅ 已验收 2026-10-01 |
+| P3-2 | 直连 LLM 客户端与配置 | 独立配置模型/endpoint/key 来源；本地 HTTP fixture 验证请求、响应、超时与取消；错误不泄露 key；实际可用模型生成 P3-1 合法计划 | 待办 |
+| P3-3 | 指挥官计划持久化与执行状态机 | 新迁移；事务保存、重启恢复、并发状态转换与失败/取消单测，不自动重跑历史任务 | 待办 |
+| P3-4 | ACP 派单与依赖调度 | 按批次并行、并发上限、失败阻断后代、取消回收，原 cwd/agent/审批归属不变；协议 fixture 与真实双 agent 核对 | 待办 |
+| P3-5 | 结果汇总与指挥官 CLI 闭环 | 汇总明确成功/失败/跳过，输出对应会话引用，真实拆解→派单→汇总留痕 | 待办 |
+| P3-6 | 指挥官桌面入口 | 配置、计划预览确认、执行进度、取消与恢复；macOS UI 核对，Windows 待平台验收 | 待办 |
+| P3-7 | Codex NativeDriver 协议与运行时审批 | 先写协议设计与 fixture，能力协商、运行/取消/审批变更、真实本机任务验收 | 待办 |
+| P3-8 | Windows 进程与终端适配 | Windows CI + 实机验收进程树回收、PTY、路径和 WebView2；不可用环境保留待验收 | 待办 |
+| P3-9 | Windows UI 与安装包 | Windows 实机 UI、双平台构建产物和校验和，无平台假通过 | 待办 |
+| P3-10 | v1.0.0 整体验收与发布 | 预写 Phase 3 剧本、指挥官真实闭环、双平台安装包、dev 全绿、annotated tag/main/GitHub Release | 待办 |
+
+P3-1 详细验收见 `docs/acceptance/p3-1.md`。后续各项在动工前继续细化最小子任务及接口，单项超过两天时拆分后实施。P3-2 真实模型访问方式在启动该任务时确认，不阻塞无网络契约工作。
 
 ## 里程碑总览
 
@@ -165,3 +177,5 @@
 - **v0.3.0 范围调整（2026-10-01）**：用户明确授权跳过 P2-6 并提前发布。ZCode Start Plan 桌面可用但 standalone CLI 未接入该账号路径，默认模型临时试验无效；P2-6 不伪记通过、不合入本版。P2-10 以 P2-1～5、P2-7～9 及整体回归作为本版出口，版本统一 0.3.0，annotated tag 后 dev 合入 main。此前预验收的禁止发布结论被本次范围授权取代。
 
 - **v0.3.0 发布落地**：tag 指向 `6d43e7b`，main 合并为 `045de1f`；本地安装包与校验和已归档，远程推送和 GitHub Release 已完成（双架构 DMG + SHA256SUMS.txt）。下一阶段为 Phase 3 细化，P2-6 独立延期补验。
+
+- **P3-1 验收（2026-10-01）**：完成严格版本化任务计划契约、agent/依赖 DAG 校验、稳定拓扑批次及 `plan validate` CLI。`just verify` 全绿（core 70 + 新计划集成 4、ACP 4、desktop 6、CLI 集成 2；1 既有 ignored），真实命令示例输出 [[research], [implement, review]]。不启动 agent、不访问模型、无数据库迁移；已有 serde_json 提升为 CLI 运行依赖。详见 `docs/acceptance/p3-1.md`。下一步 P3-2，直连 LLM 客户端与配置。

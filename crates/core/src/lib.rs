@@ -13,6 +13,7 @@
 //! - [`orchestrator`] — 编排核心，会话生命周期与任务调度
 
 pub mod approval;
+pub mod commander;
 pub mod db;
 pub mod driver;
 pub mod envcheck;
