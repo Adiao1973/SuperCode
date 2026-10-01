@@ -718,3 +718,12 @@ P2-9 依赖选择与实测：5.5.0 在 React StrictMode/面板销毁后存在 vi
 CLI 与桌面宿主一致：driver 返回 `Err` 时，在关闭事件通道、等待 recorder 排空之前补发 `DriverError`，让已有会话落库为 failed；会话未建立时不制造伪档案。新建和续聊均用真实 CLI + 无网络 ACP 对端回归验证。release 版本徽标读取 Tauri 实际 app version，`dev` 后缀仅开发构建显示，不再硬编码版本。Phase 2 tag/main 出口仍受未完成 P2-6 限制。
 
 - **2026-10-01 v0.3.0 范围调整**：用户授权提前发布多 ACP agent、worktree、看板与终端；ZCode StreamJson/Start Plan 真实验收延期，独立任务分支不合入本版，发布版保留禁选状态。
+
+
+### P3-1 — 指挥官计划契约
+
+`commander::TaskPlan { version, objective, tasks }` 是直连 LLM 与宿主之间的 JSON 契约，version 固定为 1，未知字段拒绝。每个 `PlannedTask { id, title, agent_id, prompt, depends_on }` 具有 1～64 字符的 ASCII 字母/数字/连字符/下划线 id，非空 title/prompt；depends_on 可省略为 []。计划必须有 1～64 个任务和非空 objective，总输入最多 1 MiB。agent_id 必须在宿主注册表存在且通过现有 launch 校验（当前仅 ACP）；ZCode 禁选逻辑保持一致。
+
+`TaskPlan::validate(&AgentRegistry) -> Result<ValidatedPlan>` 拒绝重复 id、未知 agent、重复/缺失/自身依赖和环；返回按输入顺序稳定排列的拓扑执行批次。每个批次仅包含依赖在此前批次已完成的任务。该结果仅是静态建议，不创建会话、数据库记录、worktree 或子进程；实际安装探测、工作目录及审批在 P3-4 执行入口重新校验。计划自身不携带权限豁免或 shell 命令执行配置，不能越过既有审批管线。
+
+CLI `supercode plan validate <file>` 读取不超过 1 MiB 的 JSON，按合并后的注册表验证，输出 `ValidatedPlan { plan, batches }` JSON；坏计划返回非零并给出字段/依赖诊断。不调用 LLM，不访问 SQLite，不执行 agent。P3-2 将复用同一契约校验模型响应。

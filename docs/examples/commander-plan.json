@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "objective": "为项目设计一个可审阅的改进计划",
+  "tasks": [
+    { "id": "research", "title": "分析现有实现", "agent_id": "codex", "prompt": "阅读项目并列出问题，不修改文件" },
+    { "id": "implement", "title": "实现已确认的改进", "agent_id": "claude-code", "prompt": "依据分析结果实现改进并验证", "depends_on": ["research"] },
+    { "id": "review", "title": "独立审查", "agent_id": "mimo", "prompt": "审查分析结果与建议，不修改文件", "depends_on": ["research"] }
+  ]
+}
