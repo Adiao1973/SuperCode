@@ -731,14 +731,23 @@ CLI `supercode plan validate <file>` 读取不超过 1 MiB 的 JSON，按合并�
 
 ### P3-2 — 直连 LLM 计划生成
 
-`commander::llm::LlmConfig { endpoint, model, api_key_env, timeout_secs }` 使用严格 JSON，配置文件默认 `~/.supercode/commander.json`，CLI `--config` 可指定独立文件。endpoint 是完整 chat-completions URL（不自行拼接路径），要求 HTTPS 或字面 loopback HTTP，禁止 URL 用户信息、query、fragment；model/key 环境变量名非空，变量名只含 ASCII 字母/数字/下划线且首位不是数字。timeout_secs 默认 60，范围 1～300。配置和用户目标分别限制 64 KiB，响应及计划限制 1 MiB；只读普通文件，无 key 字段。
+`commander::llm::LlmConfig { endpoint, model, api_key_env, timeout_secs }` 使用严格 JSON，配置文件只用于显式 `--config`，CLI `--config` 可指定独立文件；按用户要求，默认改从本机 SQLite 的 commander_config 单例读取，旧 JSON 路径不自动读取。endpoint 是完整 chat-completions URL（不自行拼接路径），要求 HTTPS 或字面 loopback HTTP，禁止 URL 用户信息、query、fragment；model/key 环境变量名非空，变量名只含 ASCII 字母/数字/下划线且首位不是数字。timeout_secs 默认 60，范围 1～300。配置和用户目标分别限制 64 KiB，响应及计划限制 1 MiB；只读普通文件，无 key 字段。
 
 `LlmClient::from_config(config)` 在运行时读取 api_key_env，密钥不参与 Debug/序列化，只用于 sensitive Bearer 头；不修改任何 agent 配置。客户端使用 reqwest 0.13.5（锁文件已有），JSON 与 rustls 特性；禁重定向和自动重试，避免凭据转发及非显式重计费。
 
 `generate_plan(objective, registry, cancel) -> Result<ValidatedPlan>` 一次非流式 POST `{model,stream:false,messages:[system,user]}`。系统提示给出 P3-1 精确 JSON 契约及可执行 ACP agent 名单；用户目标是独立 user 内容，不读取项目文件。响应必须有唯一 choice、finish_reason=stop、assistant message.content 字符串，禁止 tool_calls/refusal；content 必须为裸 JSON（无 Markdown），再走 TaskPlan::validate，输出 objective 固定为原用户目标。未知 agent、非法 DAG 等不进入执行。
 
-从发送到读取全部响应实行同一 deadline 和 CancellationToken；超时、取消、HTTP 错误、非法响应均不输出服务端原文、URL、key 或目标内容。计划验证错误也不回显模型文本，只给分类诊断。HTTP 失败只包含状态码，不读取错误体。不访问 SQLite、不启动 agent、不自动执行计划。
+从发送到读取全部响应实行同一 deadline 和 CancellationToken；超时、取消、HTTP 错误、非法响应均不输出服务端原文、URL、key 或目标内容。计划验证错误也不回显模型文本，只给分类诊断。HTTP 失败只包含状态码，不读取错误体。网络客户端不访问 SQLite、不启动 agent、不自动执行计划；CLI 默认配置加载可打开 SQLite，但不创建会话。
 
 CLI `supercode plan generate <objective> [--config <file>]` 输出与 validate 相同的 JSON，Ctrl-C 取消返回非零。P3-2 仅生成计划，后续确认和派单由 P3-3/4/6 实现。真实模型验收必须使用用户指定的 provider/model 和 key 来源；fixture 不替代真实调用，缺少可直连访问方式时保留任务分支待验收。
 
 HTTP 客户端配置参考 [reqwest ClientBuilder](https://docs.rs/reqwest/0.13.5/reqwest/struct.ClientBuilder.html)。
+
+
+#### P3-2 本机配置与桌面适配（用户补充）
+
+用户选择 MiMo，但 endpoint/model/key 来源稍后提供，要求连接信息不得上传 GitHub。新增 migration 0005 的 `commander_config(id=1, config_json)`，只保存严格 LlmConfig（endpoint/model/api_key_env/timeout_secs），不保存 API key 值；SQLite/数据库 WAL/SHM 全部加入 gitignore，真实配置只保存在应用数据目录或 SUPERCODE_DB 测试库，示例只使用虚构占位符。
+
+Store::save_commander_config/get_commander_config 校验后原子替换单例，失败不覆盖旧值。桌面设置新增“指挥官模型”区块，字段 endpoint、model、key 环境变量名、timeout，可保存和重启恢复；不提供自动联网测试或任务派单按钮。IPC get_commander_config/save_commander_config 的嵌套配置沿用 snake_case JSON 字段，与前端类型逐字对齐；配置本身无密钥字段，非法配置错误不回显内容。用户稍后可在此填入 MiMo 连接信息，无需重新开发专用 MiMo adapter。
+
+默认 `plan generate` 从 Store 读取本机配置；显式 --config 使用独立普通文件，便于隔离验收。凭据仍由运行进程的环境变量提供；桌面 key 来源可在后续宿主凭据设置扩展，本任务不读取现有 agent 登录 token。

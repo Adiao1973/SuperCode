@@ -30,3 +30,14 @@ apps/desktop/src-tauri/icons/ios/
 .idea/
 .vscode/
 *.swp
+
+# ===== 本机数据库（含指挥官连接配置，不上传 GitHub） =====
+*.db
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+*.sqlite3
+*.sqlite3-wal
+*.sqlite3-shm
