@@ -751,3 +751,5 @@ HTTP 客户端配置参考 [reqwest ClientBuilder](https://docs.rs/reqwest/0.13.
 Store::save_commander_config/get_commander_config 校验后原子替换单例，失败不覆盖旧值。桌面设置新增“指挥官模型”区块，字段 endpoint、model、key 环境变量名、timeout，可保存和重启恢复；不提供自动联网测试或任务派单按钮。IPC get_commander_config/save_commander_config 的嵌套配置沿用 snake_case JSON 字段，与前端类型逐字对齐；配置本身无密钥字段，非法配置错误不回显内容。用户稍后可在此填入 MiMo 连接信息，无需重新开发专用 MiMo adapter。
 
 默认 `plan generate` 从 Store 读取本机配置；显式 --config 使用独立普通文件，便于隔离验收。凭据仍由运行进程的环境变量提供；桌面 key 来源可在后续宿主凭据设置扩展，本任务不读取现有 agent 登录 token。
+
+- **P3-2 验证状态（2026-10-01）**：接口、SQLite 0005、桌面设置和 HTTP/CLI 契约已通过自动及 macOS 检查，用户选定 MiMo 的真实 API 验收待连接信息；只保留任务分支，不宣称闭环完成。

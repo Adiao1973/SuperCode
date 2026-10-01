@@ -143,7 +143,7 @@
 | ID | 任务 | 验收与预期 | 状态 |
 |---|---|---|---|
 | P3-1 | 指挥官任务计划契约与 DAG 校验、CLI 计划检查入口 | `just verify`；合法依赖输出稳定执行批次；重复 id、空目标、未知/未接入 agent、缺失/重复/自身依赖、循环及超过 64 任务拒绝；CLI 合法文件退出 0、坏计划非 0，不启动 agent | ✅ 已验收 2026-10-01 |
-| P3-2 | 直连 LLM 客户端与配置 | 独立配置模型/endpoint/key 来源；本地 HTTP fixture 验证请求、响应、超时与取消；错误不泄露 key；实际可用模型生成 P3-1 合法计划；详见 `docs/acceptance/p3-2.md` | 进行中 |
+| P3-2 | 直连 LLM 客户端与配置 | 独立配置模型/endpoint/key 来源；本地 HTTP fixture 验证请求、响应、超时与取消；错误不泄露 key；实际可用模型生成 P3-1 合法计划；详见 `docs/acceptance/p3-2.md` | 进行中（实现/自动/桌面通过，MiMo 真实 API 待补验） |
 | P3-3 | 指挥官计划持久化与执行状态机 | 新迁移；事务保存、重启恢复、并发状态转换与失败/取消单测，不自动重跑历史任务 | 待办 |
 | P3-4 | ACP 派单与依赖调度 | 按批次并行、并发上限、失败阻断后代、取消回收，原 cwd/agent/审批归属不变；协议 fixture 与真实双 agent 核对 | 待办 |
 | P3-5 | 结果汇总与指挥官 CLI 闭环 | 汇总明确成功/失败/跳过，输出对应会话引用，真实拆解→派单→汇总留痕 | 待办 |
@@ -179,3 +179,5 @@ P3-1 详细验收见 `docs/acceptance/p3-1.md`。后续各项在动工前继续�
 - **v0.3.0 发布落地**：tag 指向 `6d43e7b`，main 合并为 `045de1f`；本地安装包与校验和已归档，远程推送和 GitHub Release 已完成（双架构 DMG + SHA256SUMS.txt）。下一阶段为 Phase 3 细化，P2-6 独立延期补验。
 
 - **P3-1 验收（2026-10-01）**：完成严格版本化任务计划契约、agent/依赖 DAG 校验、稳定拓扑批次及 `plan validate` CLI。`just verify` 全绿（core 70 + 新计划集成 4、ACP 4、desktop 6、CLI 集成 2；1 既有 ignored），真实命令示例输出 [[research], [implement, review]]。不启动 agent、不访问模型、无数据库迁移；已有 serde_json 提升为 CLI 运行依赖。详见 `docs/acceptance/p3-1.md`。下一步 P3-2，直连 LLM 客户端与配置。
+
+- **P3-2 实施（2026-10-01，待真实模型验收）**：直连 Chat Completions 计划生成、SQLite 本机连接配置、桌面设置、CLI generate 已完成。`just verify` 99 passed / 1 ignored，macOS 设置保存/失败保留旧值/重启恢复通过。用户选择 MiMo，允许连接信息稍后提供且不得上传 GitHub；真实模型尚未调用，保留 feat/p3-2-direct-llm，不合 dev/main、不发布。详见 `docs/acceptance/p3-2.md`。
