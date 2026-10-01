@@ -101,11 +101,11 @@
 | P2-3 | claude-code 接入：`npx -y @agentclientprotocol/claude-agent-acp` 走 AcpDriver；Node/npx 依赖探测引导 | 真实任务跑通（流式消息 + 工具时间线 + 审批应答）；npx/Node 未装时给出可复制安装指引；续聊 session/load 生效；自动/手动步骤见 `docs/acceptance/p2-3.md` | ✅ 已验收 2026-09-28 |
 | P2-4 | codex 接入：`npx -y @agentclientprotocol/codex-acp` 走 AcpDriver | 同 P2-3 剧本在 codex 上通过（两 agent 并行会话互不串台）；具体命令与预期见 `docs/acceptance/p2-4.md` | ✅ 已验收 2026-09-28 |
 | P2-5 | mimo 接入：`mimo acp` 走 AcpDriver | 同 P2-3 剧本在 mimo 上通过；具体命令与预期见 `docs/acceptance/p2-5.md` | ✅ 已验收 2026-09-30 |
-| P2-6 | StreamJsonDriver + zcode 受限支持：headless `--mode yolo` 预授权流解析；UI 标注"该 agent 无法外部审批" | zcode 任务跑通消息/工具事件；UI 可见受限标注；权限模式选择器对 zcode 置灰 | 延期补验（无有效 key，用户授权跳过） |
+| P2-6 | StreamJsonDriver + zcode 受限支持：headless `--mode yolo` 预授权流解析；UI 标注"该 agent 无法外部审批" | zcode 任务跑通消息/工具事件；UI 可见受限标注；权限模式选择器对 zcode 置灰 | 延期验收（Start Plan CLI 不兼容；用户授权排除本版） |
 | P2-7 | git worktree 任务隔离：每任务独立 worktree + 分支、`.worktreeinclude` 复制、孤儿清扫（worktree 会话归属原项目空间，ADR-0007） | 从项目空间任务一键建 worktree 会话；改动不影响主工作区；孤儿 worktree 可清扫；会话仍归原项目空间；完整步骤与结果见 `docs/acceptance/p2-7.md` | ✅ 已验收 2026-10-01 |
 | P2-8 | 完整看板：dnd-kit 拖拽跨列/跨空间移动任务 | 拖拽改变状态即时落库；重启保留；拖拽不破坏绑定会话引用；完整剧本见 `docs/acceptance/p2-8.md` | ✅ 已验收 2026-10-01 |
 | P2-9 | xterm 终端嵌入（≥5.3.0，禁透明 canvas）：会话内嵌终端（cwd=会话 cwd） | 会话视图可开终端；输入输出正常；WebKit 无绿伪影；关终端不残留进程；详见 `docs/acceptance/p2-9.md` | ✅ 已验收 2026-10-01 |
-| P2-10 | Phase 2 整体验收 + tag v0.3.0 合入 main | 验收剧本（P2-10 前预写进 docs/acceptance/phase2.md）逐条留痕；`just verify` 全绿；`git tag v0.3.0` | 待办 |
+| P2-10 | Phase 2 整体验收 + tag v0.3.0 合入 main | 验收剧本（P2-10 前预写进 docs/acceptance/phase2.md）逐条留痕；`just verify` 全绿；`git tag v0.3.0` | ✅ 已验收 2026-10-01（按用户授权排除 P2-6 发布） |
 
 **Phase 2 验收剧本**（P2-10 执行，输出存 `docs/acceptance/phase2.md`）：
 1. 注册表：设置页五 agent（opencode/claude-code/codex/mimo/zcode）安装状态正确；自定义 agent 增删生效；
@@ -149,7 +149,7 @@
 |---|---|---|---|
 | v0.1.0 | Phase 0：opencode 链路 CLI 原型 | Phase 0 验收剧本全过 | ✅ 2026-09-24 达成（docs/acceptance/phase0.md） |
 | v0.2.0 | Phase 1：桌面 MVP | 可打包运行的 .app，验收剧本全过 | ✅ 已发布 2026-09-28 |
-| v0.3.0 | Phase 2：多 agent + worktree | 三家以上 agent 并行可用 | — |
+| v0.3.0 | Phase 2：多 agent + worktree | 三家以上 agent 并行可用；ZCode 延期 | ✅ 已发布 2026-10-01 |
 | v1.0.0 | Phase 3：AI 指挥官 + Windows | 双平台安装包 + 指挥官闭环 | — |
 
 - **P2-6 延期授权（2026-09-30）**：用户无有效 key，允许跳过；实现和自动验收记录见 `docs/acceptance/p2-6.md`，保留独立分支待补验，继续 P2-7。
@@ -159,3 +159,7 @@
 - **P2-8 验收（2026-10-01）**：看板鼠标/键盘跨列跨空间拖拽、原子保存与失败回滚、重启恢复通过；绑定会话及 worktree 原执行归属保持，移动后真实 OpenCode 运行成功。`just verify` 全绿（core 70/协议 4/desktop 3，1 既有 ignored）。新增 dnd-kit core 6.3.1，无 schema 变更；完整留痕见 `docs/acceptance/p2-8.md`。下一步 P2-9，P2-6 继续延期补验。
 
 - **P2-9 验收（2026-10-01）**：会话内嵌 xterm 6.0 + portable-pty，实际 cwd/worktree、中文/ANSI、Ctrl-C、resize、自然退出、关闭/切换/应用退出进程回收、重启历史均通过 macOS WebKit 核对。`just verify` 全绿（core 70/协议 4/desktop 6，1 既有 ignored），修复 PTY 句柄释放顺序与 xterm 旧版销毁回调异常，无 schema 变更。详见 `docs/acceptance/p2-9.md`。下一步 P2-10 整体验收，P2-6 仍待有效 key 补验，Phase 2 发布出口尚未达成。
+
+- **P2-10 预验收（2026-10-01，未发布）**：独立任务分支完成全部自动检查、三家 ACP 并行真实写读/续聊、OpenCode 模型冒烟与 macOS release 打包/组合核对；修复 CLI 协议失败历史仍 active 和 release 硬编码版本标识。结果见 `docs/acceptance/phase2.md`。P2-6 仍未通过真实补验，故保留 P2-10 分支，不标完整验收、不合 dev/main、不创建 v0.3.0 tag。
+
+- **v0.3.0 范围调整（2026-10-01）**：用户明确授权跳过 P2-6 并提前发布。ZCode Start Plan 桌面可用但 standalone CLI 未接入该账号路径，默认模型临时试验无效；P2-6 不伪记通过、不合入本版。P2-10 以 P2-1～5、P2-7～9 及整体回归作为本版出口，版本统一 0.3.0，annotated tag 后 dev 合入 main。此前预验收的禁止发布结论被本次范围授权取代。

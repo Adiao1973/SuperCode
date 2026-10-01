@@ -1,4 +1,5 @@
 import { useEffect, useReducer, useState } from "react";
+import { getVersion } from "@tauri-apps/api/app";
 import { Badge } from "@/components/ui/badge";
 import { ApprovalsView } from "@/components/ApprovalsView";
 import { KanbanView } from "@/components/KanbanView";
@@ -27,6 +28,8 @@ const NAV_ITEMS = [
 type NavId = (typeof NAV_ITEMS)[number]["id"];
 
 function App() {
+  const [version, setVersion] = useState<string | null>(null);
+  useEffect(() => { void getVersion().then(setVersion).catch(() => {}); }, []);
   const [nav, setNav] = useState<NavId>("sessions");
   const [sessions, dispatch] = useReducer(
     sessionsReducer,
@@ -101,7 +104,7 @@ function App() {
             SuperCode
           </span>
           <Badge variant="secondary" className="ml-auto text-[10px]">
-            v0.2 dev
+            {version ? `v${version}` : ""}{import.meta.env.DEV ? " dev" : ""}
           </Badge>
         </div>
         <div className="border-t" />

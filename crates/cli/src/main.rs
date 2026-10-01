@@ -335,6 +335,15 @@ async fn run_session(
         .run(cwd, start, prompt, events_tx.clone(), permissions, cancel)
         .await;
 
+    // Driver transport/protocol failures may return Err without an event. Send a
+    // terminal event before draining so CLI history cannot remain active forever.
+    if let Err(err) = &stop_reason {
+        let _ = events_tx
+            .send(AgentEvent::DriverError {
+                message: err.to_string(),
+            })
+            .await;
+    }
     drop(events_tx);
     let _ = printer.await;
     approver.abort();
