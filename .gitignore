@@ -41,3 +41,7 @@ apps/desktop/src-tauri/icons/ios/
 *.sqlite3
 *.sqlite3-wal
 *.sqlite3-shm
+*.db-journal
+*.sqlite-journal
+*.sqlite3-journal
+commander.local.json

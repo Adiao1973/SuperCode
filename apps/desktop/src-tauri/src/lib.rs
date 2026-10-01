@@ -1,6 +1,7 @@
 //! SuperCode 桌面壳（Tauri v2）。
 //! P1-5：审批中心——权限模式热切换、待决请求转发应答、规则库 SQLite 持久化（§5.1）。
 
+mod commander_settings;
 mod terminal;
 mod worktrees;
 
@@ -920,6 +921,8 @@ pub fn run() {
             store: tokio::sync::OnceCell::new(),
         })
         .invoke_handler(tauri::generate_handler![
+            commander_settings::get_commander_config,
+            commander_settings::save_commander_config,
             terminal::open_terminal,
             terminal::write_terminal,
             terminal::resize_terminal,
