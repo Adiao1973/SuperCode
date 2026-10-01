@@ -68,7 +68,15 @@ just build           # 打包 .app 与 .dmg（target/release/bundle/）
 - **续聊**：跑过的会话直接输入新提示词再运行（自动 session/load 恢复上下文）；重启后历史仍在
 - **严格模式**（推荐）：会话运行框检测到"宽松"时，展开「收紧引导」复制 `opencode.jsonc` 片段写入项目目录——之后 bash/edit 全部进 SuperCode 审批（否则 opencode 自带白名单会静默放行部分操作，见 ADR-0006 管辖边界）
 
-CLI 原型（Phase 0 宿主）仍可用：`./target/debug/supercode run|resume|sessions|detect`。
+CLI 支持 `./target/debug/supercode run|resume|sessions|detect`。
+
+Phase 3 开发中的计划校验（dev，尚未包含在 v0.3.0）：
+
+```bash
+cargo run -p supercode-cli -- plan validate docs/examples/commander-plan.json
+```
+
+该命令只验证计划并输出依赖批次，不执行任务。
 
 ### 预授权规则语法
 
