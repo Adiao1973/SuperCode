@@ -651,7 +651,7 @@ P1-8 落地迁移 0003（workspaces + sessions.workspace_id，历史会话按 di
 
 - 权限默认**最小放行**：未配置规则的工具调用一律 `ask`；审批是产品的第一公民功能。
 - 预授权规则中的 `always` 生效时必须落库（approvals.decision_by = rule:<id>）留痕。
-- API key 等敏感配置不进入 SuperCode：各 agent 自管自己的鉴权（`opencode auth login` 等），SuperCode 只管进程与协议。
+- 执行 agent 的 API key 不进入 SuperCode：各 agent 自管鉴权。Phase 3 指挥官直连模型是独立配置，只保存 endpoint/model/key 环境变量名；运行时读取该变量，不保存密钥、不复用 agent 登录凭据。
 - exec 类工具的命令内容在审批 UI 中**完整可见**（不截断命令、展示 cwd）。
 
 ## 10. 技术约束与开发规范（WebKit 相关）
@@ -727,3 +727,18 @@ CLI 与桌面宿主一致：driver 返回 `Err` 时，在关闭事件通道、�
 `TaskPlan::validate(&AgentRegistry) -> Result<ValidatedPlan>` 拒绝重复 id、未知 agent、重复/缺失/自身依赖和环；返回按输入顺序稳定排列的拓扑执行批次。每个批次仅包含依赖在此前批次已完成的任务。该结果仅是静态建议，不创建会话、数据库记录、worktree 或子进程；实际安装探测、工作目录及审批在 P3-4 执行入口重新校验。计划自身不携带权限豁免或 shell 命令执行配置，不能越过既有审批管线。
 
 CLI `supercode plan validate <file>` 读取不超过 1 MiB 的 JSON，按合并后的注册表验证，输出 `ValidatedPlan { plan, batches }` JSON；坏计划返回非零并给出字段/依赖诊断。不调用 LLM，不访问 SQLite，不执行 agent。P3-2 将复用同一契约校验模型响应。
+
+
+### P3-2 — 直连 LLM 计划生成
+
+`commander::llm::LlmConfig { endpoint, model, api_key_env, timeout_secs }` 使用严格 JSON，配置文件默认 `~/.supercode/commander.json`，CLI `--config` 可指定独立文件。endpoint 是完整 chat-completions URL（不自行拼接路径），要求 HTTPS 或字面 loopback HTTP，禁止 URL 用户信息、query、fragment；model/key 环境变量名非空，变量名只含 ASCII 字母/数字/下划线且首位不是数字。timeout_secs 默认 60，范围 1～300。配置和用户目标分别限制 64 KiB，响应及计划限制 1 MiB；只读普通文件，无 key 字段。
+
+`LlmClient::from_config(config)` 在运行时读取 api_key_env，密钥不参与 Debug/序列化，只用于 sensitive Bearer 头；不修改任何 agent 配置。客户端使用 reqwest 0.13.5（锁文件已有），JSON 与 rustls 特性；禁重定向和自动重试，避免凭据转发及非显式重计费。
+
+`generate_plan(objective, registry, cancel) -> Result<ValidatedPlan>` 一次非流式 POST `{model,stream:false,messages:[system,user]}`。系统提示给出 P3-1 精确 JSON 契约及可执行 ACP agent 名单；用户目标是独立 user 内容，不读取项目文件。响应必须有唯一 choice、finish_reason=stop、assistant message.content 字符串，禁止 tool_calls/refusal；content 必须为裸 JSON（无 Markdown），再走 TaskPlan::validate，输出 objective 固定为原用户目标。未知 agent、非法 DAG 等不进入执行。
+
+从发送到读取全部响应实行同一 deadline 和 CancellationToken；超时、取消、HTTP 错误、非法响应均不输出服务端原文、URL、key 或目标内容。计划验证错误也不回显模型文本，只给分类诊断。HTTP 失败只包含状态码，不读取错误体。不访问 SQLite、不启动 agent、不自动执行计划。
+
+CLI `supercode plan generate <objective> [--config <file>]` 输出与 validate 相同的 JSON，Ctrl-C 取消返回非零。P3-2 仅生成计划，后续确认和派单由 P3-3/4/6 实现。真实模型验收必须使用用户指定的 provider/model 和 key 来源；fixture 不替代真实调用，缺少可直连访问方式时保留任务分支待验收。
+
+HTTP 客户端配置参考 [reqwest ClientBuilder](https://docs.rs/reqwest/0.13.5/reqwest/struct.ClientBuilder.html)。
