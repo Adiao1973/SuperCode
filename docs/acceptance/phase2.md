@@ -90,3 +90,7 @@ ZCode 0.16.9 ✓
 用户明确要求“把这个跳过吧，提前发布”，批准将 P2-6 从 v0.3.0 出口排除。之前的待补验/禁止发布结论属于原范围的预验收阶段，本节替代该发布结论。P2-6 未通过真实验收，不合入本版，发布版 ZCode 保持禁选；不存在以 fixture 或桌面成功冒充 CLI 验收。实际账号为 Start Plan，独立分支记录了 CLI 账号路径限制和临时默认模型试验。
 
 本版发布范围为已验收 P2-1～5、P2-7～9，以及上述 ACP 并行写读/续聊、OpenCode 冒烟、release 桌面组合检查。统一 Rust、前端和 Tauri 版本为 0.3.0；最终自动检查与安装包结果见下方归档。
+
+最终 `just verify` 退出 0：前端构建、fmt、严格 clippy 全通过；core 70 passed / 1 ignored，ACP 集成 4 passed，desktop 6 passed，CLI 失败落库集成 1 passed。此前真实 ACP/桌面验收证据复用，不把本次版本更新宣称为重新执行全部模型任务。
+
+`just build` 退出 0，生成 SuperCode.app 与 SuperCode_0.3.0_aarch64.dmg；安装包源代码提交 c530c17，大小和 SHA-256 见 phase2-artifacts.json。独立 macOS release 测试应用原生 AX 确认 SuperCode v0.3.0、历史六会话恢复、ZCode（尚未接入）禁选，无 dev 后缀。P2-10 按用户批准的范围闭环：任务 --no-ff 合 dev，dev 完整检查后创建 annotated v0.3.0 tag，再 --no-ff 合 main；安装包本地交付，不包含远程上传。

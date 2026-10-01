@@ -1,19 +1,22 @@
 {
   "date": "2026-10-01",
-  "status": "acceptance-preview-not-v0.3.0",
-  "source_code_commit": "d0b585d",
-  "version": "0.2.0",
+  "status": "release-v0.3.0-user-approved-scope",
+  "source_code_commit": "c530c17",
+  "version": "0.3.0",
   "platform": "macOS aarch64",
+  "excluded_tasks": [
+    "P2-6"
+  ],
   "artifacts": [
     {
       "path": "target/release/bundle/macos/SuperCode.app/Contents/MacOS/supercode-desktop",
-      "bytes": 16394368,
-      "sha256": "f475204dd8b05426ab242ec75939c2f7057ab0c16f0fe26ee37678c45733b6e3"
+      "bytes": 16361344,
+      "sha256": "77bd4cf9a7fca5ce436e3799b0605d98cf4ef3def31d7d95999cdddc056c0130"
     },
     {
-      "path": "target/release/bundle/dmg/SuperCode_0.2.0_aarch64.dmg",
-      "bytes": 8615983,
-      "sha256": "e69bc8a00b3cecf9bf3dc960332843740ef3fe4ce04cbb46dbd570c831c6920f"
+      "path": "target/release/bundle/dmg/SuperCode_0.3.0_aarch64.dmg",
+      "bytes": 8610201,
+      "sha256": "c1b07e8316fb2b0ffc6f5634bc6b7e469b9d78a062aa29c8c18071db7e360e7b"
     }
   ]
 }
