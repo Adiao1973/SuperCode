@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
+import { SessionTerminal } from "./SessionTerminal";
 import { PendingCard } from "@/components/PendingCard";
 import { CopyableBlock } from "@/components/CopyableBlock";
 import {
@@ -89,6 +90,7 @@ export function RunConsole({ session, dispatch }: RunConsoleProps) {
   const { draft, stream } = session;
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  const [terminalOpen, setTerminalOpen] = useState(false);
   const [agents, setAgents] = useState<AgentRow[]>([]);
   const [agentsError, setAgentsError] = useState<string | null>(null);
   const [nodeEnv, setNodeEnv] = useState<NodeEnvReport | null>(null);
@@ -231,6 +233,7 @@ export function RunConsole({ session, dispatch }: RunConsoleProps) {
   // Cmd/Ctrl+R 运行、Cmd/Ctrl+. 停止：焦点免疫（仅作用于当前活动会话）
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      if ((e.target as HTMLElement | null)?.closest("[data-session-terminal]")) return;
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "r") {
         e.preventDefault();
         void start();
@@ -541,8 +544,11 @@ export function RunConsole({ session, dispatch }: RunConsoleProps) {
         </p>
       )}
 
+      {terminalOpen && <SessionTerminal key={draft.cwd} cwd={draft.cwd} onClose={() => setTerminalOpen(false)} />}
+
       {/* 状态条 */}
       <div className="text-muted-foreground flex h-8 shrink-0 items-center gap-3 border-t px-5 text-[11px]">
+        <button type="button" className="hover:text-primary" disabled={terminalOpen || !draft.cwd.trim()} onClick={() => setTerminalOpen(true)}>打开终端</button>
         {stream.running ? (
           <>
             <Loader2 className="text-primary size-3 animate-spin" />
