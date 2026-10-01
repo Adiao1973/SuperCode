@@ -159,3 +159,5 @@
 - **P2-8 验收（2026-10-01）**：看板鼠标/键盘跨列跨空间拖拽、原子保存与失败回滚、重启恢复通过；绑定会话及 worktree 原执行归属保持，移动后真实 OpenCode 运行成功。`just verify` 全绿（core 70/协议 4/desktop 3，1 既有 ignored）。新增 dnd-kit core 6.3.1，无 schema 变更；完整留痕见 `docs/acceptance/p2-8.md`。下一步 P2-9，P2-6 继续延期补验。
 
 - **P2-9 验收（2026-10-01）**：会话内嵌 xterm 6.0 + portable-pty，实际 cwd/worktree、中文/ANSI、Ctrl-C、resize、自然退出、关闭/切换/应用退出进程回收、重启历史均通过 macOS WebKit 核对。`just verify` 全绿（core 70/协议 4/desktop 6，1 既有 ignored），修复 PTY 句柄释放顺序与 xterm 旧版销毁回调异常，无 schema 变更。详见 `docs/acceptance/p2-9.md`。下一步 P2-10 整体验收，P2-6 仍待有效 key 补验，Phase 2 发布出口尚未达成。
+
+- **P2-10 预验收（2026-10-01，未发布）**：独立任务分支完成全部自动检查、三家 ACP 并行真实写读/续聊、OpenCode 模型冒烟与 macOS release 打包/组合核对；修复 CLI 协议失败历史仍 active 和 release 硬编码版本标识。结果见 `docs/acceptance/phase2.md`。P2-6 仍未通过真实补验，故保留 P2-10 分支，不标完整验收、不合 dev/main、不创建 v0.3.0 tag。
