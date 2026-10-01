@@ -9,19 +9,19 @@
 1. `just verify`：前端 build、fmt、clippy、全部测试通过；真实环境 ignored 联检另行执行；真实模型冒烟用独立 cwd 的 CLI run。
 2. `supercode detect`：注册表五个内置 agent 的版本/安装状态正确；自定义 CRUD 和重启证据核对 P2-2，桌面打包探测与实际运行再检查。
 3. 至少 Claude Code 和另一个 ACP agent 在独立 cwd 写入/读回唯一标记；三个以上 agent 的已验收证据齐备。CLI 使用共享新 SQLite，并行输出、agent/cwd/session 归属独立；新进程 resume 仅凭上下文复述标记。审批证据核对 P2-3/4/5 的真实内联允许与持久化，不以当前预授权放行替代人工审批证明。
-4. ZCode：真实消息/工具、无法外部审批的标注、禁用权限模式、取消、重启归属和新建提示均通过，P2-6 才能合入 dev。当前用户无有效 key、授权延期；本项明确待补验。
+4. ZCode：真实消息/工具、无法外部审批的标注、禁用权限模式、取消、重启归属和新建提示均通过，P2-6 才能合入 dev。预验收时用户无有效 key、授权延期；本项明确待补验。
 5. worktree：建/改/清扫、主目录不受影响、原项目空间归属；看板跨列跨空间/重启/绑定不变；会话终端实际 cwd、输入输出、WebKit 背景和关闭进程；核对 P2-7/8/9 自动与 macOS 证据，在 release 包再做组合核对。
 6. `just build` 生成 release `.app`/`.dmg`；独立测试数据库启动打包应用，核对注册 agent、恢复历史/agent/cwd、打开 worktree 终端、任务看板及退出清理。
-7. 发布出口：所有 Phase 2 行均已验收、完整剧本全过、dev 全绿后才更新版本至 0.3.0、annotated tag `v0.3.0`、`--no-ff` 合入 main 并生成对应版本安装包。无有效 key 不能把第 4 项记为通过，当前准备包仍保持 0.2.0，不冒充 v0.3.0。
+7. 发布出口：所有 Phase 2 行均已验收、完整剧本全过、dev 全绿后才更新版本至 0.3.0、annotated tag `v0.3.0`、`--no-ff` 合入 main 并生成对应版本安装包。无有效 key 不能把第 4 项记为通过，当时准备包保持 0.2.0，不冒充 v0.3.0。
 
-## 发布门槛
+## 原发布门槛（历史，已由最终范围调整）
 
 - P2-6 保留 `feat/p2-6-zcode-stream-json`，未合入本验收分支；不得用协议 fixture 替代真实模型验收。
 - P2-10 在发布出口未满足时保留进行中，已完成的回归/文档可归档，不创建 v0.3.0 tag，不合入 main。
 
-## 2026-10-01 当前结果
+## 2026-10-01 预验收结果（历史）
 
-**P2-10 尚未完成发布闭环。** 在 `feat/p2-10-phase2-acceptance` 完成以下预验收与修复，当前保留任务分支；不提前合入 dev/main，不打 tag。dev 基线仍是 P2-9 `9deb598`，代码修复提交 `e4235e0`（CLI 失败落库）和 `d0b585d`（实际版本标识）。
+**当时 P2-10 尚未完成发布闭环；现已按批准范围完成。** 在 `feat/p2-10-phase2-acceptance` 完成以下预验收与修复，当前保留任务分支；不提前合入 dev/main，不打 tag。dev 基线仍是 P2-9 `9deb598`，代码修复提交 `e4235e0`（CLI 失败落库）和 `d0b585d`（实际版本标识）。
 
 | 项目 | 本阶段新执行结果 | 证据范围 |
 |---|---|---|
@@ -31,7 +31,7 @@
 | 真实多 agent | ✅ Claude/Codex/MiMo 并行写读及并行 resume | 同一新库、三个独立 cwd，文件标记/暗号、agent/session/cwd 互不串台；真实审批专项证据仍见 P2-3/4/5 |
 | OpenCode 模型冒烟 | ✅ 临时目录回复 P210-OPENCODE，EndTurn | 当前集成 CLI 真实调用；首次测试 cwd 未创建导致服务失败，后续创建目录重跑通过 |
 | worktree/看板/终端 | ✅ 专项证据 + release 组合复核 | P2-7/8/9；打包历史原 cwd、终端中文/ANSI、看板拖拽保存和重启/跳转绑定、终端退出进程回收 |
-| macOS 打包 | ✅ `just build` 退出 0，.app/.dmg 生成 | 版本保持 0.2.0 的验收准备包，不是已发布的 v0.3.0；大小/校验和见 phase2-artifacts.json |
+| macOS 打包 | ✅ `just build` 退出 0，.app/.dmg 生成 | 版本保持 0.2.0 的验收准备包，不是已发布的 v0.3.0；正式 0.3.0 的大小/校验和见 phase2-artifacts.json |
 | ZCode 真实支持 | ⏳ 延期补验 | P2-6 无有效 key，源码保留独立分支；当前 dev/release 选择器仍禁选尚未接入的 ZCode，不满足受限支持验收 |
 | 版本/tag/main | ⏳ 未执行 | 全部 Phase 2 已验收的流程门槛未满足 |
 
@@ -74,7 +74,7 @@ ZCode 0.16.9 ✓
 
 完整自动输出：`/tmp/sc-p210-verify-final.log`；构建输出：`/tmp/sc-p210-build-final.log`；CLI 回归：`/tmp/sc-p210-regression.log`。临时日志不是长期凭证，关键结果与产物校验和已归档本文。
 
-## 后续闭环步骤
+## 原范围的后续步骤（历史，已由最终发布范围取代）
 
 1. 在 ZCode 自身配置有效模型，按 P2-6 剧本补真实写读/取消/桌面受限能力/重启验收；用户无需把 key 交给 SuperCode。
 2. 在已更新 dev 基线上集成并复验 P2-6 和本 P2-10 分支，重跑全部自动与 Phase 2 剧本，按流程把任务合回 dev。
@@ -82,7 +82,7 @@ ZCode 0.16.9 ✓
 
 ### 补验重新启动（2026-10-01）
 
-用户已在 ZCode 配置 GLM 5.3 Flash，原有效模型阻塞解除。开始重新执行 P2-6 真实验收；本节之前的未发布结论记录的是此前预验收阶段，最终发布结论以补验后记录为准。
+用户已在 ZCode 配置 GLM 5.3 Flash，桌面模型配置已可用。开始重新执行 P2-6 真实验收；本节之前的未发布结论记录的是此前预验收阶段，最终发布结论以补验后记录为准。
 
 
 ## 最终发布范围（2026-10-01，用户授权）
@@ -94,3 +94,5 @@ ZCode 0.16.9 ✓
 最终 `just verify` 退出 0：前端构建、fmt、严格 clippy 全通过；core 70 passed / 1 ignored，ACP 集成 4 passed，desktop 6 passed，CLI 失败落库集成 1 passed。此前真实 ACP/桌面验收证据复用，不把本次版本更新宣称为重新执行全部模型任务。
 
 `just build` 退出 0，生成 SuperCode.app 与 SuperCode_0.3.0_aarch64.dmg；安装包源代码提交 c530c17，大小和 SHA-256 见 phase2-artifacts.json。独立 macOS release 测试应用原生 AX 确认 SuperCode v0.3.0、历史六会话恢复、ZCode（尚未接入）禁选，无 dev 后缀。P2-10 按用户批准的范围闭环：任务 --no-ff 合 dev，dev 完整检查后创建 annotated v0.3.0 tag，再 --no-ff 合 main；安装包本地交付，不包含远程上传。
+
+发布操作已完成：annotated tag `v0.3.0` 指向 dev 合并提交 `6d43e7b`；main 发布合并提交 `045de1f`。dev 最终 `just verify` 退出 0（`/tmp/sc-v030-dev-verify.log`）。main 与 tag 的发布文件树一致，安装包 SHA-256 与归档一致。远程推送与 GitHub Release 上传尚未执行。

@@ -134,7 +134,7 @@
 - **P2-2 验收**：设置页「Agent 管理」区块实机核对（用户截图）——五条注册 agent 列出；OpenCode ✓1.18.30 / Claude Code ✓0.81.2 / Codex ✓adapter 1.13.1；MiMo/ZCode 未安装项展示琥珀徽标 + 可复制安装指引；自定义 CRUD 写 `~/.supercode/agents.json` 重启保留。`just verify` 全绿（core 61 + desktop 2 = 63 测试）。
 - **P2-2 审查修复（独立审查发现 critical）**：`AgentInput` 嵌套入参 casing 不匹配——Tauri 仅映射顶层命令形参，嵌套 struct 走 serde 原样匹配，前端 camelCase vs Rust snake_case 导致 add/update_agent 反序列化必失败。修复：`#[serde(rename_all = "camelCase")]` + 2 条 serde JSON 回归测锁定字段名；前端 id 校验收紧 `^[a-z0-9-]+$` 与后端一致。复审 PASS。**教训**：项目首个嵌套命令入参即踩坑——嵌套 IPC 入参必须显式 rename_all 并配 serde 级单测（`just verify` 不覆盖 IPC 反序列化层）。
 - **P2-2 偏差（zcode 误报未安装，用户实机发现）**：本机装的是 **ZCode.app 桌面版**，CLI 嵌在 `/Applications/ZCode.app/Contents/Resources/glm/zcode.cjs`（Node 脚本，0.16.9），**不注册 PATH 命令**——`zcode --version` 失败故判未安装（探测逻辑正确，安装形态特殊）。处理：安装引导改为可复制软链命令（`ln -sf …/zcode.cjs ~/.local/bin/zcode`）；实机验证软链后 `detect` → `ZCode 0.16.9 ✓`。与 P1-10 GUI PATH 问题同类：环境形态差异由产品引导兜底。
-- **P2-6 实测更正**：0.16.9 help 遗漏 output-format，参数校验实际支持 stream-json；help 不能作为唯一判断依据。实现保留在 P2-6 分支，用户无有效 key，授权延期真实验收。
+- **P2-6 实测更正（2026-09-30 历史）**：0.16.9 help 遗漏 output-format，参数校验实际支持 stream-json；help 不能作为唯一判断依据。实现保留在 P2-6 分支，用户无有效 key，授权延期真实验收。
 
 ## Phase 3 — AI 指挥官与 Windows（概要）
 
@@ -163,3 +163,5 @@
 - **P2-10 预验收（2026-10-01，未发布）**：独立任务分支完成全部自动检查、三家 ACP 并行真实写读/续聊、OpenCode 模型冒烟与 macOS release 打包/组合核对；修复 CLI 协议失败历史仍 active 和 release 硬编码版本标识。结果见 `docs/acceptance/phase2.md`。P2-6 仍未通过真实补验，故保留 P2-10 分支，不标完整验收、不合 dev/main、不创建 v0.3.0 tag。
 
 - **v0.3.0 范围调整（2026-10-01）**：用户明确授权跳过 P2-6 并提前发布。ZCode Start Plan 桌面可用但 standalone CLI 未接入该账号路径，默认模型临时试验无效；P2-6 不伪记通过、不合入本版。P2-10 以 P2-1～5、P2-7～9 及整体回归作为本版出口，版本统一 0.3.0，annotated tag 后 dev 合入 main。此前预验收的禁止发布结论被本次范围授权取代。
+
+- **v0.3.0 发布落地**：tag 指向 `6d43e7b`，main 合并为 `045de1f`；本地安装包与校验和已归档，远程推送和 GitHub Release 尚未执行。下一阶段为 Phase 3 细化，P2-6 独立延期补验。
