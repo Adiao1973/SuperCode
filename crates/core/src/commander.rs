@@ -1,5 +1,6 @@
 //! Static commander plan contract; validation never executes a task.
 pub mod llm;
+pub mod scheduler;
 
 use std::collections::{HashMap, HashSet};
 
