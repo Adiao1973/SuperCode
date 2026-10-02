@@ -753,3 +753,7 @@ Store::save_commander_config/get_commander_config 校验后原子替换单例，
 默认 `plan generate` 从 Store 读取本机配置；显式 --config 使用独立普通文件，便于隔离验收。凭据仍由运行进程的环境变量提供；桌面 key 来源可在后续宿主凭据设置扩展，本任务不读取现有 agent 登录 token。
 
 - **P3-2 验证状态（2026-10-01）**：接口、SQLite 0005、桌面设置和 HTTP/CLI 契约已通过自动及 macOS 检查，用户选定 MiMo 的真实 API 验收待连接信息；只保留任务分支，不宣称闭环完成。
+
+#### P3-2 模型发现与配置反馈（2026-10-02）
+
+桌面设置突出展示已保存模型，明确“配置已保存”不等于推理验收通过。新增 list_commander_models(config) IPC：使用表单中的 endpoint 与环境变量凭据，允许模型名为空；仅对同源、同路径前缀的 chat/completions 推导 models 地址并 GET，不跟随重定向、不探测其他供应商。超时沿用配置，响应限制 1 MiB、最多 4096 模型；严格解析 data[].id、排序去重，不回显响应原文。列表仅内存保存，选择后需显式保存，不覆盖手填模型；列表不保证计费权限或文本规划能力。缺少 key、接口不支持或失败时保留手填路径。MiMo 官方提供 models API 并支持 Bearer： https://mimo.mi.com/docs/zh-CN/api/model/list-models 。

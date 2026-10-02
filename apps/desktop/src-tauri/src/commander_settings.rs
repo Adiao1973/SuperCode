@@ -1,5 +1,5 @@
 use super::AppState;
-use supercode_core::commander::llm::LlmConfig;
+use supercode_core::commander::llm::{LlmClient, LlmConfig};
 #[tauri::command]
 pub async fn get_commander_config(
     state: tauri::State<'_, AppState>,
@@ -36,4 +36,13 @@ mod tests {
         input["api_key"] = serde_json::json!("never-store-test-key");
         assert!(serde_json::from_value::<LlmConfig>(input).is_err());
     }
+}
+
+#[tauri::command]
+pub async fn list_commander_models(config: LlmConfig) -> Result<Vec<String>, String> {
+    let key = std::env::var(&config.api_key_env)
+        .map_err(|_| "Key 环境变量未设置；请从设置过变量的终端启动应用".to_string())?;
+    LlmClient::discover_models(config, key)
+        .await
+        .map_err(|e| e.to_string())
 }

@@ -922,6 +922,7 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             commander_settings::get_commander_config,
+            commander_settings::list_commander_models,
             commander_settings::save_commander_config,
             terminal::open_terminal,
             terminal::write_terminal,

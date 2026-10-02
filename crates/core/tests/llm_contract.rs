@@ -58,7 +58,7 @@ async fn server_at_phase(
                             .strip_prefix("content-length: ")
                             .and_then(|s| s.parse::<usize>().ok())
                     })
-                    .unwrap();
+                    .unwrap_or(0);
                 if request.len() >= end + 4 + length {
                     break;
                 }
@@ -264,4 +264,70 @@ fn missing_or_malformed_credentials_fail_without_echoing_values() {
         .unwrap_err()
         .to_string();
     assert!(!error.contains(KEY));
+}
+
+#[tokio::test]
+async fn model_discovery_uses_same_origin_and_sorts_without_requiring_model() {
+    let (endpoint, task) = server(
+        "200 OK",
+        json!({"data":[{"id":"z"},{"id":"a"},{"id":"z"}]}).to_string(),
+        0,
+    )
+    .await;
+    let mut cfg = config(endpoint);
+    cfg.model.clear();
+    let models = LlmClient::discover_models(cfg, KEY.to_string())
+        .await
+        .unwrap();
+    assert_eq!(models, vec!["a", "z"]);
+    let request = String::from_utf8(task.await.unwrap()).unwrap();
+    assert!(request.starts_with("GET /v1/models HTTP/1.1"));
+    assert!(request.contains(&format!("authorization: Bearer {KEY}")));
+}
+
+#[tokio::test]
+async fn model_discovery_rejects_bad_responses_without_echoing_secrets() {
+    for (status, body) in [
+        ("401 Unauthorized", KEY.to_string()),
+        ("200 OK", KEY.to_string()),
+        ("200 OK", json!({"data":[{"id":""}]}).to_string()),
+        ("302 Found", KEY.to_string()),
+    ] {
+        let (endpoint, task) = server(status, body, 0).await;
+        let error = LlmClient::discover_models(config(endpoint), KEY.to_string())
+            .await
+            .unwrap_err()
+            .to_string();
+        assert!(!error.contains(KEY));
+        task.await.unwrap();
+    }
+}
+
+#[tokio::test]
+async fn model_discovery_bounds_body_items_and_timeout() {
+    for body in [
+        "x".repeat(1024 * 1024 + 1),
+        json!({"data":vec![json!({"id":"a"});4097]}).to_string(),
+    ] {
+        let (endpoint, task) = server("200 OK", body, 0).await;
+        assert!(
+            LlmClient::discover_models(config(endpoint), KEY.to_string())
+                .await
+                .is_err()
+        );
+        // Client may close immediately upon oversized Content-Length.
+        let _ = task.await;
+    }
+    let (endpoint, task) = server("200 OK", json!({"data":[]}).to_string(), 1500).await;
+    let error = LlmClient::discover_models(config(endpoint), KEY.to_string())
+        .await
+        .unwrap_err()
+        .to_string();
+    assert!(error.contains("超时"));
+    task.abort();
+    assert!(
+        LlmClient::discover_models(config("https://example.com/custom".into()), KEY.to_string())
+            .await
+            .is_err()
+    );
 }

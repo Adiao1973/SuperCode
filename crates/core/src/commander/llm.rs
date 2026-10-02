@@ -143,6 +143,76 @@ impl LlmClient {
             timeout: Duration::from_secs(config.timeout_secs),
         })
     }
+    /// Read-only provider catalog; returned ids do not prove inference permission.
+    pub async fn discover_models(mut config: LlmConfig, key: String) -> Result<Vec<String>> {
+        if config.model.is_empty() {
+            config.model = "catalog-query".into();
+        }
+        let client = Self::new(config, key)?;
+        let mut url = client.endpoint.clone();
+        let prefix = url
+            .path()
+            .strip_suffix("/chat/completions")
+            .ok_or_else(|| invalid("模型查询需要以 /chat/completions 结尾的 endpoint"))?;
+        let path = format!("{prefix}/models");
+        url.set_path(&path);
+        let request = async {
+            let mut response = client
+                .http
+                .get(url)
+                .header(AUTHORIZATION, client.authorization.clone())
+                .send()
+                .await
+                .map_err(|_| invalid("模型列表请求失败"))?;
+            if !response.status().is_success() {
+                return Err(invalid(&format!(
+                    "模型列表 HTTP 状态 {}；可继续手填模型",
+                    response.status().as_u16()
+                )));
+            }
+            if response
+                .content_length()
+                .is_some_and(|n| n > MAX_PLAN_BYTES)
+            {
+                return Err(invalid("模型列表超过 1 MiB"));
+            }
+            let mut bytes = Vec::new();
+            while let Some(chunk) = response
+                .chunk()
+                .await
+                .map_err(|_| invalid("模型列表读取失败"))?
+            {
+                if bytes.len() as u64 + chunk.len() as u64 > MAX_PLAN_BYTES {
+                    return Err(invalid("模型列表超过 1 MiB"));
+                }
+                bytes.extend_from_slice(&chunk);
+            }
+            let value: Value =
+                serde_json::from_slice(&bytes).map_err(|_| invalid("模型列表不是合法 JSON"))?;
+            let data = value["data"]
+                .as_array()
+                .filter(|items| items.len() <= 4096)
+                .ok_or_else(|| invalid("模型列表格式无效或超过 4096 项"))?;
+            let mut models = Vec::new();
+            for item in data {
+                let id = item["id"]
+                    .as_str()
+                    .filter(|id| {
+                        !id.trim().is_empty()
+                            && id.len() <= 1024
+                            && !id.chars().any(char::is_control)
+                    })
+                    .ok_or_else(|| invalid("模型列表含无效模型 ID"))?;
+                models.push(id.to_string());
+            }
+            models.sort();
+            models.dedup();
+            Ok(models)
+        };
+        tokio::time::timeout(client.timeout, request)
+            .await
+            .map_err(|_| CoreError::Timeout("模型列表请求超时".into()))?
+    }
     pub async fn generate_plan(
         &self,
         objective: &str,

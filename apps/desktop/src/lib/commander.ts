@@ -13,3 +13,7 @@ export function getCommanderConfig(): Promise<CommanderConfig | null> {
 export function saveCommanderConfig(config: CommanderConfig): Promise<void> {
   return invoke("save_commander_config", { config });
 }
+
+export function listCommanderModels(config: CommanderConfig): Promise<string[]> {
+  return invoke("list_commander_models", { config });
+}

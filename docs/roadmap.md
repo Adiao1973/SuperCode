@@ -181,3 +181,5 @@ P3-1 详细验收见 `docs/acceptance/p3-1.md`。后续各项在动工前继续�
 - **P3-1 验收（2026-10-01）**：完成严格版本化任务计划契约、agent/依赖 DAG 校验、稳定拓扑批次及 `plan validate` CLI。`just verify` 全绿（core 70 + 新计划集成 4、ACP 4、desktop 6、CLI 集成 2；1 既有 ignored），真实命令示例输出 [[research], [implement, review]]。不启动 agent、不访问模型、无数据库迁移；已有 serde_json 提升为 CLI 运行依赖。详见 `docs/acceptance/p3-1.md`。下一步 P3-2，直连 LLM 客户端与配置。
 
 - **P3-2 实施（2026-10-01，待真实模型验收）**：直连 Chat Completions 计划生成、SQLite 本机连接配置、桌面设置、CLI generate 已完成。`just verify` 99 passed / 1 ignored，macOS 设置保存/失败保留旧值/重启恢复通过。用户选择 MiMo，允许连接信息稍后提供且不得上传 GitHub；真实模型尚未调用，保留 feat/p3-2-direct-llm，不合 dev/main、不发布。详见 `docs/acceptance/p3-2.md`。
+
+- **P3-2 设置优化（2026-10-02）**：突出已保存模型与未保存状态，增加同源模型目录查询和下拉选择；保留手填及显式保存。`just verify` 102 passed / 1 ignored，macOS 隔离 fixture 查询/选择/保存/清除旧目录通过。用户已自行保存真实配置，未读取或上传真实连接信息与 key；真实 MiMo 计划验收仍待完成。
