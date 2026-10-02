@@ -102,7 +102,7 @@ cargo run -p supercode-cli -- plan generate '为待办应用提出开发计划�
 cargo run -p supercode-cli -- plan generate '设计任务计划' --config /tmp/commander.json
 ```
 
-`docs/examples/commander-config.json` 只包含占位值。P3-1～P3-3 已验收并合入 dev，真实 MiMo App/CLI 计划生成通过；尚未包含在 v0.3.0 安装包。计划持久化与状态机已实现，ACP 自动派单仍待 P3-4。
+`docs/examples/commander-config.json` 只包含占位值。P3-1～P3-4 已验收并合入 dev，真实 MiMo App/CLI 计划生成通过；尚未包含在 v0.3.0 安装包。计划持久化、状态机与核心 ACP 批次调度已实现并完成真实双 agent 验收。产品 CLI 汇总入口（P3-5）和桌面计划执行入口（P3-6）尚未实现。
 
 ## 架构与文档
 

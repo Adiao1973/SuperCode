@@ -1,7 +1,7 @@
 # SuperCode 架构设计文档
 
 > 本文档是 SuperCode 接口设计的**单一事实源**：任何接口 / 数据模型变更，先改本文档再改代码。
-> 更新：2026-10-02；现行 dev 契约截至 P3-3。当前任务状态见 [roadmap](roadmap.md)，历史演进见 [快照](history/architecture-through-p3-3.md)。
+> 更新：2026-10-02；现行 dev 契约截至 P3-4。当前任务状态见 [roadmap](roadmap.md)，历史演进见 [快照](history/architecture-through-p3-3.md)。
 
 > v0.3.0 已发布：ACP 路径支持 OpenCode、Claude Code、Codex、MiMo；StreamJsonDriver 是延期设计，未包含在本版。
 
@@ -703,7 +703,7 @@ CLI 与桌面宿主一致：driver 返回 `Err` 时，在关闭事件通道、�
 
 内置 Claude 行的 installed_version 仍表示 ACP 适配器版本，不能由 claude --version 替代。新增 cli_version 可空字段，仅原样内置 Claude 命令另行并发探测 claude --version；自定义命令不套用此检测。定义列表（不探测）置 null。UI 单独展示 CLI 已检测版本与 ACP 已检测/未就绪；失败包含缺少程序、退出失败与超时等原因，因此统一“未检测到/未就绪”而非断言未安装。不读取登录或 key，不以版本结果保证认证可用。
 
-## 12. 指挥官契约（dev，截至 P3-3）
+## 12. 指挥官契约（dev，截至 P3-4）
 
 ### P3-1 — 指挥官计划契约
 
@@ -742,13 +742,13 @@ App 示例验证读取已保存配置与凭据，固定待办应用目标；每�
 
 读取/重开库只恢复记录，绝不自动执行；独占调度器启动时可显式 recover_commander_runs 将 running 计划改 interrupted，running 任务 interrupted、pending cancelled；draft 和既有终态不改。不能在 Store::open 自动执行恢复（其他连接可能仍有活跃任务）。P3-4 接入调度器后负责调用恢复、派单和回收进程。
 
-### P3-4 — ACP 派单与批次调度（实现中）
+### P3-4 — ACP 派单与批次调度（已集成 dev）
 
 `commander::scheduler::Scheduler` 持有 Store 和注册表；`execute(run_id, DispatchOptions, BrokerFactory, broadcast::Sender<DispatchEvent>, CancellationToken)` 显式执行已确认 draft 计划，返回最终 CommanderRun。Options 为 max_concurrency（1～16）与 workspace_id；cwd 来自不可变计划记录。执行前重校验计划、目录存在/绝对路径、空间存在与各实际 ACP 适配器版本探测。预检失败保持 draft、无会话/任务运行；CAS draft→running 是跨调用唯一认领，不重跑 running/终态。
 
 按 P3-1 稳定拓扑批次派单，同批受并发上限约束，全部结束后才进入下一批；失败后代由 P3-3 标 skipped，独立分支继续。每任务独立本机会话 UUID、AcpDriver、新建 ACP 会话、SessionRecorder 与 broker；事件信封包含 run_id/task_id/session_id/agent_id，输出广播不阻塞执行，SQLite 是持久化事实源。原 cwd、workspace_id、agent_id、审批管线保持。共享目录不自动创建 worktree；此阶段只核心库及验收示例，不新增产品 CLI/UI（P3-5/6）。
 
-BrokerFactory 为每个派单创建独立 ApprovalBroker，宿主可事先订阅接入人工审批；调度器使用 resolve_fail_closed，无订阅的兜底拒绝，显式 ask 仍保持队列语义。取消联动 reject_all_pending，裁决单独绑定本机会话写 approvals，不借计划提升权限。SessionStarted 经可返回错误的 recorder 写入后绑定任务 session UUID；driver 错误补 DriverError，落库失败使任务失败，不宣称成功。仅 EndTurn 且无持久化错误视为 succeeded；其它停止原因失败，计划取消则保留已有完成结果，其余 cancelled。
+BrokerFactory 为每个派单创建独立 ApprovalBroker，宿主可事先订阅接入人工审批；调度器使用 resolve_fail_closed，无订阅的兜底拒绝，显式 ask 仍保持队列语义。取消联动 reject_all_pending，完成拒绝解析后以 <cancelled> 拒绝规则留痕，裁决单独绑定本机会话写 approvals，不借计划提升权限。SessionStarted 经可返回错误的 recorder 写入后绑定任务 session UUID；driver 错误补 DriverError，落库失败使任务失败，不宣称成功。仅 EndTurn 且无持久化错误视为 succeeded；其它停止原因失败，计划取消则保留已有完成结果，其余 cancelled。
 
 取消停止新派单、取消全部自有 driver 并等待协议/进程清理及 recorder 排空，然后原子取消计划；不得杀无关进程。执行 future 意外被丢弃时取消 token，剩余运行记录由独占宿主显式 recover_commander_runs 恢复为 interrupted；普通读取/另一执行调用不自动恢复，以免打断仍活跃计划。P3-4 不引入后台自动恢复或自动重跑。
 
@@ -758,5 +758,5 @@ BrokerFactory 为每个派单创建独立 ApprovalBroker，宿主可事先订阅
 
 | 日期 | 变更 | 证据 |
 |---|---|---|
-| 2026-10-02 | P3-1～3 计划契约、直连 LLM/本机凭据与执行状态持久化已集成 dev | [验收索引](acceptance/README.md) |
+| 2026-10-02 | P3-1～4 计划契约、直连 LLM/本机凭据与执行状态持久化已集成 dev | [验收索引](acceptance/README.md) |
 | 2026-10-02 | 文档结构整理，替代过时的环境变量唯一来源与裸 JSON 唯一输出约定 | [整理验收](acceptance/docs-alignment.md) |
