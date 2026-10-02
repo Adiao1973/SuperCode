@@ -8,7 +8,7 @@ use crate::{
     events::{AgentEvent, StopReason},
     registry::{AgentDefinition, AgentRegistry},
 };
-use futures::{StreamExt, stream::FuturesUnordered};
+use futures::{FutureExt, StreamExt, stream::FuturesUnordered};
 use std::{collections::HashMap, path::PathBuf, sync::Arc};
 use tokio::sync::{broadcast, mpsc, watch};
 use tokio_util::sync::CancellationToken;
@@ -275,14 +275,25 @@ async fn run_task(
                 let request_session = request.session_id.clone();
                 let request_tool = request.tool_call_id.clone();
                 let mut decisions = broker.subscribe_decisions();
-                let decision = tokio::select! {biased; _=token.cancelled()=>{
-                    broker.reject_all_pending().await;
-                    while let Ok(record)=decisions.try_recv() {
-                        if record.request.session_id==request_session && record.request.tool_call_id==request_tool {store.insert_approval(session,&record).await?;break;}
-                    }
-                    return Err(invalid("审批已取消"));
-                }, result=broker.resolve_fail_closed(request)=>result?};
-                let record = loop {
+                let rejection = request
+                    .options
+                    .iter()
+                    .find(|o| !o.kind.is_allow())
+                    .map(|o| o.option_id.clone());
+                let resolution = broker.resolve_fail_closed(request);
+                tokio::pin!(resolution);
+                let mut cancelled_approval = false;
+                let mut decision = tokio::select! {biased;
+                    _=token.cancelled()=>{
+                        cancelled_approval=true;
+                        broker.reject_all_pending().await;
+                        match resolution.as_mut().now_or_never() {
+                            Some(result)=>result?,
+                            None=>{broker.reject_all_pending().await;resolution.await?}
+                        }
+                    },result=&mut resolution=>result?
+                };
+                let mut record = loop {
                     let record = decisions
                         .try_recv()
                         .map_err(|_| invalid("审批裁决记录缺失"))?;
@@ -292,6 +303,15 @@ async fn run_task(
                         break record;
                     }
                 };
+                if cancelled_approval {
+                    decision.option_id =
+                        rejection.ok_or_else(|| invalid("审批取消缺少拒绝选项"))?;
+                    record.decision = decision.clone();
+                    record.source = crate::approval::DecisionSource::Rule {
+                        pattern: "<cancelled>".into(),
+                        effect: crate::approval::RuleEffect::Deny,
+                    };
+                }
                 store.insert_approval(session, &record).await?;
                 Ok(decision)
             })
