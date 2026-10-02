@@ -266,6 +266,24 @@ impl AgentRegistry {
     }
 
     /// 全部条目（内置顺序 + 用户新增）
+    /// An in-memory planning allowlist, never writes user registry settings.
+    pub fn restricted(&self, ids: &[String]) -> Result<Self> {
+        if ids.is_empty() {
+            return Err(crate::error::CoreError::Protocol(
+                "规划 agent 名单不能为空".into(),
+            ));
+        }
+        let mut entries = Vec::new();
+        for id in ids {
+            let def = self.find(id)?;
+            crate::orchestrator::validate_launch(def, None, ".")?;
+            if !entries.iter().any(|d: &AgentDefinition| d.id == def.id) {
+                entries.push(def.clone());
+            }
+        }
+        Ok(Self { entries })
+    }
+
     pub fn entries(&self) -> &[AgentDefinition] {
         &self.entries
     }
