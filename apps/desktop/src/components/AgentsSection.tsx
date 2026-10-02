@@ -254,7 +254,12 @@ export function AgentsSection() {
                 </Badge>
               ) : (
                 <Badge variant="outline" className="border-amber-500/50 text-amber-500 text-[10px]">
-                  — 未安装
+                  {agent.driver_kind === "acp" ? "ACP 未就绪（探测失败或超时）" : "未检测到（失败或超时）"}
+                </Badge>
+              )}
+              {agent.cli_version && (
+                <Badge variant="outline" className="border-emerald-500/50 text-emerald-500 text-[10px]">
+                  Claude CLI 已安装 · {agent.cli_version}
                 </Badge>
               )}
               {agent.is_user_defined && (
@@ -276,9 +281,12 @@ export function AgentsSection() {
               )}
             </div>
             <p className="text-muted-foreground mt-1 font-mono text-[11px] break-all">{agent.command}</p>
+            {agent.cli_version && !agent.installed_version && (
+              <p className="text-muted-foreground mt-2 text-xs">已检测到 Claude Code。SuperCode 的 ACP 适配器尚未通过探测，请检查 Node/npx、适配器安装与 npm 网络后刷新；无需重复安装 Claude Code。</p>
+            )}
             {!agent.installed_version && (
               <div className="mt-2">
-                <CopyableBlock text={installHint(agent)} label="安装指引（可复制）" />
+                <CopyableBlock text={installHint(agent)} label={agent.driver_kind === "acp" ? "ACP 适配器安装指引（可复制）" : "安装指引（可复制）"} />
               </div>
             )}
           </div>

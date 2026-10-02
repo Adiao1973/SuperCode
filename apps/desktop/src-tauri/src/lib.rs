@@ -770,6 +770,7 @@ struct AgentRow {
     /// id 出现在用户文件（含覆盖内置）
     is_user_defined: bool,
     installed_version: Option<String>,
+    cli_version: Option<String>,
 }
 
 /// 新增/更新入参。Tauri 仅映射**顶层**命令形参（camelCase↔snake_case），
@@ -839,7 +840,13 @@ fn user_defined_ids() -> std::collections::HashSet<String> {
 }
 
 async fn probe_row(def: registry::AgentDefinition, is_user_defined: bool) -> AgentRow {
-    let installed_version = def.detect_version().await;
+    let native_probe = def.native_cli_probe();
+    let (installed_version, cli_version) = tokio::join!(def.detect_version(), async {
+        match native_probe {
+            Some(probe) => probe.detect_version().await,
+            None => None,
+        }
+    });
     AgentRow {
         id: def.id,
         display_name: def.display_name,
@@ -850,6 +857,7 @@ async fn probe_row(def: registry::AgentDefinition, is_user_defined: bool) -> Age
         capabilities: def.capabilities,
         is_user_defined,
         installed_version,
+        cli_version,
     }
 }
 
@@ -870,6 +878,7 @@ fn list_agent_definitions() -> Vec<AgentRow> {
             capabilities: def.capabilities.clone(),
             is_user_defined: user_ids.contains(&def.id),
             installed_version: None,
+            cli_version: None,
         })
         .collect()
 }

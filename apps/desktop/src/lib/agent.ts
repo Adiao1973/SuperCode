@@ -178,6 +178,8 @@ export interface AgentRow {
   /** id 出现在用户自定义文件（含覆盖内置） */
   is_user_defined: boolean;
   installed_version: string | null;
+  /** Native Claude CLI version, separate from ACP adapter readiness. */
+  cli_version: string | null;
 }
 
 /** 新增/更新自定义 agent 入参（能力位扁平化） */

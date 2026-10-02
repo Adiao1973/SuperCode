@@ -185,3 +185,5 @@ P3-1 详细验收见 `docs/acceptance/p3-1.md`。后续各项在动工前继续�
 - **P3-2 设置优化（2026-10-02）**：突出已保存模型与未保存状态，增加同源模型目录查询和下拉选择；保留手填及显式保存。`just verify` 102 passed / 1 ignored，macOS 隔离 fixture 查询/选择/保存/清除旧目录通过。用户已自行保存真实配置，未读取或上传真实连接信息与 key；真实 MiMo 计划验收仍待完成。
 
 - **P3-2 复制配置修复（2026-10-02）**：兼容 /v1 Base URL 与尾斜杠，裁剪 key 首尾空白，拒绝内部非法字符并提供重复制指引；本地 GET/POST 契约验证，`just verify` 103 passed / 1 ignored。真实 MiMo 访问仍待验收。
+
+- **设置页 Claude 状态修复（2026-10-02）**：区分已安装的 Claude CLI 与 ACP 适配器探测失败，避免误报未安装；新增 cli_version 不替代 ACP 版本。完整验证 104 passed / 1 ignored，macOS 核对通过。真实适配器 npx 启动遇到 npm ENOTEMPTY，全局安装待用户明确授权。

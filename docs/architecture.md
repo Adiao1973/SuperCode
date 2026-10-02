@@ -761,3 +761,7 @@ Store::save_commander_config/get_commander_config 校验后原子替换单例，
 #### P3-2 复制配置兼容修复（2026-10-02）
 
 endpoint 同时接受以 /v1（含尾部 /）结尾的 Base URL 和完整 /chat/completions 地址；仅前者在客户端补全路径，SQLite 保留用户输入，不切换 origin。key 仅裁剪首尾空白，内部空白、非 ASCII 或控制字符仍拒绝且不回显值，提示重新复制完整 key。模型目录与计划请求复用这一规范化规则。
+
+#### Claude CLI 与 ACP 探测状态区分（2026-10-02）
+
+内置 Claude 行的 installed_version 仍表示 ACP 适配器版本，不能由 claude --version 替代。新增 cli_version 可空字段，仅原样内置 Claude 命令另行并发探测 claude --version；自定义命令不套用此检测。定义列表（不探测）置 null。UI 单独展示 CLI 已检测版本与 ACP 已检测/未就绪；失败包含缺少程序、退出失败与超时等原因，因此统一“未检测到/未就绪”而非断言未安装。不读取登录或 key，不以版本结果保证认证可用。
