@@ -9,6 +9,8 @@ use std::path::PathBuf;
 use std::process::ExitCode;
 use std::sync::Arc;
 
+mod commander;
+
 use clap::{Parser, Subcommand};
 use tokio::sync::mpsc;
 use tokio_util::sync::CancellationToken;
@@ -84,6 +86,28 @@ enum Cmd {
 enum PlanCmd {
     /// 校验 JSON 计划并输出依赖执行批次
     Validate { file: PathBuf },
+    /// 生成并保存 draft 计划供审阅，不派单
+    Run {
+        objective: String,
+        #[arg(long)]
+        cwd: PathBuf,
+        #[arg(long, value_delimiter = ',')]
+        agents: Vec<String>,
+    },
+    /// 显式确认并执行已保存的 draft；未预授权操作拒绝
+    Execute {
+        run_id: Uuid,
+        #[arg(long)]
+        yes: bool,
+        #[arg(long,default_value_t=2,value_parser=clap::value_parser!(u8).range(1..=16))]
+        jobs: u8,
+        #[arg(long = "allow")]
+        allows: Vec<String>,
+        #[arg(long = "deny")]
+        denies: Vec<String>,
+    },
+    /// 只读查询计划结果，不自动恢复或重跑
+    Report { run_id: Uuid },
     /// 用独立直连 LLM 生成计划（不执行）
     Generate {
         objective: String,
@@ -110,6 +134,27 @@ async fn main() -> ExitCode {
         Cmd::Plan {
             cmd: PlanCmd::Generate { objective, config },
         } => cmd_plan_generate(objective, config).await,
+        Cmd::Plan {
+            cmd:
+                PlanCmd::Run {
+                    objective,
+                    cwd,
+                    agents,
+                },
+        } => commander::preview(objective, cwd, agents).await,
+        Cmd::Plan {
+            cmd:
+                PlanCmd::Execute {
+                    run_id,
+                    yes,
+                    jobs,
+                    allows,
+                    denies,
+                },
+        } => commander::execute(run_id, yes, jobs as usize, allows, denies).await,
+        Cmd::Plan {
+            cmd: PlanCmd::Report { run_id },
+        } => commander::report(run_id).await,
         Cmd::Run {
             agent,
             prompt,

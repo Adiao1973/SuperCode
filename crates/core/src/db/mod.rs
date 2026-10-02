@@ -3,7 +3,9 @@
 
 mod commander_config;
 mod commander_runs;
+mod commander_summary;
 pub use commander_runs::{CommanderRun, CommanderTaskState, PlanStatus, TaskStatus};
+pub use commander_summary::{RunSummary, TaskCounts, TaskSummary};
 mod recorder;
 mod task_move;
 
