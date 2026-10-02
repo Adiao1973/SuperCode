@@ -731,7 +731,7 @@ CLI `supercode plan validate <file>` 读取不超过 1 MiB 的 JSON，按合并�
 
 ### P3-2 — 直连 LLM 计划生成
 
-`commander::llm::LlmConfig { endpoint, model, api_key_env, timeout_secs }` 使用严格 JSON，配置文件只用于显式 `--config`，CLI `--config` 可指定独立文件；按用户要求，默认改从本机 SQLite 的 commander_config 单例读取，旧 JSON 路径不自动读取。endpoint 是完整 chat-completions URL（不自行拼接路径），要求 HTTPS 或字面 loopback HTTP，禁止 URL 用户信息、query、fragment；model/key 环境变量名非空，变量名只含 ASCII 字母/数字/下划线且首位不是数字。timeout_secs 默认 60，范围 1～300。配置和用户目标分别限制 64 KiB，响应及计划限制 1 MiB；只读普通文件，无 key 字段。
+`commander::llm::LlmConfig { endpoint, model, api_key_env, timeout_secs }` 使用严格 JSON，配置文件只用于显式 `--config`，CLI `--config` 可指定独立文件；按用户要求，默认改从本机 SQLite 的 commander_config 单例读取，旧 JSON 路径不自动读取。endpoint 支持完整 chat-completions URL，或 /v1 Base URL（客户端同源补全路径），要求 HTTPS 或字面 loopback HTTP，禁止 URL 用户信息、query、fragment；model/key 环境变量名非空，变量名只含 ASCII 字母/数字/下划线且首位不是数字。timeout_secs 默认 60，范围 1～300。配置和用户目标分别限制 64 KiB，响应及计划限制 1 MiB；只读普通文件，无 key 字段。
 
 `LlmClient::from_config(config)` 在运行时读取 api_key_env，密钥不参与 Debug/序列化，只用于 sensitive Bearer 头；不修改任何 agent 配置。客户端使用 reqwest 0.13.5（锁文件已有），JSON 与 rustls 特性；禁重定向和自动重试，避免凭据转发及非显式重计费。
 
@@ -775,3 +775,13 @@ endpoint 同时接受以 /v1（含尾部 /）结尾的 Base URL 和完整 /chat/
 用户明确选择统一存本机 SQLite（不上传 GitHub），不采用钥匙串。0006 commander_credentials(scope PRIMARY KEY,key_value) 保存明文密钥，按 origin + 规范化接口路径 + 环境变量名绑定，不跨源复用。SQLite/WAL/SHM/journal 和 .env 保持 Git 忽略；保存前校验 ASCII 非空且 ≤16 KiB，首尾空白裁剪；错误/Debug/文档不输出密钥。默认宿主优先读 SQLite key，再读环境变量；显式 CLI --config 仍只读环境变量、不开 DB。前端 password 输入只用于显式保存，成功清空；IPC 状态只返回 sqlite/environment/missing，不返回密钥。密钥和连接设置分开显式保存，分别展示状态。
 
 新增保存密钥/凭据来源/示例计划验证/取消 IPC。示例验证从已保存 SQLite 配置读取，固定待办应用目标，只展示任务和批次，不派单、不读取项目文件。每次验证 UUID，最多一个活跃请求；drop 删除请求，取消和关闭窗口回收 CancellationToken，既有 timeout 限制总时长。真实计划留本机内存，不自动写仓库。
+
+### P3-3 — 计划持久化与执行状态机
+
+0007 commander_runs 保存不可变计划 JSON、工作目录、plan 状态、按原计划顺序排列的任务状态 JSON、revision 和时间戳。计划与全部初始状态单条 INSERT 原子写入；不得含连接配置/key。创建时重新校验 DAG/agent 和 1 MiB 上限，cwd 要求绝对路径（不访问文件）。每次转换读取快照后按 revision 做单条 UPDATE CAS，计划与任务状态原子变化；竞争失败返回 false，让调度器重新读取，非法转换返回分类错误。此任务只提供 Store API，不启动模型或 agent。
+
+计划 draft → running（显式确认）→ succeeded/failed/cancelled/interrupted，终态不可重跑。任务 pending → running（计划 running 且依赖全部 succeeded）→ succeeded/failed；pending 可因失败依赖标记 skipped，running 不可直接 skipped。失败/跳过依赖的全部后代自动 skipped，独立任务继续；全部任务终态后计划有失败则 failed，否则 succeeded。显式取消 draft/running 时所有未终态任务 cancelled，已完成记录保留。任务启动时可绑定 session_id，或在 running 且尚未绑定时单次补绑（UUID 仅引用，不改会话表）；终态不可改绑。
+
+读取/重开库只恢复记录，绝不自动执行；独占调度器启动时可显式 recover_commander_runs 将 running 计划改 interrupted，running 任务 interrupted、pending cancelled；draft 和既有终态不改。不能在 Store::open 自动执行恢复（其他连接可能仍有活跃任务）。P3-4 接入调度器后负责调用恢复、派单和回收进程。
+
+P3-2 真实推理出口仍待验收。P3-3 为依赖该本地实现的独立后续分支，暂从 P3-2 任务头派生（对从 dev 创建惯例的依赖分支例外）；不得据此将 P3-2 标记完成或合入 dev/main。待前置出口补齐后按任务顺序集成。
