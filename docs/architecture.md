@@ -742,6 +742,16 @@ App 示例验证读取已保存配置与凭据，固定待办应用目标；每�
 
 读取/重开库只恢复记录，绝不自动执行；独占调度器启动时可显式 recover_commander_runs 将 running 计划改 interrupted，running 任务 interrupted、pending cancelled；draft 和既有终态不改。不能在 Store::open 自动执行恢复（其他连接可能仍有活跃任务）。P3-4 接入调度器后负责调用恢复、派单和回收进程。
 
+### P3-4 — ACP 派单与批次调度（实现中）
+
+`commander::scheduler::Scheduler` 持有 Store 和注册表；`execute(run_id, DispatchOptions, BrokerFactory, broadcast::Sender<DispatchEvent>, CancellationToken)` 显式执行已确认 draft 计划，返回最终 CommanderRun。Options 为 max_concurrency（1～16）与 workspace_id；cwd 来自不可变计划记录。执行前重校验计划、目录存在/绝对路径、空间存在与各实际 ACP 适配器版本探测。预检失败保持 draft、无会话/任务运行；CAS draft→running 是跨调用唯一认领，不重跑 running/终态。
+
+按 P3-1 稳定拓扑批次派单，同批受并发上限约束，全部结束后才进入下一批；失败后代由 P3-3 标 skipped，独立分支继续。每任务独立本机会话 UUID、AcpDriver、新建 ACP 会话、SessionRecorder 与 broker；事件信封包含 run_id/task_id/session_id/agent_id，输出广播不阻塞执行，SQLite 是持久化事实源。原 cwd、workspace_id、agent_id、审批管线保持。共享目录不自动创建 worktree；此阶段只核心库及验收示例，不新增产品 CLI/UI（P3-5/6）。
+
+BrokerFactory 为每个派单创建独立 ApprovalBroker，宿主可事先订阅接入人工审批；调度器使用 resolve_fail_closed，无订阅的兜底拒绝，显式 ask 仍保持队列语义。取消联动 reject_all_pending，裁决单独绑定本机会话写 approvals，不借计划提升权限。SessionStarted 经可返回错误的 recorder 写入后绑定任务 session UUID；driver 错误补 DriverError，落库失败使任务失败，不宣称成功。仅 EndTurn 且无持久化错误视为 succeeded；其它停止原因失败，计划取消则保留已有完成结果，其余 cancelled。
+
+取消停止新派单、取消全部自有 driver 并等待协议/进程清理及 recorder 排空，然后原子取消计划；不得杀无关进程。执行 future 意外被丢弃时取消 token，剩余运行记录由独占宿主显式 recover_commander_runs 恢复为 interrupted；普通读取/另一执行调用不自动恢复，以免打断仍活跃计划。P3-4 不引入后台自动恢复或自动重跑。
+
 ## 13. 设计变更与历史
 
 现行接口在对应章节原位更新；过程、失败尝试和验收结果写任务验收记录，重大决策写 ADR。[历史快照](history/architecture-through-p3-3.md) 保留原变更表与 P3-2/3 演进过程，不作为现行约定。
