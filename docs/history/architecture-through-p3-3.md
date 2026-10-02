@@ -1,7 +1,11 @@
+# 架构演进历史快照（截至 2026-10-02 P3-3）
+
+> 历史设计与补充记录，可能包含已被后续实现替代的约定。现行契约以 [architecture](../architecture.md) 为准。
+
 # SuperCode 架构设计文档
 
 > 本文档是 SuperCode 接口设计的**单一事实源**：任何接口 / 数据模型变更，先改本文档再改代码。
-> 更新：2026-10-02；现行 dev 契约截至 P3-3。当前任务状态见 [roadmap](roadmap.md)，历史演进见 [快照](history/architecture-through-p3-3.md)。
+> 版本：0.8（P1-6 持久化与恢复落地）· 变更记录见文末。
 
 > v0.3.0 已发布：ACP 路径支持 OpenCode、Claude Code、Codex、MiMo；StreamJsonDriver 是延期设计，未包含在本版。
 
@@ -241,18 +245,18 @@ resolve 返回 Err，driver 层转为 ACP `cancelled` outcome，agent 收到"未
 **预授权规则**（参考 opencode permission 配置语义）：
 
 ```jsonc
-// 规则语义示例；App 规则实际保存在 SQLite permission_rules 表
+// ~/Library/Application Support/<bundle-id>/rules.json（Phase 0 先支持内置默认 + CLI 参数）
 {
   "allow": ["read", "edit", "bash(git status)", "bash(git diff *)"],
   "deny":  ["bash(rm -rf *)", "bash(sudo *)"],
-  "ask":   []           // 未匹配项由会话权限模式决定
+  "ask":   ["*"]        // 其余一律询问（默认）
 }
 ```
 
 **规则语法与求值**：
 - 模式三形：`*`（全匹配）；`tool`（工具名全匹配，任意参数）；`tool(args)`（args 为
   glob：`*` 任意序列含空格、`?` 单字符）。
-- 求值优先级：**deny > ask > allow**；未命中项交由会话权限模式处理（完整管线见下文）。
+- 求值优先级：**deny > allow > ask**；全不命中 → 进入待决队列（人工裁决）。
 - 匹配目标（tool, subject）从 `PermissionRequest` 推断：`raw_input` 含 `command`
   字符串字段 → (`bash`, command)；否则 tool = tool_name 首词、subject = tool_name。
   （ACP v1 权限请求不带机器可读工具名，此推断覆盖 opencode 的 bash 工具；后续随
@@ -611,9 +615,9 @@ approvals(id TEXT PK, session_id TEXT, tool_call_id TEXT, tool_name TEXT,
           request_json TEXT, decision TEXT, decided_by TEXT,  -- rule:<id> | user
           created_at TEXT, decided_at TEXT);
 
-tasks(id TEXT PK, session_id TEXT, workspace_id TEXT REFERENCES workspaces(id),
+tasks(id TEXT PK, workspace_id TEXT REFERENCES workspaces(id),
       title TEXT, cwd TEXT NULL, status TEXT,       -- backlog|in_progress|review|done；cwd 缺省取空间路径
-      created_at TEXT, updated_at TEXT);             -- P1-9 简版看板（按空间组织）；session 关联经 tasks.session_id（迁移 0004）
+      created_at TEXT, updated_at TEXT);             -- P1-9 简版看板（按空间组织）；session 关联经 sessions.task_id
 
 permission_rules(id TEXT PK, pattern TEXT NOT NULL,  -- 规则库（P1-5，全局持久）
                  effect TEXT NOT NULL,               -- allow | deny | ask
@@ -627,7 +631,6 @@ P1-8 落地迁移 0003（workspaces + sessions.workspace_id，历史会话按 di
 回填为 project 空间并归类；删除空间不删会话，会话移入默认空间——ADR-0007）。
 运行期写入 sessions/messages/tool_calls/approvals
 （`SessionRecorder` 消费事件流：消息 chunk 在 TurnCompleted 时组装落库），tasks 表 Phase 1 使用。
-迁移 0004 增 tasks.session_id 引用；0005～0007 的指挥官配置、凭据和运行快照见 §12。
 时间戳为 RFC3339 文本。`SUPERCODE_DB` 环境变量可覆盖库文件路径（测试/多环境用）。
 
 ## 7. 进程生命周期管理
@@ -662,7 +665,28 @@ P1-8 落地迁移 0003（workspaces + sessions.workspace_id，历史会话按 di
 3. 事件流禁止使用 SSE/EventSource（`tauri://` 不支持），一律 Tauri Channel / WebSocket 插件。
 4. 跨平台 CSS：每个涉及视觉的验收任务须在 macOS 实测，Phase 3 起增加 Windows 双测。
 
-## 11. 工作区、看板与终端
+## 11. 变更记录
+
+| 日期 | 版本 | 摘要 |
+|---|---|---|
+| 2026-09-29 | 0.18 | P2-5：MiMo ACP 进程 cwd 约束与注册表可选启动选项；ACP 空轮次失败识别及桌面安装/模型指引 |
+| 2026-09-28 | 0.17 | P2-4：会话选择器新增无探测注册表 IPC，Codex ACP 认证/权限/并行边界与 npm 缓存争用规避 |
+| 2026-09-28 | 0.16 | P2-3：注册表驱动运行、历史 agent 归属、续聊校验与运行时 load 能力协商；Node/npx 探测；CLI --agent；API Key 认证引导 |
+| 2026-09-28 | 0.15 | P2-2 小设计：§4.4 补用户自定义写路径（load_user_entries/save/upsert/remove，原子写）；§5.1 新增 list/add/update/delete_agent 与 AgentRow |
+| 2026-09-28 | 0.14 | P2-1 小设计：§4.4 AgentDefinition 落地形态（driver_kind/command/version_args/capabilities + serde 用户自定义）；AgentRegistry builtin/load/find/probe_installed；内置五条齐备（opencode/claude-code/codex/mimo/zcode） |
+| 2026-09-27 | 0.13 | P1-10 打包验收：版本号 v0.2.0 + just build 剧本；§4.7 增 GUI PATH 修正（launchd 不继承 shell PATH，探测与 spawn 双失效，宿主启动并入常见安装目录） |
+| 2026-09-27 | 0.12 | P1-9 简版任务看板：§5.1 IPC 增 list/create/update/delete_task（update 兼改状态与绑定会话）；tasks 表读写方法（绑定会话随 delete_session 解绑）；前端看板按空间分节四列 |
+| 2026-09-27 | 0.11 | P1-8 工作空间落地：§5.1 IPC 增 list/create/delete_workspace + run_prompt workspace_id + 历史行含 workspace_id；迁移 0003（workspaces 表 + sessions/tasks.workspace_id）与 Rust 回填（distinct cwd → project 空间，幂等） |
+| 2026-09-27 | 0.10 | 工作空间模型定稿（ADR-0007）：§6 新增 workspaces 表 + sessions/tasks 归属空间（迁移 0003 规划，历史按 distinct cwd 回填；默认空间承载非项目任务）；IPC 契约行随 P1-8 小设计补充 |
+| 2026-09-27 | 0.9 | P1-7 环境探测落地：新增 §4.7 envcheck 模块（安装探测 + JSONC 配置解析 + 严格判定）；§5.1 IPC 新增 check_opencode_env；新依赖 json5（opencode 配置为 JSONC，注释/尾逗号解析，纯 Rust 无 unsafe） |
+| 2026-09-27 | 0.8 | P1-6 持久化与恢复落地：§5.1 IPC 扩展（resume_session_id/list_history_sessions/list_session_messages/delete_session）；Store 增 list_messages/find_session_by_agent/delete_session_by_agent（级联）+ 文件库 WAL 多连接；run_prompt 接 SessionRecorder；晚失败 done watcher |
+| 2026-09-25 | 0.7 | P1-5 审批中心落地：§4.3 模式化管线实现（PermissionMode 四档 + ask 规则 + DecisionSource::Mode）；§5.1 IPC 扩展（mode 参数/set_permission_mode/respond_permission/规则 CRUD/permission-request 与 decision-record 事件）；§6 新增 permission_rules 表（迁移 0002）；PermissionRequest 增加 kind 字段 |
+| 2026-09-25 | 0.6 | P1-4 会话视图落地：§4.1 diff 字段改为结构化 DiffPayload（ACP ToolCallContent::Diff 提取）；IPC 新增 read_text_file（write 新文件内容磁盘懒读）；前端 react-virtuoso + @pierre/diffs（依赖替换偏差见 roadmap） |
+| 2026-09-25 | 0.5 | P1-3 多会话管理落地：§5.1 多会话并行说明（客户端会话键路由、active run map 并发）；前端 sessions store + 会话列表/切换；IPC 契约不变（run_prompt 并发调用） |
+| 2026-09-25 | 0.4 | P1-2 事件管道落地：新增 §5.1 Tauri IPC 契约（run_prompt/cancel_run + Channel 批量推送）；§4.3 增补权限模式管线 v2 设计稿与管辖边界（ADR-0006，ZCode 源码研究结论），P1-5/P1-7 验收要点相应重写 |
+| 2026-09-24 | 0.1 | Step 0 初版：分层架构、AgentDriver/AgentEvent/ApprovalBroker/Registry 接口、事件管道、数据模型、进程与安全约定 |
+| 2026-09-25 | 0.3 | P1-1 脚手架落地：apps/desktop 为 Tauri v2 壳（crate `supercode-desktop` 并入 cargo workspace；pnpm-workspace 管理 apps/*）；前端 React 19 + Tailwind v4 + shadcn/ui（radix-nova 预设）；§5 事件管道与命令接入自 P1-2 起 |
+| 2026-09-24 | 0.2 | Phase 0 落地（v0.1.0）：§4.1 对齐 ACP v1 实际 schema（ThoughtChunk、Option 字段、ToolKind 全集）；§4.3 规则引擎 + 留痕流；§4.5 ProcessManager；§4.6 EventAggregator；§4.2 StartMode 与 trait 化节奏；§6 迁移 0001 六表 + SessionRecorder；§7 取消链路与 SDK 托管进程组 |
 
 ### P2-7 任务 worktree 隔离
 
@@ -695,15 +719,10 @@ P2-9 依赖选择与实测：5.5.0 在 React StrictMode/面板销毁后存在 vi
 
 ### P2-10 — 整体验收发现的宿主收尾修复
 
-CLI 与桌面宿主一致：driver 返回 `Err` 时，在关闭事件通道、等待 recorder 排空之前补发 `DriverError`，让已有会话落库为 failed；会话未建立时不制造伪档案。新建和续聊均用真实 CLI + 无网络 ACP 对端回归验证。release 版本徽标读取 Tauri 实际 app version，`dev` 后缀仅开发构建显示，不再硬编码版本。v0.3.0 按用户批准范围排除 P2-6 后发布；延期不影响已批准版本。
+CLI 与桌面宿主一致：driver 返回 `Err` 时，在关闭事件通道、等待 recorder 排空之前补发 `DriverError`，让已有会话落库为 failed；会话未建立时不制造伪档案。新建和续聊均用真实 CLI + 无网络 ACP 对端回归验证。release 版本徽标读取 Tauri 实际 app version，`dev` 后缀仅开发构建显示，不再硬编码版本。Phase 2 tag/main 出口仍受未完成 P2-6 限制。
 
+- **2026-10-01 v0.3.0 范围调整**：用户授权提前发布多 ACP agent、worktree、看板与终端；ZCode StreamJson/Start Plan 真实验收延期，独立任务分支不合入本版，发布版保留禁选状态。
 
-
-### Claude CLI 与 ACP 探测边界
-
-内置 Claude 行的 installed_version 仍表示 ACP 适配器版本，不能由 claude --version 替代。新增 cli_version 可空字段，仅原样内置 Claude 命令另行并发探测 claude --version；自定义命令不套用此检测。定义列表（不探测）置 null。UI 单独展示 CLI 已检测版本与 ACP 已检测/未就绪；失败包含缺少程序、退出失败与超时等原因，因此统一“未检测到/未就绪”而非断言未安装。不读取登录或 key，不以版本结果保证认证可用。
-
-## 12. 指挥官契约（dev，截至 P3-3）
 
 ### P3-1 — 指挥官计划契约
 
@@ -711,28 +730,57 @@ CLI 与桌面宿主一致：driver 返回 `Err` 时，在关闭事件通道、�
 
 `TaskPlan::validate(&AgentRegistry) -> Result<ValidatedPlan>` 拒绝重复 id、未知 agent、重复/缺失/自身依赖和环；返回按输入顺序稳定排列的拓扑执行批次。每个批次仅包含依赖在此前批次已完成的任务。该结果仅是静态建议，不创建会话、数据库记录、worktree 或子进程；实际安装探测、工作目录及审批在 P3-4 执行入口重新校验。计划自身不携带权限豁免或 shell 命令执行配置，不能越过既有审批管线。
 
-CLI `supercode plan validate <file>` 读取不超过 1 MiB 的 JSON，按合并后的注册表验证，输出 `ValidatedPlan { plan, batches }` JSON；坏计划返回非零并给出字段/依赖诊断。不调用 LLM，不访问 SQLite，不执行 agent。直连模型响应复用同一契约校验。
+CLI `supercode plan validate <file>` 读取不超过 1 MiB 的 JSON，按合并后的注册表验证，输出 `ValidatedPlan { plan, batches }` JSON；坏计划返回非零并给出字段/依赖诊断。不调用 LLM，不访问 SQLite，不执行 agent。P3-2 将复用同一契约校验模型响应。
 
 
-### P3-2 — 直连 LLM、配置与本机凭据
+### P3-2 — 直连 LLM 计划生成
 
-`LlmConfig { endpoint, model, api_key_env, timeout_secs }` 使用严格 JSON，不包含 key 值。endpoint 接受完整 /chat/completions URL 或 /v1 Base URL（同源补全），要求 HTTPS 或字面 loopback HTTP，禁止 userinfo/query/fragment。model 非空；环境变量名符合 ASCII 命名规则。timeout 默认 60 秒，范围 1～300；配置/目标最多 64 KiB，响应/计划最多 1 MiB。
+`commander::llm::LlmConfig { endpoint, model, api_key_env, timeout_secs }` 使用严格 JSON，配置文件只用于显式 `--config`，CLI `--config` 可指定独立文件；按用户要求，默认改从本机 SQLite 的 commander_config 单例读取，旧 JSON 路径不自动读取。endpoint 支持完整 chat-completions URL，或 /v1 Base URL（客户端同源补全路径），要求 HTTPS 或字面 loopback HTTP，禁止 URL 用户信息、query、fragment；model/key 环境变量名非空，变量名只含 ASCII 字母/数字/下划线且首位不是数字。timeout_secs 默认 60，范围 1～300。配置和用户目标分别限制 64 KiB，响应及计划限制 1 MiB；只读普通文件，无 key 字段。
 
-SQLite 0005 `commander_config(id=1,config_json)` 原子保存配置，无效输入不覆盖旧值；0006 `commander_credentials(scope,key_value)` 按用户选择保存明文密钥。scope 由 origin、规范化接口路径和变量名组成，不跨源复用，切换模型不改变绑定。默认 App/CLI 优先 SQLite key，再读环境变量；显式 CLI `--config` 只读指定普通文件和环境变量，不打开数据库。密钥首尾空白裁剪，非空且 ≤16 KiB，内部空白/非 ASCII/控制字符拒绝。
+`LlmClient::from_config(config)` 在运行时读取 api_key_env，密钥不参与 Debug/序列化，只用于 sensitive Bearer 头；不修改任何 agent 配置。客户端使用 reqwest 0.13.5（锁文件已有），JSON 与 rustls 特性；禁重定向和自动重试，避免凭据转发及非显式重计费。
 
-`LlmClient::from_config` 是环境变量构造入口；默认宿主通过 `Store::commander_client` 解析本机凭据。客户端 reqwest 0.13.5 使用 JSON/rustls，禁重定向与自动重试；敏感 Bearer 头及错误/Debug 不回显密钥、URL、目标或响应原文。不修改 agent 配置，不读取 agent 登录 token。
+`generate_plan(objective, registry, cancel) -> Result<ValidatedPlan>` 一次非流式 POST `{model,stream:false,messages:[system,user]}`。系统提示给出 P3-1 精确 JSON 契约及可执行 ACP agent 名单；用户目标是独立 user 内容，不读取项目文件。响应必须有唯一 choice、finish_reason=stop、assistant message.content 字符串，禁止 tool_calls/refusal；content 必须为裸 JSON（无 Markdown），再走 TaskPlan::validate，输出 objective 固定为原用户目标。未知 agent、非法 DAG 等不进入执行。
 
-`generate_plan(objective,registry,cancel)` 一次非流式 POST，包含 model、stream=false、response_format={type:json_object} 和独立 system/user 消息。system 给出 P3-1 契约及 ACP agent 名单，不读取项目文件。响应要求唯一 choice、finish_reason=stop、assistant content 字符串，无 tool_calls/refusal。content 接受裸 JSON 或完整 json/无语言代码围栏，拒绝额外说明；严格反序列化并复用 DAG/agent 校验，objective 固定为原用户目标。发送及读取共用 deadline/CancellationToken；HTTP 错误只输出状态码，语法与字段错误仅分类诊断。
+从发送到读取全部响应实行同一 deadline 和 CancellationToken；超时、取消、HTTP 错误、非法响应均不输出服务端原文、URL、key 或目标内容。计划验证错误也不回显模型文本，只给分类诊断。HTTP 失败只包含状态码，不读取错误体。网络客户端不访问 SQLite、不启动 agent、不自动执行计划；CLI 默认配置加载可打开 SQLite，但不创建会话。
 
-`plan generate` 与 `plan validate` 均输出 `ValidatedPlan { plan,batches }`，但 validate 的输入是 `TaskPlan`；复核 generate 结果须先取其 plan 字段。生成不创建执行会话或派单，Ctrl-C 取消返回非零。
+CLI `supercode plan generate <objective> [--config <file>]` 输出与 validate 相同的 JSON，Ctrl-C 取消返回非零。P3-2 仅生成计划，后续确认和派单由 P3-3/4/6 实现。真实模型验收必须使用用户指定的 provider/model 和 key 来源；fixture 不替代真实调用，缺少可直连访问方式时保留任务分支待验收。
 
-模型发现 `discover_models` 使用同源、同路径前缀 /models GET 与同一凭据来源，允许表单 model 为空，严格解析 data[].id、排序去重，限制 1 MiB/4096 项。不跟随重定向、不探测其他供应商；目录不保证账号计费权限或文本规划能力，查询失败仍允许手填。
+HTTP 客户端配置参考 [reqwest ClientBuilder](https://docs.rs/reqwest/0.13.5/reqwest/struct.ClientBuilder.html)。
 
-桌面设置分别展示已保存配置、当前模型与凭据来源，配置/密钥分开显式保存。password 框保存成功后清空；IPC 来源仅返回 sqlite/environment/missing，不返回 key。模型列表留内存，选择后显式保存；改连接参数清除旧列表。IPC：get_commander_config、save_commander_config、list_commander_models、save_commander_key、commander_credential_source、verify_commander_plan、cancel_commander_plan。
 
-App 示例验证读取已保存配置与凭据，固定待办应用目标；每请求 UUID，最多一个活跃请求，取消/drop/窗口销毁回收 token。只展示合法任务与批次，不执行 agent；结果留内存。SQLite/WAL/SHM/journal、.env 和真实连接配置不入 Git。真实验收结果见 [P3-2](acceptance/p3-2.md)，不在设计契约重复保存过程状态。
+#### P3-2 本机配置与桌面适配（用户补充）
 
-参考：[reqwest](https://docs.rs/reqwest/0.13.5/reqwest/struct.ClientBuilder.html)、[MiMo 模型目录](https://mimo.mi.com/docs/zh-CN/api/model/list-models)、[MiMo JSON 输出](https://mimo.mi.com/docs/zh-CN/quick-start/usage-guide/text-generation/structured-output)。
+用户选择 MiMo，但 endpoint/model/key 来源稍后提供，要求连接信息不得上传 GitHub。新增 migration 0005 的 `commander_config(id=1, config_json)`，只保存严格 LlmConfig（endpoint/model/api_key_env/timeout_secs），不保存 API key 值；SQLite/数据库 WAL/SHM 全部加入 gitignore，真实配置只保存在应用数据目录或 SUPERCODE_DB 测试库，示例只使用虚构占位符。
+
+Store::save_commander_config/get_commander_config 校验后原子替换单例，失败不覆盖旧值。桌面设置新增“指挥官模型”区块，字段 endpoint、model、key 环境变量名、timeout，可保存和重启恢复；不提供自动联网测试或任务派单按钮。IPC get_commander_config/save_commander_config 的嵌套配置沿用 snake_case JSON 字段，与前端类型逐字对齐；配置本身无密钥字段，非法配置错误不回显内容。用户稍后可在此填入 MiMo 连接信息，无需重新开发专用 MiMo adapter。
+
+默认 `plan generate` 从 Store 读取本机配置；显式 --config 使用独立普通文件，便于隔离验收。凭据仍由运行进程的环境变量提供；桌面 key 来源可在后续宿主凭据设置扩展，本任务不读取现有 agent 登录 token。
+
+- **P3-2 验证状态（2026-10-01）**：接口、SQLite 0005、桌面设置和 HTTP/CLI 契约已通过自动及 macOS 检查，用户选定 MiMo 的真实 API 验收待连接信息；只保留任务分支，不宣称闭环完成。
+
+#### P3-2 模型发现与配置反馈（2026-10-02）
+
+桌面设置突出展示已保存模型，明确“配置已保存”不等于推理验收通过。新增 list_commander_models(config) IPC：使用表单中的 endpoint 与环境变量凭据，允许模型名为空；仅对同源、同路径前缀的 chat/completions 推导 models 地址并 GET，不跟随重定向、不探测其他供应商。超时沿用配置，响应限制 1 MiB、最多 4096 模型；严格解析 data[].id、排序去重，不回显响应原文。列表仅内存保存，选择后需显式保存，不覆盖手填模型；列表不保证计费权限或文本规划能力。缺少 key、接口不支持或失败时保留手填路径。MiMo 官方提供 models API 并支持 Bearer： https://mimo.mi.com/docs/zh-CN/api/model/list-models 。
+
+#### P3-2 复制配置兼容修复（2026-10-02）
+
+endpoint 同时接受以 /v1（含尾部 /）结尾的 Base URL 和完整 /chat/completions 地址；仅前者在客户端补全路径，SQLite 保留用户输入，不切换 origin。key 仅裁剪首尾空白，内部空白、非 ASCII 或控制字符仍拒绝且不回显值，提示重新复制完整 key。模型目录与计划请求复用这一规范化规则。
+
+#### Claude CLI 与 ACP 探测状态区分（2026-10-02）
+
+内置 Claude 行的 installed_version 仍表示 ACP 适配器版本，不能由 claude --version 替代。新增 cli_version 可空字段，仅原样内置 Claude 命令另行并发探测 claude --version；自定义命令不套用此检测。定义列表（不探测）置 null。UI 单独展示 CLI 已检测版本与 ACP 已检测/未就绪；失败包含缺少程序、退出失败与超时等原因，因此统一“未检测到/未就绪”而非断言未安装。不读取登录或 key，不以版本结果保证认证可用。
+
+#### P3-2 真实模型输出兼容（2026-10-02）
+
+真实模型调用到达响应阶段但计划反序列化失败；尚无响应原文证据，不预设具体格式原因。请求增加 response_format={type:json_object}，采用 MiMo 官方支持的 JSON 模式；兼容仅包裹一个 JSON 对象的完整 json/无语言 Markdown 代码围栏，剥离围栏后仍严格拒绝未知字段、错类型、非法 DAG/agent、工具调用/拒绝/截断，不从解释文字中抽取对象，不重试计费。错误分语法与字段类型类别，不输出模型原文。参考 https://mimo.mi.com/docs/zh-CN/quick-start/usage-guide/text-generation/structured-output 。
+
+#### P3-2 App 内 SQLite 密钥与验证入口（2026-10-02）
+
+用户明确选择统一存本机 SQLite（不上传 GitHub），不采用钥匙串。0006 commander_credentials(scope PRIMARY KEY,key_value) 保存明文密钥，按 origin + 规范化接口路径 + 环境变量名绑定，不跨源复用。SQLite/WAL/SHM/journal 和 .env 保持 Git 忽略；保存前校验 ASCII 非空且 ≤16 KiB，首尾空白裁剪；错误/Debug/文档不输出密钥。默认宿主优先读 SQLite key，再读环境变量；显式 CLI --config 仍只读环境变量、不开 DB。前端 password 输入只用于显式保存，成功清空；IPC 状态只返回 sqlite/environment/missing，不返回密钥。密钥和连接设置分开显式保存，分别展示状态。
+
+新增保存密钥/凭据来源/示例计划验证/取消 IPC。示例验证从已保存 SQLite 配置读取，固定待办应用目标，只展示任务和批次，不派单、不读取项目文件。每次验证 UUID，最多一个活跃请求；drop 删除请求，取消和关闭窗口回收 CancellationToken，既有 timeout 限制总时长。真实计划留本机内存，不自动写仓库。
+
+P3-2 真实出口补验（2026-10-02）：独立 App 使用用户自行保存的本机 SQLite 凭据，真实 MiMo 示例计划通过严格契约及 DAG 校验（13 任务、8 批次），无需终端环境变量；未执行 agent。此前待验收记录为历史阶段，现满足 P3-2 集成出口，按任务合入 dev。真实连接信息不归档。
 
 ### P3-3 — 计划持久化与执行状态机
 
@@ -742,11 +790,5 @@ App 示例验证读取已保存配置与凭据，固定待办应用目标；每�
 
 读取/重开库只恢复记录，绝不自动执行；独占调度器启动时可显式 recover_commander_runs 将 running 计划改 interrupted，running 任务 interrupted、pending cancelled；draft 和既有终态不改。不能在 Store::open 自动执行恢复（其他连接可能仍有活跃任务）。P3-4 接入调度器后负责调用恢复、派单和回收进程。
 
-## 13. 设计变更与历史
+P3-3 最初在 P3-2 等待真实验收期间从其任务头派生（依赖分支例外）。2026-10-02 P3-2 真实出口已补齐并独立合入 dev；同步前置集成后复核 P3-3，再按任务边界 --no-ff 合入 dev。
 
-现行接口在对应章节原位更新；过程、失败尝试和验收结果写任务验收记录，重大决策写 ADR。[历史快照](history/architecture-through-p3-3.md) 保留原变更表与 P3-2/3 演进过程，不作为现行约定。
-
-| 日期 | 变更 | 证据 |
-|---|---|---|
-| 2026-10-02 | P3-1～3 计划契约、直连 LLM/本机凭据与执行状态持久化已集成 dev | [验收索引](acceptance/README.md) |
-| 2026-10-02 | 文档结构整理，替代过时的环境变量唯一来源与裸 JSON 唯一输出约定 | [整理验收](acceptance/docs-alignment.md) |
