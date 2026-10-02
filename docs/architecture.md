@@ -775,3 +775,5 @@ endpoint 同时接受以 /v1（含尾部 /）结尾的 Base URL 和完整 /chat/
 用户明确选择统一存本机 SQLite（不上传 GitHub），不采用钥匙串。0006 commander_credentials(scope PRIMARY KEY,key_value) 保存明文密钥，按 origin + 规范化接口路径 + 环境变量名绑定，不跨源复用。SQLite/WAL/SHM/journal 和 .env 保持 Git 忽略；保存前校验 ASCII 非空且 ≤16 KiB，首尾空白裁剪；错误/Debug/文档不输出密钥。默认宿主优先读 SQLite key，再读环境变量；显式 CLI --config 仍只读环境变量、不开 DB。前端 password 输入只用于显式保存，成功清空；IPC 状态只返回 sqlite/environment/missing，不返回密钥。密钥和连接设置分开显式保存，分别展示状态。
 
 新增保存密钥/凭据来源/示例计划验证/取消 IPC。示例验证从已保存 SQLite 配置读取，固定待办应用目标，只展示任务和批次，不派单、不读取项目文件。每次验证 UUID，最多一个活跃请求；drop 删除请求，取消和关闭窗口回收 CancellationToken，既有 timeout 限制总时长。真实计划留本机内存，不自动写仓库。
+
+P3-2 真实出口补验（2026-10-02）：独立 App 使用用户自行保存的本机 SQLite 凭据，真实 MiMo 示例计划通过严格契约及 DAG 校验（13 任务、8 批次），无需终端环境变量；未执行 agent。此前待验收记录为历史阶段，现满足 P3-2 集成出口，按任务合入 dev。真实连接信息不归档。
