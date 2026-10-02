@@ -57,9 +57,9 @@ export function CommanderSettings() {
         将目标拆解为任务计划，独立于执行任务的 Agent。支持兼容 Chat Completions 的接口。保存配置后可用于生成计划；保存成功尚不代表模型推理已验收。
       </p>
       <div className="grid gap-3 sm:grid-cols-2">
-        <label className="text-xs sm:col-span-2">API endpoint（完整对话补全地址）
+        <label className="text-xs sm:col-span-2">API 地址（Base URL 或完整对话补全地址）
           <Input aria-label="指挥官 API endpoint" className="mt-1 font-mono text-xs" value={config.endpoint} disabled={busy || listing}
-            placeholder="https://api.example.com/v1/chat/completions" onChange={(e) => change("endpoint", e.target.value)} />
+            placeholder="https://api.example.com/v1" onChange={(e) => change("endpoint", e.target.value)} />
         </label>
         <label className="text-xs">模型名
           <Input aria-label="指挥官模型名" className="mt-1 font-mono text-xs" value={config.model} disabled={busy || listing}

@@ -757,3 +757,7 @@ Store::save_commander_config/get_commander_config 校验后原子替换单例，
 #### P3-2 模型发现与配置反馈（2026-10-02）
 
 桌面设置突出展示已保存模型，明确“配置已保存”不等于推理验收通过。新增 list_commander_models(config) IPC：使用表单中的 endpoint 与环境变量凭据，允许模型名为空；仅对同源、同路径前缀的 chat/completions 推导 models 地址并 GET，不跟随重定向、不探测其他供应商。超时沿用配置，响应限制 1 MiB、最多 4096 模型；严格解析 data[].id、排序去重，不回显响应原文。列表仅内存保存，选择后需显式保存，不覆盖手填模型；列表不保证计费权限或文本规划能力。缺少 key、接口不支持或失败时保留手填路径。MiMo 官方提供 models API 并支持 Bearer： https://mimo.mi.com/docs/zh-CN/api/model/list-models 。
+
+#### P3-2 复制配置兼容修复（2026-10-02）
+
+endpoint 同时接受以 /v1（含尾部 /）结尾的 Base URL 和完整 /chat/completions 地址；仅前者在客户端补全路径，SQLite 保留用户输入，不切换 origin。key 仅裁剪首尾空白，内部空白、非 ASCII 或控制字符仍拒绝且不回显值，提示重新复制完整 key。模型目录与计划请求复用这一规范化规则。

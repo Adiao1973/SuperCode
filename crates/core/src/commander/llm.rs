@@ -123,9 +123,20 @@ impl LlmClient {
     }
     /// Host-supplied credential; never serialized or included in Debug/errors.
     pub fn new(config: LlmConfig, key: String) -> Result<Self> {
-        let endpoint = config.validate()?;
-        if key.trim().is_empty() {
+        let mut endpoint = config.validate()?;
+        let base_path = endpoint.path().trim_end_matches('/');
+        if base_path.ends_with("/v1") {
+            let path = format!("{base_path}/chat/completions");
+            endpoint.set_path(&path);
+        }
+        let key = key.trim();
+        if key.is_empty() {
             return Err(invalid("key 不能为空"));
+        }
+        if !key.bytes().all(|c| c.is_ascii_graphic()) {
+            return Err(invalid(
+                "key 含内部空白或非 ASCII 字符；请重新复制完整 key 并从设置变量的终端启动应用",
+            ));
         }
         let mut authorization = HeaderValue::from_str(&format!("Bearer {key}"))
             .map_err(|_| invalid("key 不是合法 HTTP 凭据"))?;

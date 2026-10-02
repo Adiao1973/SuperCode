@@ -331,3 +331,40 @@ async fn model_discovery_bounds_body_items_and_timeout() {
             .is_err()
     );
 }
+
+#[tokio::test]
+async fn copied_base_url_and_key_whitespace_are_normalized() {
+    for suffix in ["", "/"] {
+        let (endpoint, task) =
+            server("200 OK", json!({"data":[{"id":"model"}]}).to_string(), 0).await;
+        let base = endpoint.strip_suffix("/chat/completions").unwrap();
+        assert_eq!(
+            LlmClient::discover_models(config(format!("{base}{suffix}")), format!(" \r\n{KEY}\n"))
+                .await
+                .unwrap(),
+            vec!["model"]
+        );
+        let request = String::from_utf8(task.await.unwrap()).unwrap();
+        assert!(request.starts_with("GET /v1/models HTTP/1.1"));
+        assert!(request.contains(&format!("authorization: Bearer {KEY}\r\n")));
+    }
+    let (endpoint, task) = server("200 OK", response(content()), 0).await;
+    let base = endpoint.strip_suffix("/chat/completions").unwrap();
+    LlmClient::new(config(base.into()), KEY.into())
+        .unwrap()
+        .generate_plan("goal", &AgentRegistry::builtin(), CancellationToken::new())
+        .await
+        .unwrap();
+    assert!(
+        String::from_utf8(task.await.unwrap())
+            .unwrap()
+            .starts_with("POST /v1/chat/completions HTTP/1.1")
+    );
+    for key in ["abc def", "abc\nxyz", "密钥"] {
+        let error = LlmClient::new(config("https://example.com/v1".into()), key.into())
+            .err()
+            .unwrap()
+            .to_string();
+        assert!(!error.contains(key));
+    }
+}
