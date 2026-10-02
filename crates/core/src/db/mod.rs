@@ -2,6 +2,8 @@
 //! Store 为连接池薄封装（Clone 廉价）；事件流落库经 [`recorder::SessionRecorder`]。
 
 mod commander_config;
+mod commander_runs;
+pub use commander_runs::{CommanderRun, CommanderTaskState, PlanStatus, TaskStatus};
 mod recorder;
 mod task_move;
 
