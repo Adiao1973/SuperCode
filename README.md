@@ -102,7 +102,19 @@ cargo run -p supercode-cli -- plan generate '为待办应用提出开发计划�
 cargo run -p supercode-cli -- plan generate '设计任务计划' --config /tmp/commander.json
 ```
 
-`docs/examples/commander-config.json` 只包含占位值。P3-1～P3-4 已验收并合入 dev，真实 MiMo App/CLI 计划生成通过；尚未包含在 v0.3.0 安装包。计划持久化、状态机与核心 ACP 批次调度已实现并完成真实双 agent 验收。产品 CLI 汇总入口（P3-5）和桌面计划执行入口（P3-6）尚未实现。
+`docs/examples/commander-config.json` 只包含占位值。P3-1～P3-5 已验收并合入 dev，真实 MiMo App/CLI 计划生成通过；尚未包含在 v0.3.0 安装包。计划持久化、状态机与核心 ACP 批次调度已实现并完成真实双 agent 验收。CLI 预览、显式确认执行及结果报告已实现；桌面计划执行入口仍待 P3-6。
+
+指挥官 CLI 闭环（dev）：
+
+```bash
+# 使用已保存的模型和密钥，仅生成并保存 draft；目录须已存在且为绝对路径
+supercode plan run '任务目标' --cwd /absolute/project --agents opencode,codex
+# 先审阅返回的 plan/prompts，再复制 summary.run_id 确认执行
+supercode plan execute <run-id> --yes --jobs 2
+supercode plan report <run-id>
+```
+
+`execute` 没有 `--yes` 不运行；未预授权操作默认拒绝，可用 `--allow`/`--deny` 指定规则。stdout 为 JSON，进度写 stderr；失败非零，Ctrl-C 等待取消后退出 130。报告包含各状态数量、会话引用和最后回复（最多 8 KiB），读取不重跑任务。
 
 ## 架构与文档
 

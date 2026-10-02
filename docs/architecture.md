@@ -1,7 +1,7 @@
 # SuperCode 架构设计文档
 
 > 本文档是 SuperCode 接口设计的**单一事实源**：任何接口 / 数据模型变更，先改本文档再改代码。
-> 更新：2026-10-02；现行 dev 契约截至 P3-4。当前任务状态见 [roadmap](roadmap.md)，历史演进见 [快照](history/architecture-through-p3-3.md)。
+> 更新：2026-10-03；现行 dev 契约截至 P3-5。当前任务状态见 [roadmap](roadmap.md)，历史演进见 [快照](history/architecture-through-p3-3.md)。
 
 > v0.3.0 已发布：ACP 路径支持 OpenCode、Claude Code、Codex、MiMo；StreamJsonDriver 是延期设计，未包含在本版。
 
@@ -703,7 +703,7 @@ CLI 与桌面宿主一致：driver 返回 `Err` 时，在关闭事件通道、�
 
 内置 Claude 行的 installed_version 仍表示 ACP 适配器版本，不能由 claude --version 替代。新增 cli_version 可空字段，仅原样内置 Claude 命令另行并发探测 claude --version；自定义命令不套用此检测。定义列表（不探测）置 null。UI 单独展示 CLI 已检测版本与 ACP 已检测/未就绪；失败包含缺少程序、退出失败与超时等原因，因此统一“未检测到/未就绪”而非断言未安装。不读取登录或 key，不以版本结果保证认证可用。
 
-## 12. 指挥官契约（dev，截至 P3-4）
+## 12. 指挥官契约（dev，截至 P3-5）
 
 ### P3-1 — 指挥官计划契约
 
@@ -752,15 +752,15 @@ BrokerFactory 为每个派单创建独立 ApprovalBroker，宿主可事先订阅
 
 取消停止新派单、取消全部自有 driver 并等待协议/进程清理及 recorder 排空，然后原子取消计划；不得杀无关进程。执行 future 意外被丢弃时取消 token，剩余运行记录由独占宿主显式 recover_commander_runs 恢复为 interrupted；普通读取/另一执行调用不自动恢复，以免打断仍活跃计划。P3-4 不引入后台自动恢复或自动重跑。
 
-### P3-5 — 结果汇总与 CLI 闭环（实现中）
+### P3-5 — 结果汇总与 CLI 闭环（已集成 dev）
 
-`Store::summarize_commander_run(id)` 返回 RunSummary：run_id/objective/cwd/status、七种任务状态计数、按计划顺序的 task 摘要（id/title/agent_id/status/depends_on、本机 session_id、agent_session_id、最后一条 agent 消息 result、truncated）。读取不调用模型、不执行任务、不自动恢复或重跑。消息摘要最多 8 KiB（UTF-8 边界截断），无会话的失败/跳过仍输出明确状态。读取引用需核对 agent/cwd 一致，缺失会话可返回空 agent_session_id，不能把其他会话结果归给该任务。状态来源是 SQLite，不使用输出文本推断成功。
+`Store::summarize_commander_run(id)` 返回 RunSummary：run_id/objective/cwd/status、七种任务状态计数、按计划顺序的 task 摘要（id/title/agent_id/status/depends_on、本机 session_id、agent_session_id、最后一条 agent 消息 result、truncated）。读取不调用模型、不执行任务、不自动恢复或重跑。消息摘要最多 8 KiB（UTF-8 边界截断），无会话的失败/跳过仍输出明确状态。最后消息按本机会话 UUID 查询，远端 id 相同也不串台；读取引用需核对 agent/cwd 一致，缺失会话可返回空 agent_session_id，不能把其他会话结果归给该任务。状态来源是 SQLite，不使用输出文本推断成功。
 
 CLI `plan run <objective> --cwd <dir> [--agents opencode,codex]` 使用本机 SQLite 模型与密钥生成并校验计划，保存 draft，stdout 输出完整 plan/batches/summary 供审阅；默认不派单。agents 是可选的规划名单限制，未知或非 ACP agent 拒绝，计划及执行重新校验；不改全局注册表。没有限制时用全部已接入 ACP 定义。真实验收限制为 OpenCode+Codex，不处理 Claude/MiMo ACP 环境。
 
 `plan execute <run UUID> --yes [--jobs 2] [--allow ...] [--deny ...]` 显式确认已存 draft，不再次生成/改写计划；复用 P3-4 调度器。没有 --yes 退出 2、无派单；并发范围 1～16。CLI 无交互审批队列，按用户 allow/deny 规则使用独立 broker，未匹配操作 fail-closed，保留裁决落库，不改成 full 权限。事件按 run/task/session 归属写 stderr，stdout 仅最终 summary JSON。Ctrl-C 取消并等待驱动/审批/recorder 排空；成功退出 0，失败/中断/错误退出 1，取消退出 130。预检失败保留 draft 并输出可查询摘要。
 
-`plan report <run UUID>` 输出同一摘要，成功查询退出 0，无论计划状态；不存在退出非零。完整生成输出包含 plan（TaskPlan）、batches 和 summary；执行/报告输出 RunSummary。报告不包含 endpoint/model/key，不调用额外 LLM，不处理桌面入口（P3-6）。没有迁移或新包依赖；使用现有 serde/SQLite/调度器。
+`plan report <run UUID>` 输出同一摘要，成功查询退出 0，无论计划状态；不存在退出非零。完整生成输出包含 plan（TaskPlan）、batches 和 summary；执行/报告输出 RunSummary。报告不包含 endpoint/model/key，不调用额外 LLM，不处理桌面入口（P3-6）。没有迁移或新增包；CLI 直接使用锁文件已有 serde 序列化共用报告，复用 SQLite/调度器。
 
 ## 13. 设计变更与历史
 
