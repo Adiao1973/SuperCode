@@ -94,7 +94,7 @@ bash(git diff *) 通配（* 跨空格；尾通配宽容：也匹配无参的 git
 - 会话库：`~/Library/Application Support/SuperCode/supercode.db`（`SUPERCODE_DB` 覆盖）
 - opencode stderr 日志：`~/.local/share/opencode/log/`
 
-P3-2 开发分支提供“设置 → 指挥官模型”，连接参数只保存到本机 SQLite，key 从指定环境变量读取。配置后可运行：
+P3-2 开发分支提供“设置 → 指挥官模型”，连接参数和 key 可在 App 内分开保存到本机 SQLite，数据库不上传 GitHub。密钥保存后无需终端环境变量，重启 App 仍可直接使用；环境变量保留为备用来源。点击“验证模型并生成示例计划”可直接验证，计划不会自动执行。CLI 默认同样读取本机配置与密钥；显式 --config 只读取指定配置及其环境变量。配置后可运行：
 
 ```bash
 cargo run -p supercode-cli -- plan generate '为待办应用提出开发计划，不执行任务'

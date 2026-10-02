@@ -49,3 +49,50 @@ fn config_file_rejects_key_values_unknown_fields_and_oversize_without_echoing() 
     }
     std::fs::remove_dir_all(root).unwrap();
 }
+
+#[tokio::test]
+async fn local_key_survives_reopen_and_never_crosses_provider_scope() {
+    use supercode_core::commander::llm::credentials::CredentialSource;
+    let root = std::env::temp_dir().join(format!("sc-private-key-{}", uuid::Uuid::new_v4()));
+    let path = root.join("test.sqlite");
+    let store = Store::open(&path).await.unwrap();
+    let config:LlmConfig=serde_json::from_value(json!({"endpoint":"https://example.com/v1","model":"fixture","api_key_env":format!("SC_MISSING_{}",uuid::Uuid::new_v4().simple())})).unwrap();
+    assert_eq!(
+        store.commander_credential_source(&config).await.unwrap(),
+        CredentialSource::Missing
+    );
+    store
+        .save_commander_key(&config, " fixture-key\n")
+        .await
+        .unwrap();
+    assert!(
+        store
+            .save_commander_key(&config, "bad internal key")
+            .await
+            .is_err()
+    );
+    drop(store);
+    let store = Store::open(&path).await.unwrap();
+    assert_eq!(
+        store.commander_credential_source(&config).await.unwrap(),
+        CredentialSource::Sqlite
+    );
+    assert_eq!(
+        store.commander_key(&config).await.unwrap().as_deref(),
+        Some("fixture-key")
+    );
+    let mut complete = config.clone();
+    complete.endpoint.push_str("/chat/completions");
+    assert_eq!(
+        store.commander_credential_source(&complete).await.unwrap(),
+        CredentialSource::Sqlite
+    );
+    complete.endpoint = "https://other.example.com/v1".into();
+    assert_eq!(
+        store.commander_credential_source(&complete).await.unwrap(),
+        CredentialSource::Missing
+    );
+    assert!(store.list_sessions().await.unwrap().is_empty());
+    drop(store);
+    std::fs::remove_dir_all(root).unwrap();
+}

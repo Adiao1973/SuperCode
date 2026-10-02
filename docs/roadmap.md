@@ -187,3 +187,5 @@ P3-1 详细验收见 `docs/acceptance/p3-1.md`。后续各项在动工前继续�
 - **P3-2 复制配置修复（2026-10-02）**：兼容 /v1 Base URL 与尾斜杠，裁剪 key 首尾空白，拒绝内部非法字符并提供重复制指引；本地 GET/POST 契约验证，`just verify` 103 passed / 1 ignored。真实 MiMo 访问仍待验收。
 
 - **设置页 Claude 状态修复（2026-10-02）**：区分已安装的 Claude CLI 与 ACP 适配器探测失败，避免误报未安装；新增 cli_version 不替代 ACP 版本。完整验证 104 passed / 1 ignored，macOS 核对通过。真实适配器 npx 启动遇到 npm ENOTEMPTY，全局安装待用户明确授权。
+
+- **P3-2 App 直用适配（2026-10-02）**：按用户要求，密钥统一本机 SQLite（0006），数据库不上传 GitHub；新增密码框保存/来源状态、App 示例计划验证与取消，CLI 默认可无环境变量运行。增加 JSON 模式请求及完整围栏兼容以处理真实验收格式失败。109 passed / 1 ignored、macOS 隔离保存/生成/取消/重启通过；真实 MiMo 首次本机密钥保存后待验证，仍不合 dev/main。

@@ -109,6 +109,7 @@ async fn sends_contract_and_validates_response_without_executing() {
     let body: Value = serde_json::from_slice(&request[end + 4..]).unwrap();
     assert_eq!(body["model"], "fixture-model");
     assert_eq!(body["stream"], false);
+    assert_eq!(body["response_format"], json!({"type":"json_object"}));
     assert_eq!(body["messages"][1]["content"], "Design a todo app");
     let system = body["messages"][0]["content"].as_str().unwrap();
     assert!(system.contains("codex"));
@@ -366,5 +367,32 @@ async fn copied_base_url_and_key_whitespace_are_normalized() {
             .unwrap()
             .to_string();
         assert!(!error.contains(key));
+    }
+}
+
+#[tokio::test]
+async fn accepts_only_complete_json_fences_and_keeps_strict_plan_schema() {
+    for (text, accepted) in [
+        (format!("```json\n{}\n```", content()), true),
+        (format!("```\n{}\n```", content()), true),
+        (format!("Explanation\n```json\n{}\n```", content()), false),
+        (format!("```json\n{}\n```\nExplanation", content()), false),
+        ("```json\n{bad}\n```".into(), false),
+        (
+            json!({"goal":"unknown-schema","tasks":[]}).to_string(),
+            false,
+        ),
+    ] {
+        let body = json!({"choices":[{"finish_reason":"stop","message":{"role":"assistant","content":text}}]}).to_string();
+        let (endpoint, task) = server("200 OK", body, 0).await;
+        let result = LlmClient::new(config(endpoint), KEY.into())
+            .unwrap()
+            .generate_plan("goal", &AgentRegistry::builtin(), CancellationToken::new())
+            .await;
+        assert_eq!(result.is_ok(), accepted);
+        if let Err(error) = result {
+            assert!(!error.to_string().contains("unknown-schema"));
+        }
+        task.await.unwrap();
     }
 }

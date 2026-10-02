@@ -14,6 +14,8 @@ use serde_json::{Value, json};
 use std::{fmt, io::Read, net::IpAddr, path::Path, time::Duration};
 use tokio_util::sync::CancellationToken;
 
+pub mod credentials;
+
 pub const MAX_CONFIG_BYTES: u64 = 64 * 1024;
 fn default_timeout() -> u64 {
     60
@@ -133,7 +135,7 @@ impl LlmClient {
         if key.is_empty() {
             return Err(invalid("key 不能为空"));
         }
-        if !key.bytes().all(|c| c.is_ascii_graphic()) {
+        if key.len() > 16 * 1024 || !key.bytes().all(|c| c.is_ascii_graphic()) {
             return Err(invalid(
                 "key 含内部空白或非 ASCII 字符；请重新复制完整 key 并从设置变量的终端启动应用",
             ));
@@ -247,7 +249,7 @@ impl LlmClient {
             "You are a task planner. Return only one bare JSON object, no Markdown or prose. Do not execute tasks or call tools. Exact contract example: {schema}. version must be 1. objective is the user goal. tasks must have 1 to 64 items. Each id is unique, 1 to 64 ASCII alphanumeric, hyphen or underscore characters. title and prompt must be nonempty. depends_on contains only other existing ids, no duplicates or cycles. No extra fields. Choose agent_id only from this JSON array: {}. Use dependencies to describe the work; agents receive prompts separately so include enough context in each prompt.",
             json!(agents)
         );
-        let payload = json!({"model":self.model,"stream":false,"messages":[{"role":"system","content":system},{"role":"user","content":objective}]});
+        let payload = json!({"model":self.model,"stream":false,"response_format":{"type":"json_object"},"messages":[{"role":"system","content":system},{"role":"user","content":objective}]});
         let request = async {
             let mut response = self
                 .http
@@ -312,8 +314,20 @@ fn parse_response(
         .as_str()
         .filter(|text| !text.trim().is_empty())
         .ok_or_else(|| invalid("响应缺少文本计划"))?;
-    let plan: TaskPlan =
-        serde_json::from_str(content).map_err(|_| invalid("计划不是合法契约 JSON"))?;
+    let content = content.trim();
+    let content = content
+        .strip_prefix("```json\n")
+        .or_else(|| content.strip_prefix("```\n"))
+        .and_then(|inner| inner.strip_suffix("```"))
+        .map(str::trim)
+        .unwrap_or(content);
+    let plan: TaskPlan = serde_json::from_str(content).map_err(|error| {
+        let category = match error.classify() {
+            serde_json::error::Category::Data => "字段缺失、类型错误或包含额外字段",
+            _ => "JSON 语法错误、围栏不完整或包含额外说明",
+        };
+        invalid(&format!("计划不是合法契约 JSON：{category}"))
+    })?;
     let mut validated = plan
         .validate(registry)
         .map_err(|_| invalid("计划未通过 agent/字段/依赖校验"))?;

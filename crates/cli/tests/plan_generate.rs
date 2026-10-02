@@ -119,6 +119,30 @@ async fn cli_uses_local_sqlite_settings_without_creating_execution_sessions() {
         "{}",
         String::from_utf8_lossy(&output.stderr)
     );
+    store
+        .save_commander_key(&config, "local-fixture-key")
+        .await
+        .unwrap();
+    let output = Command::new(env!("CARGO_BIN_EXE_supercode"))
+        .args([
+            "plan",
+            "generate",
+            "Design a todo app without environment credentials",
+        ])
+        .env("SUPERCODE_DB", &path)
+        .env_remove("SC_CLI_FIXTURE_KEY")
+        .output()
+        .unwrap();
+    assert!(
+        output.status.success(),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let output: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(
+        output["plan"]["objective"],
+        "Design a todo app without environment credentials"
+    );
     assert!(store.list_sessions().await.unwrap().is_empty());
     drop(store);
     std::fs::remove_dir_all(root).unwrap();

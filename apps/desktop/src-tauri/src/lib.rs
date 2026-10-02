@@ -924,6 +924,7 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .manage(terminal::Terminals::default())
+        .manage(commander_settings::CommanderRequests::default())
         .manage(AppState {
             runs: tokio::sync::Mutex::new(HashMap::new()),
             pending: tokio::sync::Mutex::new(HashMap::new()),
@@ -932,6 +933,10 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             commander_settings::get_commander_config,
             commander_settings::list_commander_models,
+            commander_settings::save_commander_key,
+            commander_settings::commander_credential_source,
+            commander_settings::verify_commander_plan,
+            commander_settings::cancel_commander_plan,
             commander_settings::save_commander_config,
             terminal::open_terminal,
             terminal::write_terminal,
@@ -979,6 +984,8 @@ pub fn run() {
                     }
             ) {
                 app.state::<terminal::Terminals>().close_all();
+                app.state::<commander_settings::CommanderRequests>()
+                    .cancel_all();
             }
         });
 }

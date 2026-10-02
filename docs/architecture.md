@@ -765,3 +765,13 @@ endpoint 同时接受以 /v1（含尾部 /）结尾的 Base URL 和完整 /chat/
 #### Claude CLI 与 ACP 探测状态区分（2026-10-02）
 
 内置 Claude 行的 installed_version 仍表示 ACP 适配器版本，不能由 claude --version 替代。新增 cli_version 可空字段，仅原样内置 Claude 命令另行并发探测 claude --version；自定义命令不套用此检测。定义列表（不探测）置 null。UI 单独展示 CLI 已检测版本与 ACP 已检测/未就绪；失败包含缺少程序、退出失败与超时等原因，因此统一“未检测到/未就绪”而非断言未安装。不读取登录或 key，不以版本结果保证认证可用。
+
+#### P3-2 真实模型输出兼容（2026-10-02）
+
+真实模型调用到达响应阶段但计划反序列化失败；尚无响应原文证据，不预设具体格式原因。请求增加 response_format={type:json_object}，采用 MiMo 官方支持的 JSON 模式；兼容仅包裹一个 JSON 对象的完整 json/无语言 Markdown 代码围栏，剥离围栏后仍严格拒绝未知字段、错类型、非法 DAG/agent、工具调用/拒绝/截断，不从解释文字中抽取对象，不重试计费。错误分语法与字段类型类别，不输出模型原文。参考 https://mimo.mi.com/docs/zh-CN/quick-start/usage-guide/text-generation/structured-output 。
+
+#### P3-2 App 内 SQLite 密钥与验证入口（2026-10-02）
+
+用户明确选择统一存本机 SQLite（不上传 GitHub），不采用钥匙串。0006 commander_credentials(scope PRIMARY KEY,key_value) 保存明文密钥，按 origin + 规范化接口路径 + 环境变量名绑定，不跨源复用。SQLite/WAL/SHM/journal 和 .env 保持 Git 忽略；保存前校验 ASCII 非空且 ≤16 KiB，首尾空白裁剪；错误/Debug/文档不输出密钥。默认宿主优先读 SQLite key，再读环境变量；显式 CLI --config 仍只读环境变量、不开 DB。前端 password 输入只用于显式保存，成功清空；IPC 状态只返回 sqlite/environment/missing，不返回密钥。密钥和连接设置分开显式保存，分别展示状态。
+
+新增保存密钥/凭据来源/示例计划验证/取消 IPC。示例验证从已保存 SQLite 配置读取，固定待办应用目标，只展示任务和批次，不派单、不读取项目文件。每次验证 UUID，最多一个活跃请求；drop 删除请求，取消和关闭窗口回收 CancellationToken，既有 timeout 限制总时长。真实计划留本机内存，不自动写仓库。

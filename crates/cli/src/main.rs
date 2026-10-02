@@ -182,20 +182,17 @@ fn cmd_plan_validate(file: PathBuf) -> ExitCode {
 async fn cmd_plan_generate(objective: String, config_file: Option<PathBuf>) -> ExitCode {
     use supercode_core::commander::llm::{LlmClient, LlmConfig};
     let result = async {
-        let config = if let Some(path) = config_file {
-            LlmConfig::read(&path)?
+        let client = if let Some(path) = config_file {
+            LlmClient::from_config(LlmConfig::read(&path)?)?
         } else {
-            Store::open_default()
-                .await?
-                .get_commander_config()
-                .await?
-                .ok_or_else(|| {
-                    supercode_core::error::CoreError::Protocol(
-                        "请在桌面设置配置指挥官模型，或通过 --config 指定配置文件".into(),
-                    )
-                })?
+            let store = Store::open_default().await?;
+            let config = store.get_commander_config().await?.ok_or_else(|| {
+                supercode_core::error::CoreError::Protocol(
+                    "请在桌面设置配置指挥官模型，或通过 --config 指定配置文件".into(),
+                )
+            })?;
+            store.commander_client(config).await?
         };
-        let client = LlmClient::from_config(config)?;
         let cancel = CancellationToken::new();
         let signal_cancel = cancel.clone();
         let watcher = tokio::spawn(async move {
