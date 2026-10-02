@@ -94,7 +94,7 @@ bash(git diff *) 通配（* 跨空格；尾通配宽容：也匹配无参的 git
 - 会话库：`~/Library/Application Support/SuperCode/supercode.db`（`SUPERCODE_DB` 覆盖）
 - opencode stderr 日志：`~/.local/share/opencode/log/`
 
-P3-2 开发分支提供“设置 → 指挥官模型”，连接参数和 key 可在 App 内分开保存到本机 SQLite，数据库不上传 GitHub。密钥保存后无需终端环境变量，重启 App 仍可直接使用；环境变量保留为备用来源。点击“验证模型并生成示例计划”可直接验证，计划不会自动执行。CLI 默认同样读取本机配置与密钥；显式 --config 只读取指定配置及其环境变量。配置后可运行：
+dev 已集成的 P3-2 提供“设置 → 指挥官模型”，连接参数和 key 可在 App 内分开保存到本机 SQLite，数据库不上传 GitHub。密钥保存后无需终端环境变量，重启 App 仍可直接使用；环境变量保留为备用来源。点击“验证模型并生成示例计划”可直接验证，计划不会自动执行。CLI 默认同样读取本机配置与密钥；显式 --config 只读取指定配置及其环境变量。配置后可运行：
 
 ```bash
 cargo run -p supercode-cli -- plan generate '为待办应用提出开发计划，不执行任务'
@@ -102,15 +102,17 @@ cargo run -p supercode-cli -- plan generate '为待办应用提出开发计划�
 cargo run -p supercode-cli -- plan generate '设计任务计划' --config /tmp/commander.json
 ```
 
-`docs/examples/commander-config.json` 只包含占位值。P3-2 当前待真实 MiMo API 补验，尚未合 dev 或包含在 v0.3.0 中。
+`docs/examples/commander-config.json` 只包含占位值。P3-1～P3-3 已验收并合入 dev，真实 MiMo App/CLI 计划生成通过；尚未包含在 v0.3.0 安装包。计划持久化与状态机已实现，ACP 自动派单仍待 P3-4。
 
 ## 架构与文档
 
+从 [文档导航](docs/README.md) 进入；当前进度看 roadmap，执行步骤看 development-process，历史过程不作为现行规则。
+
 - [docs/architecture.md](docs/architecture.md) —— 设计单一事实源：分层架构、核心接口（AgentEvent / ApprovalBroker / envcheck / EventAggregator）、事件管道（Rust 合帧 → Tauri Channel）、IPC 契约、数据模型
-- [docs/roadmap.md](docs/roadmap.md) —— 分期任务清单（每任务带验收要点与偏差记录）
+- [docs/roadmap.md](docs/roadmap.md) —— 分期任务清单（当前进度、下一任务及验收入口）
 - [docs/development-process.md](docs/development-process.md) —— 闭环开发流程：文档先行 → 实现 → 验证 → 归档；分支模型 `feat/fix → dev → tag → main`
 - [docs/adr/](docs/adr/) —— 架构决策记录（ACP 选型 / Tauri+Rust / React+shadcn / opencode 先行 / 分支模型 / 权限模式 / 工作空间模型）
-- [docs/acceptance/](docs/acceptance/) —— 分期与任务验收记录（phase0 / phase1 / phase2）
+- [docs/acceptance/](docs/acceptance/) —— 分期与任务验收记录（各 Phase 与任务，顶部结论优先）
 
 ```
 crates/core    # supercode-core：driver 适配层、审批、事件、进程、注册表、envcheck、SQLite
