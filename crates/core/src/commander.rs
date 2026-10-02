@@ -1,4 +1,6 @@
 //! Static commander plan contract; validation never executes a task.
+pub mod llm;
+
 use std::collections::{HashMap, HashSet};
 
 use serde::{Deserialize, Serialize};

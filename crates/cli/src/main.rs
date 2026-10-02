@@ -84,6 +84,13 @@ enum Cmd {
 enum PlanCmd {
     /// 校验 JSON 计划并输出依赖执行批次
     Validate { file: PathBuf },
+    /// 用独立直连 LLM 生成计划（不执行）
+    Generate {
+        objective: String,
+        /// 显式配置 JSON 文件；缺省从本机 SQLite 读取
+        #[arg(long)]
+        config: Option<PathBuf>,
+    },
 }
 
 #[derive(Subcommand)]
@@ -100,6 +107,9 @@ async fn main() -> ExitCode {
         Cmd::Plan {
             cmd: PlanCmd::Validate { file },
         } => cmd_plan_validate(file),
+        Cmd::Plan {
+            cmd: PlanCmd::Generate { objective, config },
+        } => cmd_plan_generate(objective, config).await,
         Cmd::Run {
             agent,
             prompt,
@@ -162,6 +172,52 @@ fn cmd_plan_validate(file: PathBuf) -> ExitCode {
             println!("{json}");
             ExitCode::SUCCESS
         }
+        Err(error) => {
+            eprintln!("{error}");
+            ExitCode::FAILURE
+        }
+    }
+}
+
+async fn cmd_plan_generate(objective: String, config_file: Option<PathBuf>) -> ExitCode {
+    use supercode_core::commander::llm::{LlmClient, LlmConfig};
+    let result = async {
+        let client = if let Some(path) = config_file {
+            LlmClient::from_config(LlmConfig::read(&path)?)?
+        } else {
+            let store = Store::open_default().await?;
+            let config = store.get_commander_config().await?.ok_or_else(|| {
+                supercode_core::error::CoreError::Protocol(
+                    "请在桌面设置配置指挥官模型，或通过 --config 指定配置文件".into(),
+                )
+            })?;
+            store.commander_client(config).await?
+        };
+        let cancel = CancellationToken::new();
+        let signal_cancel = cancel.clone();
+        let watcher = tokio::spawn(async move {
+            if tokio::signal::ctrl_c().await.is_ok() {
+                signal_cancel.cancel();
+            }
+        });
+        let result = client
+            .generate_plan(&objective, &registry::AgentRegistry::load(), cancel)
+            .await;
+        watcher.abort();
+        result
+    }
+    .await;
+    match result {
+        Ok(plan) => match serde_json::to_string_pretty(&plan) {
+            Ok(json) => {
+                println!("{json}");
+                ExitCode::SUCCESS
+            }
+            Err(_) => {
+                eprintln!("无法序列化计划");
+                ExitCode::FAILURE
+            }
+        },
         Err(error) => {
             eprintln!("{error}");
             ExitCode::FAILURE

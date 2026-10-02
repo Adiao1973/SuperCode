@@ -143,7 +143,7 @@
 | ID | 任务 | 验收与预期 | 状态 |
 |---|---|---|---|
 | P3-1 | 指挥官任务计划契约与 DAG 校验、CLI 计划检查入口 | `just verify`；合法依赖输出稳定执行批次；重复 id、空目标、未知/未接入 agent、缺失/重复/自身依赖、循环及超过 64 任务拒绝；CLI 合法文件退出 0、坏计划非 0，不启动 agent | ✅ 已验收 2026-10-01 |
-| P3-2 | 直连 LLM 客户端与配置 | 独立配置模型/endpoint/key 来源；本地 HTTP fixture 验证请求、响应、超时与取消；错误不泄露 key；实际可用模型生成 P3-1 合法计划 | 待办 |
+| P3-2 | 直连 LLM 客户端与配置 | 独立配置模型/endpoint/key 来源；本地 HTTP fixture 验证请求、响应、超时与取消；错误不泄露 key；实际可用模型生成 P3-1 合法计划；详见 `docs/acceptance/p3-2.md` | ✅ 已验收 2026-10-02 |
 | P3-3 | 指挥官计划持久化与执行状态机 | 新迁移；事务保存、重启恢复、并发状态转换与失败/取消单测，不自动重跑历史任务 | 待办 |
 | P3-4 | ACP 派单与依赖调度 | 按批次并行、并发上限、失败阻断后代、取消回收，原 cwd/agent/审批归属不变；协议 fixture 与真实双 agent 核对 | 待办 |
 | P3-5 | 结果汇总与指挥官 CLI 闭环 | 汇总明确成功/失败/跳过，输出对应会话引用，真实拆解→派单→汇总留痕 | 待办 |
@@ -179,3 +179,13 @@ P3-1 详细验收见 `docs/acceptance/p3-1.md`。后续各项在动工前继续�
 - **v0.3.0 发布落地**：tag 指向 `6d43e7b`，main 合并为 `045de1f`；本地安装包与校验和已归档，远程推送和 GitHub Release 已完成（双架构 DMG + SHA256SUMS.txt）。下一阶段为 Phase 3 细化，P2-6 独立延期补验。
 
 - **P3-1 验收（2026-10-01）**：完成严格版本化任务计划契约、agent/依赖 DAG 校验、稳定拓扑批次及 `plan validate` CLI。`just verify` 全绿（core 70 + 新计划集成 4、ACP 4、desktop 6、CLI 集成 2；1 既有 ignored），真实命令示例输出 [[research], [implement, review]]。不启动 agent、不访问模型、无数据库迁移；已有 serde_json 提升为 CLI 运行依赖。详见 `docs/acceptance/p3-1.md`。下一步 P3-2，直连 LLM 客户端与配置。
+
+- **P3-2 实施（2026-10-01，待真实模型验收）**：直连 Chat Completions 计划生成、SQLite 本机连接配置、桌面设置、CLI generate 已完成。`just verify` 99 passed / 1 ignored，macOS 设置保存/失败保留旧值/重启恢复通过。用户选择 MiMo，允许连接信息稍后提供且不得上传 GitHub；真实模型尚未调用，保留 feat/p3-2-direct-llm，不合 dev/main、不发布。详见 `docs/acceptance/p3-2.md`。
+
+- **P3-2 设置优化（2026-10-02）**：突出已保存模型与未保存状态，增加同源模型目录查询和下拉选择；保留手填及显式保存。`just verify` 102 passed / 1 ignored，macOS 隔离 fixture 查询/选择/保存/清除旧目录通过。用户已自行保存真实配置，未读取或上传真实连接信息与 key；真实 MiMo 计划验收仍待完成。
+
+- **P3-2 复制配置修复（2026-10-02）**：兼容 /v1 Base URL 与尾斜杠，裁剪 key 首尾空白，拒绝内部非法字符并提供重复制指引；本地 GET/POST 契约验证，`just verify` 103 passed / 1 ignored。真实 MiMo 访问仍待验收。
+
+- **设置页 Claude 状态修复（2026-10-02）**：区分已安装的 Claude CLI 与 ACP 适配器探测失败，避免误报未安装；新增 cli_version 不替代 ACP 版本。完整验证 104 passed / 1 ignored，macOS 核对通过。真实适配器 npx 启动遇到 npm ENOTEMPTY，全局安装待用户明确授权。
+
+- **P3-2 App 直用适配（2026-10-02）**：按用户要求，密钥统一本机 SQLite（0006），数据库不上传 GitHub；新增密码框保存/来源状态、App 示例计划验证与取消，CLI 默认可无环境变量运行。增加 JSON 模式请求及完整围栏兼容以处理真实验收格式失败。109 passed / 1 ignored、macOS 隔离保存/生成/取消/重启通过；真实 MiMo 首次本机密钥保存后待验证，仍不合 dev/main。

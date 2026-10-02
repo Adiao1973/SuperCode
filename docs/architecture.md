@@ -651,7 +651,7 @@ P1-8 落地迁移 0003（workspaces + sessions.workspace_id，历史会话按 di
 
 - 权限默认**最小放行**：未配置规则的工具调用一律 `ask`；审批是产品的第一公民功能。
 - 预授权规则中的 `always` 生效时必须落库（approvals.decision_by = rule:<id>）留痕。
-- API key 等敏感配置不进入 SuperCode：各 agent 自管自己的鉴权（`opencode auth login` 等），SuperCode 只管进程与协议。
+- 执行 agent 的 API key 不进入 SuperCode：各 agent 自管鉴权。Phase 3 指挥官直连模型是独立配置，只保存 endpoint/model/key 环境变量名；运行时读取该变量，不保存密钥、不复用 agent 登录凭据。
 - exec 类工具的命令内容在审批 UI 中**完整可见**（不截断命令、展示 cwd）。
 
 ## 10. 技术约束与开发规范（WebKit 相关）
@@ -727,3 +727,53 @@ CLI 与桌面宿主一致：driver 返回 `Err` 时，在关闭事件通道、�
 `TaskPlan::validate(&AgentRegistry) -> Result<ValidatedPlan>` 拒绝重复 id、未知 agent、重复/缺失/自身依赖和环；返回按输入顺序稳定排列的拓扑执行批次。每个批次仅包含依赖在此前批次已完成的任务。该结果仅是静态建议，不创建会话、数据库记录、worktree 或子进程；实际安装探测、工作目录及审批在 P3-4 执行入口重新校验。计划自身不携带权限豁免或 shell 命令执行配置，不能越过既有审批管线。
 
 CLI `supercode plan validate <file>` 读取不超过 1 MiB 的 JSON，按合并后的注册表验证，输出 `ValidatedPlan { plan, batches }` JSON；坏计划返回非零并给出字段/依赖诊断。不调用 LLM，不访问 SQLite，不执行 agent。P3-2 将复用同一契约校验模型响应。
+
+
+### P3-2 — 直连 LLM 计划生成
+
+`commander::llm::LlmConfig { endpoint, model, api_key_env, timeout_secs }` 使用严格 JSON，配置文件只用于显式 `--config`，CLI `--config` 可指定独立文件；按用户要求，默认改从本机 SQLite 的 commander_config 单例读取，旧 JSON 路径不自动读取。endpoint 是完整 chat-completions URL（不自行拼接路径），要求 HTTPS 或字面 loopback HTTP，禁止 URL 用户信息、query、fragment；model/key 环境变量名非空，变量名只含 ASCII 字母/数字/下划线且首位不是数字。timeout_secs 默认 60，范围 1～300。配置和用户目标分别限制 64 KiB，响应及计划限制 1 MiB；只读普通文件，无 key 字段。
+
+`LlmClient::from_config(config)` 在运行时读取 api_key_env，密钥不参与 Debug/序列化，只用于 sensitive Bearer 头；不修改任何 agent 配置。客户端使用 reqwest 0.13.5（锁文件已有），JSON 与 rustls 特性；禁重定向和自动重试，避免凭据转发及非显式重计费。
+
+`generate_plan(objective, registry, cancel) -> Result<ValidatedPlan>` 一次非流式 POST `{model,stream:false,messages:[system,user]}`。系统提示给出 P3-1 精确 JSON 契约及可执行 ACP agent 名单；用户目标是独立 user 内容，不读取项目文件。响应必须有唯一 choice、finish_reason=stop、assistant message.content 字符串，禁止 tool_calls/refusal；content 必须为裸 JSON（无 Markdown），再走 TaskPlan::validate，输出 objective 固定为原用户目标。未知 agent、非法 DAG 等不进入执行。
+
+从发送到读取全部响应实行同一 deadline 和 CancellationToken；超时、取消、HTTP 错误、非法响应均不输出服务端原文、URL、key 或目标内容。计划验证错误也不回显模型文本，只给分类诊断。HTTP 失败只包含状态码，不读取错误体。网络客户端不访问 SQLite、不启动 agent、不自动执行计划；CLI 默认配置加载可打开 SQLite，但不创建会话。
+
+CLI `supercode plan generate <objective> [--config <file>]` 输出与 validate 相同的 JSON，Ctrl-C 取消返回非零。P3-2 仅生成计划，后续确认和派单由 P3-3/4/6 实现。真实模型验收必须使用用户指定的 provider/model 和 key 来源；fixture 不替代真实调用，缺少可直连访问方式时保留任务分支待验收。
+
+HTTP 客户端配置参考 [reqwest ClientBuilder](https://docs.rs/reqwest/0.13.5/reqwest/struct.ClientBuilder.html)。
+
+
+#### P3-2 本机配置与桌面适配（用户补充）
+
+用户选择 MiMo，但 endpoint/model/key 来源稍后提供，要求连接信息不得上传 GitHub。新增 migration 0005 的 `commander_config(id=1, config_json)`，只保存严格 LlmConfig（endpoint/model/api_key_env/timeout_secs），不保存 API key 值；SQLite/数据库 WAL/SHM 全部加入 gitignore，真实配置只保存在应用数据目录或 SUPERCODE_DB 测试库，示例只使用虚构占位符。
+
+Store::save_commander_config/get_commander_config 校验后原子替换单例，失败不覆盖旧值。桌面设置新增“指挥官模型”区块，字段 endpoint、model、key 环境变量名、timeout，可保存和重启恢复；不提供自动联网测试或任务派单按钮。IPC get_commander_config/save_commander_config 的嵌套配置沿用 snake_case JSON 字段，与前端类型逐字对齐；配置本身无密钥字段，非法配置错误不回显内容。用户稍后可在此填入 MiMo 连接信息，无需重新开发专用 MiMo adapter。
+
+默认 `plan generate` 从 Store 读取本机配置；显式 --config 使用独立普通文件，便于隔离验收。凭据仍由运行进程的环境变量提供；桌面 key 来源可在后续宿主凭据设置扩展，本任务不读取现有 agent 登录 token。
+
+- **P3-2 验证状态（2026-10-01）**：接口、SQLite 0005、桌面设置和 HTTP/CLI 契约已通过自动及 macOS 检查，用户选定 MiMo 的真实 API 验收待连接信息；只保留任务分支，不宣称闭环完成。
+
+#### P3-2 模型发现与配置反馈（2026-10-02）
+
+桌面设置突出展示已保存模型，明确“配置已保存”不等于推理验收通过。新增 list_commander_models(config) IPC：使用表单中的 endpoint 与环境变量凭据，允许模型名为空；仅对同源、同路径前缀的 chat/completions 推导 models 地址并 GET，不跟随重定向、不探测其他供应商。超时沿用配置，响应限制 1 MiB、最多 4096 模型；严格解析 data[].id、排序去重，不回显响应原文。列表仅内存保存，选择后需显式保存，不覆盖手填模型；列表不保证计费权限或文本规划能力。缺少 key、接口不支持或失败时保留手填路径。MiMo 官方提供 models API 并支持 Bearer： https://mimo.mi.com/docs/zh-CN/api/model/list-models 。
+
+#### P3-2 复制配置兼容修复（2026-10-02）
+
+endpoint 同时接受以 /v1（含尾部 /）结尾的 Base URL 和完整 /chat/completions 地址；仅前者在客户端补全路径，SQLite 保留用户输入，不切换 origin。key 仅裁剪首尾空白，内部空白、非 ASCII 或控制字符仍拒绝且不回显值，提示重新复制完整 key。模型目录与计划请求复用这一规范化规则。
+
+#### Claude CLI 与 ACP 探测状态区分（2026-10-02）
+
+内置 Claude 行的 installed_version 仍表示 ACP 适配器版本，不能由 claude --version 替代。新增 cli_version 可空字段，仅原样内置 Claude 命令另行并发探测 claude --version；自定义命令不套用此检测。定义列表（不探测）置 null。UI 单独展示 CLI 已检测版本与 ACP 已检测/未就绪；失败包含缺少程序、退出失败与超时等原因，因此统一“未检测到/未就绪”而非断言未安装。不读取登录或 key，不以版本结果保证认证可用。
+
+#### P3-2 真实模型输出兼容（2026-10-02）
+
+真实模型调用到达响应阶段但计划反序列化失败；尚无响应原文证据，不预设具体格式原因。请求增加 response_format={type:json_object}，采用 MiMo 官方支持的 JSON 模式；兼容仅包裹一个 JSON 对象的完整 json/无语言 Markdown 代码围栏，剥离围栏后仍严格拒绝未知字段、错类型、非法 DAG/agent、工具调用/拒绝/截断，不从解释文字中抽取对象，不重试计费。错误分语法与字段类型类别，不输出模型原文。参考 https://mimo.mi.com/docs/zh-CN/quick-start/usage-guide/text-generation/structured-output 。
+
+#### P3-2 App 内 SQLite 密钥与验证入口（2026-10-02）
+
+用户明确选择统一存本机 SQLite（不上传 GitHub），不采用钥匙串。0006 commander_credentials(scope PRIMARY KEY,key_value) 保存明文密钥，按 origin + 规范化接口路径 + 环境变量名绑定，不跨源复用。SQLite/WAL/SHM/journal 和 .env 保持 Git 忽略；保存前校验 ASCII 非空且 ≤16 KiB，首尾空白裁剪；错误/Debug/文档不输出密钥。默认宿主优先读 SQLite key，再读环境变量；显式 CLI --config 仍只读环境变量、不开 DB。前端 password 输入只用于显式保存，成功清空；IPC 状态只返回 sqlite/environment/missing，不返回密钥。密钥和连接设置分开显式保存，分别展示状态。
+
+新增保存密钥/凭据来源/示例计划验证/取消 IPC。示例验证从已保存 SQLite 配置读取，固定待办应用目标，只展示任务和批次，不派单、不读取项目文件。每次验证 UUID，最多一个活跃请求；drop 删除请求，取消和关闭窗口回收 CancellationToken，既有 timeout 限制总时长。真实计划留本机内存，不自动写仓库。
+
+P3-2 真实出口补验（2026-10-02）：独立 App 使用用户自行保存的本机 SQLite 凭据，真实 MiMo 示例计划通过严格契约及 DAG 校验（13 任务、8 批次），无需终端环境变量；未执行 agent。此前待验收记录为历史阶段，现满足 P3-2 集成出口，按任务合入 dev。真实连接信息不归档。
