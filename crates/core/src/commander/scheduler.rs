@@ -18,12 +18,14 @@ use uuid::Uuid;
 pub struct DispatchOptions {
     pub max_concurrency: usize,
     pub workspace_id: String,
+    pub interactive_approvals: bool,
 }
 impl Default for DispatchOptions {
     fn default() -> Self {
         Self {
             max_concurrency: 2,
             workspace_id: DEFAULT_WORKSPACE.into(),
+            interactive_approvals: false,
         }
     }
 }
@@ -202,6 +204,7 @@ impl Scheduler {
                         task,
                         cwd.into(),
                         options.workspace_id.clone(),
+                        options.interactive_approvals,
                         context,
                         broker,
                         events.clone(),
@@ -238,6 +241,7 @@ async fn run_task(
     task: PlannedTask,
     cwd: String,
     workspace: String,
+    interactive_approvals: bool,
     context: DispatchContext,
     broker: ApprovalBroker,
     events: broadcast::Sender<DispatchEvent>,
@@ -280,7 +284,13 @@ async fn run_task(
                     .iter()
                     .find(|o| !o.kind.is_allow())
                     .map(|o| o.option_id.clone());
-                let resolution = broker.resolve_fail_closed(request);
+                let resolution = async {
+                    if interactive_approvals {
+                        broker.resolve(request).await
+                    } else {
+                        broker.resolve_fail_closed(request).await
+                    }
+                };
                 tokio::pin!(resolution);
                 let mut cancelled_approval = false;
                 let mut decision = tokio::select! {biased;

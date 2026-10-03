@@ -95,6 +95,15 @@ impl TaskPlan {
                 }
             }
         }
+        let batches = self.dependency_batches()?;
+        Ok(ValidatedPlan {
+            plan: self,
+            batches,
+        })
+    }
+    /// Read-only layout of persisted history; does not authorize execution.
+    pub fn dependency_batches(&self) -> Result<Vec<Vec<String>>> {
+        let invalid = |message: String| CoreError::Protocol(format!("指挥官计划: {message}"));
         let mut completed = HashSet::new();
         let mut batches = Vec::new();
         while completed.len() < self.tasks.len() {
@@ -122,9 +131,6 @@ impl TaskPlan {
             completed.extend(batch.iter().cloned());
             batches.push(batch);
         }
-        Ok(ValidatedPlan {
-            plan: self,
-            batches,
-        })
+        Ok(batches)
     }
 }

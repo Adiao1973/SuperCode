@@ -24,6 +24,8 @@ export interface PermissionRequest {
 export interface PendingPermission {
   /** Uuid（Rust 侧字符串序列化） */
   id: string;
+  commander_run_id?: string;
+  commander_task_id?: string;
   request: PermissionRequest;
 }
 
@@ -63,7 +65,7 @@ class PermissionCenter {
       listen<DecisionRecord>("decision-record", (event) => {
         // 待决应答/自动裁决后从队列移除对应项
         this.pending = this.pending.filter(
-          (p) => p.request.tool_call_id !== event.payload.request.tool_call_id,
+          (p) => p.request.tool_call_id !== event.payload.request.tool_call_id || p.request.session_id !== event.payload.request.session_id,
         );
         this.decisions = [event.payload, ...this.decisions].slice(0, 50);
         this.notifyPending();

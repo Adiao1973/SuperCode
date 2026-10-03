@@ -93,3 +93,16 @@ fn accepts_limit_and_keeps_independent_tasks_in_input_order() {
     assert_eq!(v.batches[0].len(), 64);
     assert_eq!(v.batches[0][63], "t63");
 }
+
+#[test]
+fn history_dependency_layout_survives_removed_agent_without_authorizing_execution() {
+    let plan: supercode_core::commander::TaskPlan = serde_json::from_value(serde_json::json!({"version":1,"objective":"historical","tasks":[{"id":"a","title":"a","agent_id":"removed-agent","prompt":"old","depends_on":[]},{"id":"b","title":"b","agent_id":"removed-agent","prompt":"old","depends_on":["a"]}]})).unwrap();
+    assert_eq!(
+        plan.dependency_batches().unwrap(),
+        vec![vec!["a".to_string()], vec!["b".to_string()]]
+    );
+    assert!(
+        plan.validate(&supercode_core::registry::AgentRegistry::builtin())
+            .is_err()
+    );
+}

@@ -46,6 +46,7 @@ async fn dispatches_batches_and_persists_owned_sessions() {
             DispatchOptions {
                 max_concurrency: 2,
                 workspace_id: DEFAULT_WORKSPACE.into(),
+                ..Default::default()
             },
             brokers(),
             events,
@@ -445,4 +446,101 @@ async fn persistence_failure_never_reports_success() {
         store.get_commander_run(id).await.unwrap().unwrap().status,
         PlanStatus::Succeeded
     );
+}
+
+#[tokio::test]
+async fn interactive_approval_uses_normal_ask_pipeline_and_single_record() {
+    let (scheduler, store, id) =
+        setup(&[("a", "permission", vec![]), ("b", "permission", vec![])]).await;
+    let factory: BrokerFactory = Arc::new(|_| {
+        let broker = ApprovalBroker::with_rules(PermissionRules::default());
+        let mut pending = broker.subscribe();
+        let answering = broker.clone();
+        tokio::spawn(async move {
+            let request = pending.recv().await.unwrap();
+            answering
+                .respond(
+                    request.id,
+                    supercode_core::driver::PermissionDecision {
+                        option_id: "allow".into(),
+                        updated_input: None,
+                    },
+                )
+                .await
+                .unwrap();
+        });
+        broker
+    });
+    let run = scheduler
+        .execute(
+            id,
+            DispatchOptions {
+                interactive_approvals: true,
+                ..Default::default()
+            },
+            factory,
+            broadcast::channel(128).0,
+            CancellationToken::new(),
+        )
+        .await
+        .unwrap();
+    assert_eq!(run.status, PlanStatus::Succeeded);
+    let pool = sqlx::SqlitePool::connect(&format!("sqlite://{}/state.sqlite", run.cwd))
+        .await
+        .unwrap();
+    let decisions: Vec<String> = sqlx::query_scalar("SELECT decision FROM approvals")
+        .fetch_all(&pool)
+        .await
+        .unwrap();
+    assert_eq!(decisions, vec!["allow", "allow"]);
+    assert_eq!(store.list_sessions().await.unwrap().len(), 2);
+    let owners: i64 = sqlx::query_scalar("SELECT count(DISTINCT session_id) FROM approvals")
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+    assert_eq!(owners, 2);
+}
+
+#[tokio::test]
+async fn interactive_fallback_ask_cancels_with_one_rejection_and_no_descendant_session() {
+    let (scheduler, store, id) =
+        setup(&[("a", "permission", vec![]), ("b", "fast", vec!["a"])]).await;
+    let cancel = CancellationToken::new();
+    let trigger = cancel.clone();
+    let factory: BrokerFactory = Arc::new(move |_| {
+        let broker = ApprovalBroker::with_rules(PermissionRules::default());
+        let mut pending = broker.subscribe();
+        let token = trigger.clone();
+        tokio::spawn(async move {
+            pending.recv().await.unwrap();
+            token.cancel();
+        });
+        broker
+    });
+    let run = tokio::time::timeout(
+        std::time::Duration::from_secs(15),
+        scheduler.execute(
+            id,
+            DispatchOptions {
+                interactive_approvals: true,
+                ..Default::default()
+            },
+            factory,
+            broadcast::channel(128).0,
+            cancel,
+        ),
+    )
+    .await
+    .unwrap()
+    .unwrap();
+    assert_eq!(run.status, PlanStatus::Cancelled);
+    assert_eq!(store.list_sessions().await.unwrap().len(), 1);
+    let pool = sqlx::SqlitePool::connect(&format!("sqlite://{}/state.sqlite", run.cwd))
+        .await
+        .unwrap();
+    let decisions: Vec<String> = sqlx::query_scalar("SELECT decision FROM approvals")
+        .fetch_all(&pool)
+        .await
+        .unwrap();
+    assert_eq!(decisions, vec!["reject"]);
 }

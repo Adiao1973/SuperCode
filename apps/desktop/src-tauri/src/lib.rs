@@ -2,6 +2,7 @@
 //! P1-5：审批中心——权限模式热切换、待决请求转发应答、规则库 SQLite 持久化（§5.1）。
 
 mod commander_settings;
+mod commander_workspace;
 mod terminal;
 mod worktrees;
 
@@ -923,14 +924,47 @@ pub fn run() {
     supercode_core::envcheck::augment_gui_path();
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .setup(|app| {
+            // Native macOS Quit terminates directly; route Cmd+Q through ExitRequested.
+            #[cfg(target_os = "macos")]
+            {
+                let menu = tauri::menu::Menu::default(app.handle())?;
+                if let Some(submenu) = menu.items()?.first().and_then(|item| item.as_submenu()) {
+                    let items = submenu.items()?;
+                    if let Some(item) = items.last() {
+                        submenu.remove(item)?;
+                    }
+                    submenu.append(&tauri::menu::MenuItem::with_id(
+                        app,
+                        "supercode-quit",
+                        "退出 SuperCode",
+                        true,
+                        Some("CmdOrCtrl+Q"),
+                    )?)?;
+                }
+                app.set_menu(menu)?;
+            }
+            Ok(())
+        })
+        .on_menu_event(|app, event| {
+            if event.id().as_ref() == "supercode-quit" {
+                app.exit(0);
+            }
+        })
         .manage(terminal::Terminals::default())
         .manage(commander_settings::CommanderRequests::default())
+        .manage(commander_workspace::CommanderWork::default())
         .manage(AppState {
             runs: tokio::sync::Mutex::new(HashMap::new()),
             pending: tokio::sync::Mutex::new(HashMap::new()),
             store: tokio::sync::OnceCell::new(),
         })
         .invoke_handler(tauri::generate_handler![
+            commander_workspace::generate_commander_run,
+            commander_workspace::list_commander_run_views,
+            commander_workspace::get_commander_run_view,
+            commander_workspace::execute_commander_run,
+            commander_workspace::cancel_commander_work,
             commander_settings::get_commander_config,
             commander_settings::list_commander_models,
             commander_settings::save_commander_key,
@@ -975,6 +1009,20 @@ pub fn run() {
         .build(tauri::generate_context!())
         .expect("error while building tauri application")
         .run(|app, event| {
+            if let tauri::RunEvent::ExitRequested { api, .. } = &event {
+                let work = app.state::<commander_workspace::CommanderWork>();
+                if work.busy() {
+                    api.prevent_exit();
+                    work.cancel_all();
+                    let app = app.clone();
+                    tauri::async_runtime::spawn(async move {
+                        while app.state::<commander_workspace::CommanderWork>().busy() {
+                            tokio::time::sleep(std::time::Duration::from_millis(25)).await;
+                        }
+                        app.exit(0);
+                    });
+                }
+            }
             if matches!(
                 event,
                 tauri::RunEvent::Exit
