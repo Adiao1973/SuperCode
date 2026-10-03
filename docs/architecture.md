@@ -1,7 +1,7 @@
 # SuperCode 架构设计文档
 
 > 本文档是 SuperCode 接口设计的**单一事实源**：任何接口 / 数据模型变更，先改本文档再改代码。
-> 更新：2026-10-03；现行 dev 契约截至 P3-5。当前任务状态见 [roadmap](roadmap.md)，历史演进见 [快照](history/architecture-through-p3-3.md)。
+> 更新：2026-10-03；现行 dev 契约截至 P3-6。当前任务状态见 [roadmap](roadmap.md)，历史演进见 [快照](history/architecture-through-p3-3.md)。
 
 > v0.3.0 已发布：ACP 路径支持 OpenCode、Claude Code、Codex、MiMo；StreamJsonDriver 是延期设计，未包含在本版。
 
@@ -703,7 +703,7 @@ CLI 与桌面宿主一致：driver 返回 `Err` 时，在关闭事件通道、�
 
 内置 Claude 行的 installed_version 仍表示 ACP 适配器版本，不能由 claude --version 替代。新增 cli_version 可空字段，仅原样内置 Claude 命令另行并发探测 claude --version；自定义命令不套用此检测。定义列表（不探测）置 null。UI 单独展示 CLI 已检测版本与 ACP 已检测/未就绪；失败包含缺少程序、退出失败与超时等原因，因此统一“未检测到/未就绪”而非断言未安装。不读取登录或 key，不以版本结果保证认证可用。
 
-## 12. 指挥官契约（dev，截至 P3-5）
+## 12. 指挥官契约（dev，截至 P3-6）
 
 ### P3-1 — 指挥官计划契约
 
@@ -762,11 +762,13 @@ CLI `plan run <objective> --cwd <dir> [--agents opencode,codex]` 使用本机 SQ
 
 `plan report <run UUID>` 输出同一摘要，成功查询退出 0，无论计划状态；不存在退出非零。完整生成输出包含 plan（TaskPlan）、batches 和 summary；执行/报告输出 RunSummary。报告不包含 endpoint/model/key，不调用额外 LLM，不处理桌面入口（P3-6）。没有迁移或新增包；CLI 直接使用锁文件已有 serde 序列化共用报告，复用 SQLite/调度器。
 
-### P3-6 — 桌面指挥官工作区（实现中）
+### P3-6 — 桌面指挥官工作区（已集成 dev，macOS 已验收）
 
 新增独立导航“指挥官”：目标和绝对 cwd → 生成并保存 draft → 显示任务、agent、依赖批次及全部 prompt → 明确确认执行 → 进度/审批/结果。模型配置继续使用设置页，页面显示保存的模型与密钥是否就绪及设置入口，不重复输入 key。可限制规划 agent、设置并发 1～16；不创建目录/worktree、不读取项目文件、不自动执行计划。阶段固定变更前确认模式与默认空间，显式显示执行 cwd，避免引入未持久化权限草稿。
 
-IPC generate_commander_run(request_id,objective,cwd,agents) 读取本机配置/密钥，限制注册表并校验目录，保存 P3-3 draft；list/get_commander_run_view 返回计划、批次、P3-5 summary 与 active 标志。execute_commander_run(run_id,confirmed,jobs,on_progress) 要求 confirmed=true 且 draft，复用 P3-4；同 App 最多一个生成或执行，guard 在全部清理后移除；cancel_commander_work(request_id) 只取消本 App 的请求，不改其他 CLI 正在执行记录。Channel 只传 task/session/事件类型进度，SQLite 是状态与结果事实源；切换导航不取消执行，页面重新进入按库读取，不重发 execute。
+历史批次使用 dependency_batches 只读拓扑布局，不要求旧 Agent 仍注册；执行仍完整 validate 与预检。会话导航重新进入时刷新数据库历史，显示指挥官创建的会话。
+
+IPC generate_commander_run(request_id,objective,cwd,agents) 读取本机配置/密钥，限制注册表并校验目录，保存 P3-3 draft；list_commander_run_views/get_commander_run_view 返回计划、批次、P3-5 summary 与 active 标志。execute_commander_run(run_id,confirmed,jobs,on_progress) 要求 confirmed=true 且 draft，复用 P3-4；同 App 最多一个生成或执行，guard 在全部清理后移除；cancel_commander_work(request_id) 只取消本 App 的请求，不改其他 CLI 正在执行记录。Channel 只传 task_id 刷新信号，不传模型输出或凭据，SQLite 是状态与结果事实源；切换导航不取消执行，页面重新进入按库读取，不重发 execute。
 
 DispatchOptions 增 interactive_approvals（默认 false，CLI 行为不变），desktop=true 使用原 broker.resolve 而非 fail-closed。独立 broker 载入全局规则、固定 Ask；待决/裁决转发既有 permission-request/decision-record 并按 AppState.pending 路由 respond_permission。裁决只由调度器写一次 SQLite，转发任务不重复写；前端待决移除同时匹配 ACP session_id/tool_call_id，避免不同 agent 同名工具串台。指挥官任务内联显示其审批卡，审批中心仍可应答；取消联动拒绝挂起请求与裁决留痕。
 
