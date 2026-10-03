@@ -762,6 +762,18 @@ CLI `plan run <objective> --cwd <dir> [--agents opencode,codex]` 使用本机 SQ
 
 `plan report <run UUID>` 输出同一摘要，成功查询退出 0，无论计划状态；不存在退出非零。完整生成输出包含 plan（TaskPlan）、batches 和 summary；执行/报告输出 RunSummary。报告不包含 endpoint/model/key，不调用额外 LLM，不处理桌面入口（P3-6）。没有迁移或新增包；CLI 直接使用锁文件已有 serde 序列化共用报告，复用 SQLite/调度器。
 
+### P3-6 — 桌面指挥官工作区（实现中）
+
+新增独立导航“指挥官”：目标和绝对 cwd → 生成并保存 draft → 显示任务、agent、依赖批次及全部 prompt → 明确确认执行 → 进度/审批/结果。模型配置继续使用设置页，页面显示保存的模型与密钥是否就绪及设置入口，不重复输入 key。可限制规划 agent、设置并发 1～16；不创建目录/worktree、不读取项目文件、不自动执行计划。阶段固定变更前确认模式与默认空间，显式显示执行 cwd，避免引入未持久化权限草稿。
+
+IPC generate_commander_run(request_id,objective,cwd,agents) 读取本机配置/密钥，限制注册表并校验目录，保存 P3-3 draft；list/get_commander_run_view 返回计划、批次、P3-5 summary 与 active 标志。execute_commander_run(run_id,confirmed,jobs,on_progress) 要求 confirmed=true 且 draft，复用 P3-4；同 App 最多一个生成或执行，guard 在全部清理后移除；cancel_commander_work(request_id) 只取消本 App 的请求，不改其他 CLI 正在执行记录。Channel 只传 task/session/事件类型进度，SQLite 是状态与结果事实源；切换导航不取消执行，页面重新进入按库读取，不重发 execute。
+
+DispatchOptions 增 interactive_approvals（默认 false，CLI 行为不变），desktop=true 使用原 broker.resolve 而非 fail-closed。独立 broker 载入全局规则、固定 Ask；待决/裁决转发既有 permission-request/decision-record 并按 AppState.pending 路由 respond_permission。裁决只由调度器写一次 SQLite，转发任务不重复写；前端待决移除同时匹配 ACP session_id/tool_call_id，避免不同 agent 同名工具串台。指挥官任务内联显示其审批卡，审批中心仍可应答；取消联动拒绝挂起请求与裁决留痕。
+
+退出请求有活跃指挥官工作时先阻止退出、取消 token 并等待 guard 清除/driver 回收，再退出。重启从 SQLite 恢复 draft/终态/任务结果与引用，不自动执行或重跑终态。非本 App 活跃的 running 记录显示“其他宿主或遗留运行”，禁止再执行/跨宿主取消；不会自动 recover 全库以免中断 CLI。崩溃遗留记录可由独占宿主显式执行核心恢复接口，桌面不会猜测其它进程已停止。恢复指恢复历史与草稿审阅，不承诺续跑已中断任务。
+
+本阶段不新增迁移/包。布局采用主工作区+历史列表，分隔线组织任务，prompt 按需展开，状态和操作有可读文本；配置不足/预检失败保持草稿并提示，不把安装检测视为推理可用。验收 macOS WebKit；Windows 实机专项仍归 P3-8/9，不能用 macOS 宣称 Windows 通过。
+
 ## 13. 设计变更与历史
 
 现行接口在对应章节原位更新；过程、失败尝试和验收结果写任务验收记录，重大决策写 ADR。[历史快照](history/architecture-through-p3-3.md) 保留原变更表与 P3-2/3 演进过程，不作为现行约定。
