@@ -1,5 +1,6 @@
 import { useEffect, useReducer, useState } from "react";
 import { getVersion } from "@tauri-apps/api/app";
+import { CommanderView } from "@/components/CommanderView";
 import { Badge } from "@/components/ui/badge";
 import { ApprovalsView } from "@/components/ApprovalsView";
 import { KanbanView } from "@/components/KanbanView";
@@ -19,6 +20,7 @@ import {
 
 /** 导航项：id 对应 Phase 1 各视图，hint 标注接入任务号 */
 const NAV_ITEMS = [
+  { id: "commander", label: "指挥官", icon: LayoutGrid, hint: "P3-6" },
   { id: "sessions", label: "会话", icon: MessageSquare, hint: "P1-3" },
   { id: "kanban", label: "任务看板", icon: LayoutGrid, hint: "P1-9" },
   { id: "approvals", label: "审批中心", icon: ShieldCheck, hint: "P1-5" },
@@ -38,12 +40,13 @@ function App() {
   );
   const activeNav = NAV_ITEMS.find((item) => item.id === nav) ?? NAV_ITEMS[0];
 
-  // P1-6：启动时注入 SQLite 历史会话（重启后仍可续聊）
+  // Refresh persisted sessions on entry, including commander-created sessions.
   useEffect(() => {
+    if (nav !== "sessions") return;
     void listHistorySessions()
       .then((sessions) => dispatch({ type: "hydrate", sessions }))
       .catch(() => {}); // 历史加载失败不阻塞新会话
-  }, []);
+  }, [nav]);
 
   // 审批事件订阅（应用级一次）：待决请求按 ACP session id 路由进对应会话（内联卡片）
   useEffect(() => {
@@ -150,6 +153,7 @@ function App() {
                 : activeNav.hint}
           </Badge>
         </header>
+        <div className={nav === "commander" ? "min-h-0 flex-1" : "hidden"}><CommanderView active={nav === "commander"} onSettings={() => setNav("settings")} /></div>
         {nav === "sessions" && <SessionsWorkspace state={sessions} dispatch={dispatch} />}
         {nav === "approvals" && <ApprovalsView />}
         {nav === "settings" && <SettingsView />}
