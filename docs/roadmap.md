@@ -5,8 +5,8 @@
 ## 当前进度与下一步
 
 - 已发布：v0.3.0（main/tag）；日常集成：dev。
-- Phase 3：P3-1～P3-6 已验收并合入 dev，尚未包含在 v0.3.0 安装包。
-- 当前任务：P3-7 Codex NativeDriver，在 feat/p3-7-codex-native 实施；闭环前不启动 P3-8。
+- Phase 3：P3-1～P3-7 已验收并合入 dev，尚未包含在 v0.3.0 安装包。
+- 下一任务：P3-8 Windows 进程与终端适配，尚未启动；先准备 Windows CI 与实机验收出口。P3-7 为核心库交付，产品 Codex 入口仍使用 ACP。
 - 文档整理：DOC-1 已验收，记录见 [记录](acceptance/docs-alignment.md)。整理后的流程已用于 P3-4 独立闭环。
 - 延期项：P2-6 ZCode Start Plan CLI 路径未通过真实验收，用户批准排除 v0.3.0，发布版保持禁选；见 [P2-6](acceptance/p2-6.md)。
 - 环境事项：Claude CLI 与 ACP 分开探测；用户要求暂不处理本机 ACP 未就绪。此前接入验收仍保留，不把计划中的 Claude 分配视为当前可运行证明。
@@ -38,7 +38,7 @@
 | P3-4 | ACP 派单与依赖调度 | 按批次并行、并发上限、失败阻断后代、取消回收，原 cwd/agent/审批归属不变；协议 fixture 与真实双 agent 核对；见 [验收记录](acceptance/p3-4.md) | ✅ 已验收 2026-10-02 |
 | P3-5 | 结果汇总与指挥官 CLI 闭环 | 汇总明确成功/失败/跳过，输出对应会话引用，真实拆解→派单→汇总留痕；见 [验收记录](acceptance/p3-5.md) | ✅ 已验收 2026-10-03 |
 | P3-6 | 指挥官桌面入口 | 配置、计划预览确认、执行进度、取消与恢复；macOS UI 核对，Windows 待平台验收；见 [验收记录](acceptance/p3-6.md) | ✅ macOS 已验收 2026-10-03；Windows 待 P3-8/9 |
-| P3-7 | Codex NativeDriver 协议与运行时审批 | 核心协议驱动（不替换现有 ACP/UI）；握手、运行/恢复/取消、运行时 broker 审批变更、真实本机任务；见 [验收剧本](acceptance/p3-7.md) | 进行中 |
+| P3-7 | Codex NativeDriver 协议与运行时审批 | 核心协议驱动（不替换现有 ACP/UI）；握手、运行/恢复/取消、运行时 broker 审批变更、真实本机任务；见 [验收记录](acceptance/p3-7.md) | ✅ 核心库已验收 2026-10-07 |
 | P3-8 | Windows 进程与终端适配 | Windows CI + 实机验收进程树回收、PTY、路径和 WebView2；不可用环境保留待验收 | 待办 |
 | P3-9 | Windows UI 与安装包 | Windows 实机 UI、双平台构建产物和校验和，无平台假通过 | 待办 |
 | P3-10 | v1.0.0 整体验收与发布 | 预写 Phase 3 剧本、指挥官真实闭环、双平台安装包、dev 全绿、annotated tag/main/GitHub Release | 待办 |

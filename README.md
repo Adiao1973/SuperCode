@@ -102,7 +102,9 @@ cargo run -p supercode-cli -- plan generate '为待办应用提出开发计划�
 cargo run -p supercode-cli -- plan generate '设计任务计划' --config /tmp/commander.json
 ```
 
-`docs/examples/commander-config.json` 只包含占位值。P3-1～P3-6 已验收并合入 dev，真实 MiMo App/CLI 计划生成通过；尚未包含在 v0.3.0 安装包。计划持久化、状态机与核心 ACP 批次调度已实现并完成真实双 agent 验收。CLI 预览、显式确认执行及结果报告已实现；桌面「指挥官」入口已在 macOS 验收：填写目标、已存在的绝对工作目录和参与规划的 Agent → 生成草稿 → 展开审阅完整提示词/依赖 →「审阅并执行」→ 确认后查看进度、审批和结果。可取消本应用的操作；重启恢复历史，不自动重跑。Windows 实机专项留待 P3-8/9。
+`docs/examples/commander-config.json` 只包含占位值。P3-1～P3-7 已验收并合入 dev，真实 MiMo App/CLI 计划生成通过；尚未包含在 v0.3.0 安装包。计划持久化、状态机与核心 ACP 批次调度已实现并完成真实双 agent 验收。CLI 预览、显式确认执行及结果报告已实现；桌面「指挥官」入口已在 macOS 验收：填写目标、已存在的绝对工作目录和参与规划的 Agent → 生成草稿 → 展开审阅完整提示词/依赖 →「审阅并执行」→ 确认后查看进度、审批和结果。可取消本应用的操作；重启恢复历史，不自动重跑。Windows 实机专项留待 P3-8/9。
+
+P3-7 提供核心 `NativeDriver`（Codex app-server stdio），支持线程恢复、一次性工具审批和取消。产品中的 Codex 会话及指挥官仍走 ACP；原生驱动目前通过专用示例验收：`cargo run -p supercode-core --example codex_native -- /绝对工作目录 new text`。示例默认沿用本机 Codex 登录与模型；可用 `SUPERCODE_NATIVE_TEST_MODEL` 仅覆盖本次验收子进程模型，不写用户配置。详见 [P3-7 验收](docs/acceptance/p3-7.md)。
 
 指挥官 CLI 闭环（dev）：
 
