@@ -11,3 +11,4 @@ ADR 记录重大取舍；现行接口细节见 [架构](../architecture.md)，�
 | feat/fix → dev → main 分支模型 | [0005](0005-branching-model.md) |
 | 会话权限模式及审批边界 | [0006](0006-permission-modes.md) |
 | 工作空间与会话归属 | [0007](0007-workspace-model.md) |
+| macOS 优先与 Windows 延期 | [0008](0008-macos-priority.md) |

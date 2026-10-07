@@ -113,4 +113,4 @@ just dev        # Phase 1 起：pnpm tauri dev（apps/desktop）
 1. 事件流禁止 SSE/EventSource，一律 Tauri Channel / WebSocket 插件；
 2. xterm.js ≥5.3.0，避免透明 canvas；
 3. macOS 慎用 `backdrop-filter` + 窗口透明 / `position:fixed`（用 sticky 替代）；
-4. 视觉相关验收 macOS 实测，Phase 3 起双平台。
+4. 视觉相关验收按已批准的平台范围实测。当前 macOS 优先，Windows 经用户授权延期（[ADR-0008](adr/0008-macos-priority.md)），不阻塞本轮 macOS 工作；恢复 Windows 发布范围时必须完成 Windows 实机出口。
