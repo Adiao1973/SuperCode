@@ -106,7 +106,7 @@ cargo run -p supercode-cli -- plan generate '设计任务计划' --config /tmp/c
 
 P3-7 提供核心 `NativeDriver`（Codex app-server stdio），支持线程恢复、一次性工具审批和取消。产品中的 Codex 会话及指挥官仍走 ACP；原生驱动目前通过专用示例验收：`cargo run -p supercode-core --example codex_native -- /绝对工作目录 new text`。示例默认沿用本机 Codex 登录与模型；可用 `SUPERCODE_NATIVE_TEST_MODEL` 仅覆盖本次验收子进程模型，不写用户配置。详见 [P3-7 验收](docs/acceptance/p3-7.md)。
 
-当前路线聚焦 macOS：Windows P3-8/P3-9 延期，未经平台验收的实现保留独立分支、未合 dev。本轮 v1.0.0 目标为 macOS，先进行整体回归，再构建与发布；当前安装包仍为 v0.3.0。详见 [路线图](docs/roadmap.md) 与 [平台决策](docs/adr/0008-macos-priority.md)。
+当前路线聚焦 macOS：Windows P3-8/P3-9 延期，未经平台验收的实现保留独立分支、未合 dev。本轮 v1.0.0 目标为 macOS，[P3-10A 整体回归](docs/acceptance/p3-10a.md)已通过，并修复窄窗口会话控制栏挤压问题；下一步 P3-10B 构建与发布尚未启动，当前安装包仍为 v0.3.0。详见 [路线图](docs/roadmap.md) 与 [平台决策](docs/adr/0008-macos-priority.md)。
 
 指挥官 CLI 闭环（dev）：
 
