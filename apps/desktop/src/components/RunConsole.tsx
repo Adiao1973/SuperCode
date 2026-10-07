@@ -265,7 +265,7 @@ export function RunConsole({ session, dispatch }: RunConsoleProps) {
           className="resize-none font-mono text-[13px]"
           autoFocus={stream.items.length === 0 && !stream.running}
         />
-        <div className="flex gap-2">
+        <div className="flex flex-wrap items-start gap-2">
           <select
             aria-label="Agent"
             value={draft.agentId}
@@ -330,7 +330,7 @@ export function RunConsole({ session, dispatch }: RunConsoleProps) {
               })
             }
             rows={2}
-            className="min-w-0 flex-1 resize-none py-2 font-mono text-xs leading-tight"
+            className="min-w-48 flex-1 basis-48 resize-none py-2 font-mono text-xs leading-tight"
             placeholder="预授权规则（每行一条，如 write 或 bash(git *)）"
           />
           {stream.running ? (
