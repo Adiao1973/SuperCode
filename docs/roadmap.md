@@ -6,8 +6,8 @@
 
 - 已发布：v0.3.0（main/tag）；日常集成：dev。
 - Phase 3：P3-1～P3-7 已验收并合入 dev，尚未包含在 v0.3.0 安装包。
-- 下一任务：P3-8 Windows 进程与终端适配，尚未启动；先准备 Windows CI 与实机验收出口。P3-7 为核心库交付，产品 Codex 入口仍使用 ACP。
-- 文档整理：DOC-1 已验收，记录见 [记录](acceptance/docs-alignment.md)。整理后的流程已用于 P3-4 独立闭环。
+- 平台路线：当前全力开发 macOS；用户授权延期 Windows P3-8/P3-9，排除当前 v1.0.0 macOS 发布范围。下一任务 P3-10A macOS 整体回归，尚未启动；见 [路线决策](adr/0008-macos-priority.md)。P3-7 为核心库交付，产品 Codex 入口仍使用 ACP。
+- 文档治理：DOC-1 整理见 [记录](acceptance/docs-alignment.md)；DOC-2 平台路线调整见 [授权与验证](acceptance/macos-priority.md)。开发闭环规则继续适用。
 - 延期项：P2-6 ZCode Start Plan CLI 路径未通过真实验收，用户批准排除 v0.3.0，发布版保持禁选；见 [P2-6](acceptance/p2-6.md)。
 - 环境事项：Claude CLI 与 ACP 分开探测；用户要求暂不处理本机 ACP 未就绪。此前接入验收仍保留，不把计划中的 Claude 分配视为当前可运行证明。
 
@@ -26,9 +26,9 @@
 
 此前各任务表、修复日志和中间状态保存在 [历史快照](history/roadmap-through-p3-3.md)，不在当前入口重复维护。
 
-## Phase 3 — AI 指挥官与 Windows
+## Phase 3 — AI 指挥官与 macOS 完整交付
 
-指挥官使用直连 LLM API 生成结构化任务计划，经本地校验和用户确认后派给现有 ACP agent，保留各 agent 审批链路。每项独立任务分支闭环；P2-6 保持延期，不混入本阶段验收。
+指挥官使用直连 LLM API 生成结构化任务计划，经本地校验和用户确认后派给现有 ACP agent，保留各 agent 审批链路。每项独立任务分支闭环；P2-6、P3-8、P3-9 保持延期，不混入当前 macOS 发布验收。Windows 没有恢复日期，具备 CI 与实机出口后另行认领；未验收代码保留原分支。
 
 | ID | 任务 | 验收与预期 | 状态 |
 |---|---|---|---|
@@ -37,11 +37,12 @@
 | P3-3 | 指挥官计划持久化与执行状态机 | 新迁移；原子快照保存/转换、重启恢复、并发 CAS、依赖门禁、失败后代跳过、取消/中断及终态不可重跑；详见 [验收记录](acceptance/p3-3.md) | ✅ 已验收 2026-10-02 |
 | P3-4 | ACP 派单与依赖调度 | 按批次并行、并发上限、失败阻断后代、取消回收，原 cwd/agent/审批归属不变；协议 fixture 与真实双 agent 核对；见 [验收记录](acceptance/p3-4.md) | ✅ 已验收 2026-10-02 |
 | P3-5 | 结果汇总与指挥官 CLI 闭环 | 汇总明确成功/失败/跳过，输出对应会话引用，真实拆解→派单→汇总留痕；见 [验收记录](acceptance/p3-5.md) | ✅ 已验收 2026-10-03 |
-| P3-6 | 指挥官桌面入口 | 配置、计划预览确认、执行进度、取消与恢复；macOS UI 核对，Windows 待平台验收；见 [验收记录](acceptance/p3-6.md) | ✅ macOS 已验收 2026-10-03；Windows 待 P3-8/9 |
+| P3-6 | 指挥官桌面入口 | 配置、计划预览确认、执行进度、取消与恢复；macOS UI 核对，Windows 待平台验收；见 [验收记录](acceptance/p3-6.md) | ✅ macOS 已验收 2026-10-03；Windows 随 P3-8/9 延期 |
 | P3-7 | Codex NativeDriver 协议与运行时审批 | 核心协议驱动（不替换现有 ACP/UI）；握手、运行/恢复/取消、运行时 broker 审批变更、真实本机任务；见 [验收记录](acceptance/p3-7.md) | ✅ 核心库已验收 2026-10-07 |
-| P3-8 | Windows 进程与终端适配 | Windows CI + 实机验收进程树回收、PTY、路径和 WebView2；不可用环境保留待验收 | 待办 |
-| P3-9 | Windows UI 与安装包 | Windows 实机 UI、双平台构建产物和校验和，无平台假通过 | 待办 |
-| P3-10 | v1.0.0 整体验收与发布 | 预写 Phase 3 剧本、指挥官真实闭环、双平台安装包、dev 全绿、annotated tag/main/GitHub Release | 待办 |
+| P3-8 | Windows 进程与终端适配 | 实现保留 feat/p3-8-windows-runtime，本机回归通过，Windows CI/编译/实机均未验证；见 [延期记录](acceptance/p3-8.md) | 延期：排除当前 macOS 发布范围 |
+| P3-9 | Windows UI 与安装包 | Windows 实机 UI 与安装包验收；待 P3-8 出口通过及有可用环境后恢复 | 延期：尚未启动 |
+| P3-10A | macOS v1.0.0 整体回归 | 先写 Phase 3 macOS 剧本；just verify、真实指挥官拆解→确认→双 Agent 执行→审批/取消→重启恢复，回归会话/worktree/看板/终端；失败修复后复验，不发布 | 待办：下一任务 |
+| P3-10B | macOS v1.0.0 构建与发布 | 依赖 P3-10A；macOS 安装包与校验和、安装启动实测，复核延期范围与 dev 全绿，再 annotated tag/main/GitHub Release；仅声明实际验收的系统与架构 | 待办 |
 
 ## 里程碑
 
@@ -50,4 +51,4 @@
 | v0.1.0 | Phase 0 CLI | 已发布 |
 | v0.2.0 | Phase 1 macOS 桌面 MVP | 已发布 |
 | v0.3.0 | Phase 2 多 agent 与工作区体验，排除 P2-6 | 已发布 |
-| v1.0.0 | Phase 3 指挥官闭环与 Windows | 待阶段整体验收；不以 P3-1～3 完成代替发布出口 |
+| v1.0.0 | macOS 指挥官闭环与完整桌面交付；Windows 延期 | 待 P3-10A/B；不以已有任务验收代替阶段出口 |

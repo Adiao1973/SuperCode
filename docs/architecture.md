@@ -1,7 +1,7 @@
 # SuperCode 架构设计文档
 
 > 本文档是 SuperCode 接口设计的**单一事实源**：任何接口 / 数据模型变更，先改本文档再改代码。
-> 更新：2026-10-07；现行 dev 契约截至 P3-7。当前任务状态见 [roadmap](roadmap.md)，历史演进见 [快照](history/architecture-through-p3-3.md)。
+> 更新：2026-10-07；现行 dev 契约截至 P3-7。当前开发与发布范围为 macOS，Windows 延期（ADR-0008）。当前任务状态见 [roadmap](roadmap.md)，历史演进见 [快照](history/architecture-through-p3-3.md)。
 
 > v0.3.0 已发布：ACP 路径支持 OpenCode、Claude Code、Codex、MiMo；StreamJsonDriver 是延期设计，未包含在本版。
 
@@ -660,7 +660,7 @@ P1-8 落地迁移 0003（workspaces + sessions.workspace_id，历史会话按 di
 1. xterm.js 锁 `>=5.3.0`（修复 Safari/WKWebView 输入问题）；避免透明 canvas（WebKit 绿色伪影）。
 2. macOS 慎用 `backdrop-filter` + 窗口透明 / `position:fixed` 组合（WRY 已知 bug）；用 sticky 替代 fixed。
 3. 事件流禁止使用 SSE/EventSource（`tauri://` 不支持），一律 Tauri Channel / WebSocket 插件。
-4. 跨平台 CSS：每个涉及视觉的验收任务须在 macOS 实测，Phase 3 起增加 Windows 双测。
+4. 跨平台 CSS：每个涉及视觉的验收任务须在 macOS 实测，当前按 [ADR-0008](adr/0008-macos-priority.md) 聚焦 macOS，Windows 延期；恢复 Windows 发布范围时增加对应实测。
 
 ## 11. 工作区、看板与终端
 
@@ -688,7 +688,7 @@ P2-7 托管 worktree 的原空间记录继续作为执行归属：创建/恢复�
 
 - 前端使用 `@xterm/xterm@6.0.0` 与 `@xterm/addon-fit@0.11.0`；不加载 canvas/WebGL addon，`allowTransparency=false`，不透明背景，ResizeObserver 同步字符行列。终端由会话详情显式打开，cwd 使用该会话 draft 的实际执行目录（包括 worktree），不使用看板分组路径；目录变更、切换会话/页面、关闭面板会销毁终端，重开为新 shell，不持久化 shell 状态。
 - 桌面端使用 portable-pty 启动用户 shell 的交互实例；独立 PTY 不经过 agent 或审批队列。`open_terminal(id,cwd,cols,rows,onOutput)` / `write_terminal(id,data)` / `resize_terminal(id,cols,rows)` / `close_terminal(id)` / `ack_terminal(id)`；随机客户端 id 在异步启动前确定，关闭与启动共享注册表锁，前端即使在启动中卸载也等待启动结果后关闭，避免泄漏。IPC 使用 Tauri Channel 输出字节块（UTF-8 跨块由 xterm 解码），输出采用逐块应答背压，限制输入和尺寸；命令不阻塞 Tauri 主线程。
-- 后端注册表只拥有本应用创建的 PTY；自然退出回收句柄并通知前端；关闭显式终止 shell 及其子进程并 wait 回收。应用退出/窗口销毁执行同样清理，Unix 通过原生 `getsid` 校验本 PTY 的独立 session，收集并终止各 job process group 中的进程（无法取得 session 时按自身树兜底），Windows 专项仍属 Phase 3。macOS 使用非阻塞 PTY 读取与可中断应答等待，关闭先释放 master/writer 再等待回收，避免 exiting 状态悬挂。终端仅在目录存在且为绝对路径时启动；失败显示错误，不自动创建目录。
+- 后端注册表只拥有本应用创建的 PTY；自然退出回收句柄并通知前端；关闭显式终止 shell 及其子进程并 wait 回收。应用退出/窗口销毁执行同样清理，Unix 通过原生 `getsid` 校验本 PTY 的独立 session，收集并终止各 job process group 中的进程（无法取得 session 时按自身树兜底），Windows 专项 P3-8/P3-9 已按 ADR-0008 延期，未包含在当前 dev 和 macOS 发布范围。macOS 使用非阻塞 PTY 读取与可中断应答等待，关闭先释放 master/writer 再等待回收，避免 exiting 状态悬挂。终端仅在目录存在且为绝对路径时启动；失败显示错误，不自动创建目录。
 - 不改数据库/schema。新增依赖理由：xterm 提供 ANSI/VT 解析和可访问输入，fit addon 匹配面板尺寸；portable-pty 提供真实 PTY/交互 shell 与窗口 resize，替代不支持 job control 的普通管道。
 
 P2-9 依赖选择与实测：5.5.0 在 React StrictMode/面板销毁后存在 viewport 定时回调访问已销毁 renderer 的异常，改用 6.0.0 稳定版，重复开关/切换复测无异常。官方变更见 [xterm 6.0 发布说明](https://github.com/xtermjs/xterm.js/releases/tag/6.0.0)；PTY 读写/resize 使用 [portable-pty](https://github.com/wezterm/wezterm/tree/main/pty)。

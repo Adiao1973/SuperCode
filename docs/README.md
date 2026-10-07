@@ -13,6 +13,6 @@
 | 查以前的设计和进度？ | [历史索引](history/README.md) | 只读历史，不代表当前规则或状态 |
 | 需要计划/配置样例？ | [计划](examples/commander-plan.json)、[配置](examples/commander-config.json) | 虚构示例；真实信息只留本机 |
 
-当前已发布 v0.3.0，dev 已完成 P3-1～7。P3-6 已完成 macOS 桌面闭环，CLI 与桌面均支持计划预览、确认执行、取消及结果读取；Windows 实机验收留待 P3-8/9。P3-7 核心 Codex NativeDriver 已完成真实恢复、审批与取消验收，产品入口仍使用 ACP。下一任务为 P3-8，尚未启动，需按流程预写 Windows 验收。P2-6 延期，Claude ACP 本机问题按用户要求暂不处理。
+当前已发布 v0.3.0，dev 已完成 P3-1～7。P3-6 已完成 macOS 桌面闭环，CLI 与桌面均支持计划预览、确认执行、取消及结果读取；Windows 实机验收留待 P3-8/9。P3-7 核心 Codex NativeDriver 已完成真实恢复、审批与取消验收，产品入口仍使用 ACP。用户授权全力开发 macOS，P3-8/P3-9 延期，Windows 实现保留独立分支；下一任务为 P3-10A macOS 整体回归，之后 P3-10B 构建发布，均尚未启动。P2-6 延期，Claude ACP 本机问题按用户要求暂不处理。
 
 每类信息只在对应入口维护：roadmap 不写操作流水账，architecture 不保存过时实现约定，验收历史不冒充当前状态。存量记录保留，历史段落由顶部最终结论限定。

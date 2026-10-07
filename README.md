@@ -41,7 +41,7 @@ v0.3.0 包含 Claude Code、Codex、MiMo ACP 接入、Agent 管理、任务 work
 
 ## 环境要求
 
-- macOS（Phase 3 起支持 Windows）
+- macOS（当前研发与发布范围；Windows 支持延期）
 - Rust ≥ 1.88（edition 2024）、Node + pnpm
 - [opencode](https://opencode.ai) ≥ 1.18 已安装并完成认证；也可选择 Claude Code/Codex/MiMo，按设置页指引安装相应 CLI/ACP adapter 并完成各自认证
   - 注意：需在 `~/.config/opencode/opencode.jsonc` 显式固定默认模型（ACP 会话不继承登录态默认模型，会回退到 zen 免费模型并限流），例如：
@@ -105,6 +105,8 @@ cargo run -p supercode-cli -- plan generate '设计任务计划' --config /tmp/c
 `docs/examples/commander-config.json` 只包含占位值。P3-1～P3-7 已验收并合入 dev，真实 MiMo App/CLI 计划生成通过；尚未包含在 v0.3.0 安装包。计划持久化、状态机与核心 ACP 批次调度已实现并完成真实双 agent 验收。CLI 预览、显式确认执行及结果报告已实现；桌面「指挥官」入口已在 macOS 验收：填写目标、已存在的绝对工作目录和参与规划的 Agent → 生成草稿 → 展开审阅完整提示词/依赖 →「审阅并执行」→ 确认后查看进度、审批和结果。可取消本应用的操作；重启恢复历史，不自动重跑。Windows 实机专项留待 P3-8/9。
 
 P3-7 提供核心 `NativeDriver`（Codex app-server stdio），支持线程恢复、一次性工具审批和取消。产品中的 Codex 会话及指挥官仍走 ACP；原生驱动目前通过专用示例验收：`cargo run -p supercode-core --example codex_native -- /绝对工作目录 new text`。示例默认沿用本机 Codex 登录与模型；可用 `SUPERCODE_NATIVE_TEST_MODEL` 仅覆盖本次验收子进程模型，不写用户配置。详见 [P3-7 验收](docs/acceptance/p3-7.md)。
+
+当前路线聚焦 macOS：Windows P3-8/P3-9 延期，未经平台验收的实现保留独立分支、未合 dev。本轮 v1.0.0 目标为 macOS，先进行整体回归，再构建与发布；当前安装包仍为 v0.3.0。详见 [路线图](docs/roadmap.md) 与 [平台决策](docs/adr/0008-macos-priority.md)。
 
 指挥官 CLI 闭环（dev）：
 
