@@ -2,6 +2,8 @@
 //! `AgentDriver` trait 的完整定义见 docs/architecture.md §4.2（多 driver 出现时 trait 化）。
 
 mod acp;
+mod native;
+pub use native::NativeDriver;
 
 pub use acp::{AcpDriver, StartMode};
 

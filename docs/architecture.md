@@ -1,7 +1,7 @@
 # SuperCode 架构设计文档
 
 > 本文档是 SuperCode 接口设计的**单一事实源**：任何接口 / 数据模型变更，先改本文档再改代码。
-> 更新：2026-10-03；现行 dev 契约截至 P3-6。当前任务状态见 [roadmap](roadmap.md)，历史演进见 [快照](history/architecture-through-p3-3.md)。
+> 更新：2026-10-07；现行 dev 契约截至 P3-7。当前任务状态见 [roadmap](roadmap.md)，历史演进见 [快照](history/architecture-through-p3-3.md)。
 
 > v0.3.0 已发布：ACP 路径支持 OpenCode、Claude Code、Codex、MiMo；StreamJsonDriver 是延期设计，未包含在本版。
 
@@ -775,6 +775,16 @@ DispatchOptions 增 interactive_approvals（默认 false，CLI 行为不变）�
 退出请求有活跃指挥官工作时先阻止退出、取消 token 并等待 guard 清除/driver 回收，再退出。重启从 SQLite 恢复 draft/终态/任务结果与引用，不自动执行或重跑终态。非本 App 活跃的 running 记录显示“其他宿主或遗留运行”，禁止再执行/跨宿主取消；不会自动 recover 全库以免中断 CLI。崩溃遗留记录可由独占宿主显式执行核心恢复接口，桌面不会猜测其它进程已停止。恢复指恢复历史与草稿审阅，不承诺续跑已中断任务。
 
 本阶段不新增迁移/包。布局采用主工作区+历史列表，分隔线组织任务，prompt 按需展开，状态和操作有可读文本；配置不足/预检失败保持草稿并提示，不把安装检测视为推理可用。验收 macOS WebKit；Windows 实机专项仍归 P3-8/9，不能用 macOS 宣称 Windows 通过。
+
+### P3-7 — Codex NativeDriver（已实现，核心库范围）
+
+独立 `driver::NativeDriver` 使用 `codex app-server --listen stdio://`，JSON-RPC 逐行 JSON（无需 jsonrpc 字段）。依据 [官方 App Server 文档](https://learn.chatgpt.com/docs/app-server) 与本机 codex-cli 0.144.5 生成的稳定 schema；不启用 experimentalApi、不假定 initialize 返回不存在的 capability 列表。握手校验 userAgent，未知 RPC/不支持的方法明确失败。新建 thread/start、恢复 thread/resume，然后 turn/start；恢复返回 thread.id 必须与请求相同。保持 cwd，readOnly sandbox + untrusted 服务端审批策略固定，默认不覆盖用户模型/认证。专用验收 example 允许 SUPERCODE_NATIVE_TEST_MODEL 指定单次子进程模型（来源为本机 model/list 默认条目），不写配置；目录不是权限证明，仍须真实完成推理。未消费的通知（包括恢复时旧 turn 的 legacy 通知）忽略；消费的会话、turn、item 事件按 threadId/turnId 校验，不允许跨会话污染；只有 turn/completed.status=completed 映射 EndTurn，interrupted 映射 Cancelled，failed/EOF/错误不是成功。
+
+命令及文件审批分别接入既有 PermissionHandler/ApprovalBroker，kind=execute/edit。每次 RPC 回调使用独立 tool_call_id（包括不透明 RPC id，不能只使用可重复 itemId），提供 accept/decline 两个一次性选项；不提供 acceptForSession/永久规则扩权，updated_input 不支持且拒绝。未知服务端请求回复 method-not-found，权限提升/交互输入等未实现请求不自动放行。审批异步等待，读循环继续处理取消与通知；完成或取消时收尾待决 futures。broker.set_mode 对后续请求生效；已进入队列的请求仍需明确 respond/reject_all_pending，不声称能热改服务器沙箱或撤销已执行操作。
+
+沿用 ProcessManager 独立进程组及清理；stderr 仅留本机临时日志。单帧上限 4 MiB，启动缓冲 32 帧，同时审批最多 32 个，单轮请求身份最多 4096 个；握手/启动 RPC 有超时；取消优先，turn/interrupt 有限宽限后整组回收，未来被丢弃亦取消并清理。事件队列满时取消/错误终态采用 try_send，避免背压阻止清理；宿主也应检查返回结果与取消令牌，不能依赖满队列必有终态。NativeDriver 返回前等待进程退出，不遗留后台 approvals/reader。协议错误仅输出固定诊断，不回显原始远端错误/凭据。
+
+本任务保持具体 driver 方法 `run(cwd,StartMode,prompt,events,permissions,cancel)`；普通宿主优先用 `run_with_broker`，其拥有 pending 队列并在取消/drop 时拒绝和清理，通用 callback 入口的外部队列仍由宿主负责，不提前引入设计示意 trait；提供核心验收 example，尚不注册产品原生入口、不修改现有 codex ACP、指挥官 ACP 约束、UI 或数据库 schema。真实出口已通过，按流程合入 dev。Windows 进程/PTY 与 UI 由 P3-8/9 实机验收，本机不冒充 Windows 通过。
 
 ## 13. 设计变更与历史
 
