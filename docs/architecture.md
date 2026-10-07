@@ -776,6 +776,16 @@ DispatchOptions 增 interactive_approvals（默认 false，CLI 行为不变）�
 
 本阶段不新增迁移/包。布局采用主工作区+历史列表，分隔线组织任务，prompt 按需展开，状态和操作有可读文本；配置不足/预检失败保持草稿并提示，不把安装检测视为推理可用。验收 macOS WebKit；Windows 实机专项仍归 P3-8/9，不能用 macOS 宣称 Windows 通过。
 
+### P3-7 — Codex NativeDriver（设计，核心库范围）
+
+独立 `driver::NativeDriver` 使用 `codex app-server --listen stdio://`，JSON-RPC 逐行 JSON（无需 jsonrpc 字段）。依据 [官方 App Server 文档](https://learn.chatgpt.com/docs/app-server) 与本机 codex-cli 0.144.5 生成的稳定 schema；不启用 experimentalApi、不假定 initialize 返回不存在的 capability 列表。握手校验 userAgent，未知 RPC/不支持的方法明确失败。新建 thread/start、恢复 thread/resume，然后 turn/start；恢复返回 thread.id 必须与请求相同。保持 cwd，readOnly sandbox + unlessTrusted 服务端审批策略固定，不覆盖用户模型/认证。会话、turn、item 事件按 threadId/turnId 校验，不允许跨会话污染；只有 turn/completed.status=completed 映射 EndTurn，interrupted 映射 Cancelled，failed/EOF/错误不是成功。
+
+命令及文件审批分别接入既有 PermissionHandler/ApprovalBroker，kind=execute/edit。每次 RPC 回调使用独立 tool_call_id（包括不透明 RPC id，不能只使用可重复 itemId），提供 accept/decline 两个一次性选项；不提供 acceptForSession/永久规则扩权，updated_input 不支持且拒绝。未知服务端请求回复 method-not-found，权限提升/交互输入等未实现请求不自动放行。审批异步等待，读循环继续处理取消与通知；完成或取消时收尾待决 futures。broker.set_mode 对后续请求生效；已进入队列的请求仍需明确 respond/reject_all_pending，不声称能热改服务器沙箱或撤销已执行操作。
+
+沿用 ProcessManager 独立进程组及清理；stderr 仅留本机临时日志。读行有上限，握手/启动 RPC 有超时；取消优先，turn/interrupt 有限宽限后整组回收，未来被丢弃亦取消并清理。NativeDriver 返回前等待进程退出，不遗留后台 approvals/reader。协议错误仅输出固定诊断，不回显原始远端错误/凭据。
+
+本任务保持具体 driver 方法 `run(cwd,StartMode,prompt,events,permissions,cancel)`，不提前引入设计示意 trait；提供核心验收 example，尚不注册产品原生入口、不修改现有 codex ACP、指挥官 ACP 约束、UI 或数据库 schema。真实退出通过后才合 dev。Windows 进程/PTY 与 UI 由 P3-8/9 实机验收，本机不冒充 Windows 通过。
+
 ## 13. 设计变更与历史
 
 现行接口在对应章节原位更新；过程、失败尝试和验收结果写任务验收记录，重大决策写 ADR。[历史快照](history/architecture-through-p3-3.md) 保留原变更表与 P3-2/3 演进过程，不作为现行约定。
