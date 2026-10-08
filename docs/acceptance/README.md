@@ -25,6 +25,7 @@
 | P3-7 Codex NativeDriver | [核心协议已验收，真实恢复/审批/取消通过](p3-7.md)；产品 ACP 入口保持原状 |
 | P3-8 Windows 运行时 | [延期记录](p3-8.md)；实现保留独立分支，Windows 出口未通过，排除当前 macOS 发布范围 |
 | P3-10A macOS 整体回归 | [已验收，真实 MiMo/双 Agent、桌面审批取消、工作树/看板/终端通过](p3-10a.md)；安装与发布见 P3-10B |
+| DOC-3 v2.0.0 体验路线规划 | [分析、任务拆分与文档验证](v2-roadmap.md)；仅文档，P4 产品任务未启动 |
 | DOC-2 macOS 路线调整 | [范围授权与验证](macos-priority.md)；Windows P3-8/P3-9 延期 |
 | DOC-1 文档整理 | [范围、检查与归档](docs-alignment.md) |
 
