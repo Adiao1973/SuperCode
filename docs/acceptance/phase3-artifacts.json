@@ -21,5 +21,7 @@
       "sha256": "4d3165efac9d45dee5a0b3206fd2ec7027bec6d094a10049828f6de2971ee242"
     }
   ],
-  "release_url": "https://github.com/Adiao1973/SuperCode/releases/tag/v1.0.0"
+  "release_url": "https://github.com/Adiao1973/SuperCode/releases/tag/v1.0.0",
+  "status": "published-and-remote-assets-verified",
+  "release_tag_target": "cc565659cc33049bce7d0d5d23ae9d33852ff6e9"
 }
