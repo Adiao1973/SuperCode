@@ -41,6 +41,8 @@ v0.3.0 包含 Claude Code、Codex、MiMo ACP 接入、Agent 管理、任务 work
 
 可在设置页管理 Agent，在会话中选择已安装并完成认证的 ACP agent。任务看板可跨列/空间拖拽，已有会话及 worktree 保持原执行归属；「隔离会话」建立独立任务目录；会话底部「打开终端」使用实际 cwd，关闭或切换会话/页面会结束 shell。
 
+下一版本 v2.0.0 规划聚焦交互、视觉与动效：可调整工作区、底部输入、流式 Markdown、清晰的指挥官/审批流程、主题与键盘操作。见 [新路线图](docs/roadmap.md)及[设计分析](docs/design/desktop-v2.md)；尚未实现，当前下载仍为 v1.0.0。
+
 ## 环境要求
 
 - macOS（当前研发与发布范围；Windows 支持延期）
