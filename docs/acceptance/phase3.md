@@ -1,6 +1,6 @@
 # Phase 3 — macOS v1.0.0 阶段验收
 
-> 最终本地结论：Phase 3 macOS 功能与 release 安装验收通过（2026-10-08）。v1.0.0 远端发布核对见 [P3-10B](p3-10b.md)；仅 macOS Apple Silicon。
+> 最终结论：Phase 3 macOS 功能与 release 安装验收通过（2026-10-08）。v1.0.0 已发布，远端资产摘要核对通过，见 [P3-10B](p3-10b.md)；仅 macOS Apple Silicon。
 
 ## 范围
 
