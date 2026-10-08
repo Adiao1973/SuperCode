@@ -1,9 +1,9 @@
 # SuperCode 架构设计文档
 
 > 本文档是 SuperCode 接口设计的**单一事实源**：任何接口 / 数据模型变更，先改本文档再改代码。
-> 版本：0.8（P1-6 持久化与恢复落地）· 变更记录见文末。
+> 更新：2026-10-07；现行 dev 契约截至 P3-7。当前开发与发布范围为 macOS，Windows 延期（ADR-0008）。当前任务状态见 [roadmap](roadmap.md)，历史演进见 [快照](history/architecture-through-p3-3.md)。
 
-> v0.3.0 已发布：ACP 路径支持 OpenCode、Claude Code、Codex、MiMo；StreamJsonDriver 是延期设计，未包含在本版。
+> v1.0.0 macOS 交付：ACP 路径支持 OpenCode、Claude Code、Codex、MiMo，指挥官直连规划后经确认派单；NativeDriver 限核心库。StreamJsonDriver、Windows 延期，当前包仅 arm64；安装/签名限制见 Phase 3 验收。
 
 ## 1. 项目概述
 
@@ -241,18 +241,18 @@ resolve 返回 Err，driver 层转为 ACP `cancelled` outcome，agent 收到"未
 **预授权规则**（参考 opencode permission 配置语义）：
 
 ```jsonc
-// ~/Library/Application Support/<bundle-id>/rules.json（Phase 0 先支持内置默认 + CLI 参数）
+// 规则语义示例；App 规则实际保存在 SQLite permission_rules 表
 {
   "allow": ["read", "edit", "bash(git status)", "bash(git diff *)"],
   "deny":  ["bash(rm -rf *)", "bash(sudo *)"],
-  "ask":   ["*"]        // 其余一律询问（默认）
+  "ask":   []           // 未匹配项由会话权限模式决定
 }
 ```
 
 **规则语法与求值**：
 - 模式三形：`*`（全匹配）；`tool`（工具名全匹配，任意参数）；`tool(args)`（args 为
   glob：`*` 任意序列含空格、`?` 单字符）。
-- 求值优先级：**deny > allow > ask**；全不命中 → 进入待决队列（人工裁决）。
+- 求值优先级：**deny > ask > allow**；未命中项交由会话权限模式处理（完整管线见下文）。
 - 匹配目标（tool, subject）从 `PermissionRequest` 推断：`raw_input` 含 `command`
   字符串字段 → (`bash`, command)；否则 tool = tool_name 首词、subject = tool_name。
   （ACP v1 权限请求不带机器可读工具名，此推断覆盖 opencode 的 bash 工具；后续随
@@ -611,9 +611,9 @@ approvals(id TEXT PK, session_id TEXT, tool_call_id TEXT, tool_name TEXT,
           request_json TEXT, decision TEXT, decided_by TEXT,  -- rule:<id> | user
           created_at TEXT, decided_at TEXT);
 
-tasks(id TEXT PK, workspace_id TEXT REFERENCES workspaces(id),
+tasks(id TEXT PK, session_id TEXT, workspace_id TEXT REFERENCES workspaces(id),
       title TEXT, cwd TEXT NULL, status TEXT,       -- backlog|in_progress|review|done；cwd 缺省取空间路径
-      created_at TEXT, updated_at TEXT);             -- P1-9 简版看板（按空间组织）；session 关联经 sessions.task_id
+      created_at TEXT, updated_at TEXT);             -- P1-9 简版看板（按空间组织）；session 关联经 tasks.session_id（迁移 0004）
 
 permission_rules(id TEXT PK, pattern TEXT NOT NULL,  -- 规则库（P1-5，全局持久）
                  effect TEXT NOT NULL,               -- allow | deny | ask
@@ -627,6 +627,7 @@ P1-8 落地迁移 0003（workspaces + sessions.workspace_id，历史会话按 di
 回填为 project 空间并归类；删除空间不删会话，会话移入默认空间——ADR-0007）。
 运行期写入 sessions/messages/tool_calls/approvals
 （`SessionRecorder` 消费事件流：消息 chunk 在 TurnCompleted 时组装落库），tasks 表 Phase 1 使用。
+迁移 0004 增 tasks.session_id 引用；0005～0007 的指挥官配置、凭据和运行快照见 §12。
 时间戳为 RFC3339 文本。`SUPERCODE_DB` 环境变量可覆盖库文件路径（测试/多环境用）。
 
 ## 7. 进程生命周期管理
@@ -651,7 +652,7 @@ P1-8 落地迁移 0003（workspaces + sessions.workspace_id，历史会话按 di
 
 - 权限默认**最小放行**：未配置规则的工具调用一律 `ask`；审批是产品的第一公民功能。
 - 预授权规则中的 `always` 生效时必须落库（approvals.decision_by = rule:<id>）留痕。
-- API key 等敏感配置不进入 SuperCode：各 agent 自管自己的鉴权（`opencode auth login` 等），SuperCode 只管进程与协议。
+- 执行 agent 的 API key 不进入 SuperCode：各 agent 自管鉴权。Phase 3 指挥官直连模型是独立配置，只保存 endpoint/model/key 环境变量名；运行时读取该变量，不保存密钥、不复用 agent 登录凭据。
 - exec 类工具的命令内容在审批 UI 中**完整可见**（不截断命令、展示 cwd）。
 
 ## 10. 技术约束与开发规范（WebKit 相关）
@@ -659,30 +660,9 @@ P1-8 落地迁移 0003（workspaces + sessions.workspace_id，历史会话按 di
 1. xterm.js 锁 `>=5.3.0`（修复 Safari/WKWebView 输入问题）；避免透明 canvas（WebKit 绿色伪影）。
 2. macOS 慎用 `backdrop-filter` + 窗口透明 / `position:fixed` 组合（WRY 已知 bug）；用 sticky 替代 fixed。
 3. 事件流禁止使用 SSE/EventSource（`tauri://` 不支持），一律 Tauri Channel / WebSocket 插件。
-4. 跨平台 CSS：每个涉及视觉的验收任务须在 macOS 实测，Phase 3 起增加 Windows 双测。
+4. 跨平台 CSS：每个涉及视觉的验收任务须在 macOS 实测，当前按 [ADR-0008](adr/0008-macos-priority.md) 聚焦 macOS，Windows 延期；恢复 Windows 发布范围时增加对应实测。
 
-## 11. 变更记录
-
-| 日期 | 版本 | 摘要 |
-|---|---|---|
-| 2026-09-29 | 0.18 | P2-5：MiMo ACP 进程 cwd 约束与注册表可选启动选项；ACP 空轮次失败识别及桌面安装/模型指引 |
-| 2026-09-28 | 0.17 | P2-4：会话选择器新增无探测注册表 IPC，Codex ACP 认证/权限/并行边界与 npm 缓存争用规避 |
-| 2026-09-28 | 0.16 | P2-3：注册表驱动运行、历史 agent 归属、续聊校验与运行时 load 能力协商；Node/npx 探测；CLI --agent；API Key 认证引导 |
-| 2026-09-28 | 0.15 | P2-2 小设计：§4.4 补用户自定义写路径（load_user_entries/save/upsert/remove，原子写）；§5.1 新增 list/add/update/delete_agent 与 AgentRow |
-| 2026-09-28 | 0.14 | P2-1 小设计：§4.4 AgentDefinition 落地形态（driver_kind/command/version_args/capabilities + serde 用户自定义）；AgentRegistry builtin/load/find/probe_installed；内置五条齐备（opencode/claude-code/codex/mimo/zcode） |
-| 2026-09-27 | 0.13 | P1-10 打包验收：版本号 v0.2.0 + just build 剧本；§4.7 增 GUI PATH 修正（launchd 不继承 shell PATH，探测与 spawn 双失效，宿主启动并入常见安装目录） |
-| 2026-09-27 | 0.12 | P1-9 简版任务看板：§5.1 IPC 增 list/create/update/delete_task（update 兼改状态与绑定会话）；tasks 表读写方法（绑定会话随 delete_session 解绑）；前端看板按空间分节四列 |
-| 2026-09-27 | 0.11 | P1-8 工作空间落地：§5.1 IPC 增 list/create/delete_workspace + run_prompt workspace_id + 历史行含 workspace_id；迁移 0003（workspaces 表 + sessions/tasks.workspace_id）与 Rust 回填（distinct cwd → project 空间，幂等） |
-| 2026-09-27 | 0.10 | 工作空间模型定稿（ADR-0007）：§6 新增 workspaces 表 + sessions/tasks 归属空间（迁移 0003 规划，历史按 distinct cwd 回填；默认空间承载非项目任务）；IPC 契约行随 P1-8 小设计补充 |
-| 2026-09-27 | 0.9 | P1-7 环境探测落地：新增 §4.7 envcheck 模块（安装探测 + JSONC 配置解析 + 严格判定）；§5.1 IPC 新增 check_opencode_env；新依赖 json5（opencode 配置为 JSONC，注释/尾逗号解析，纯 Rust 无 unsafe） |
-| 2026-09-27 | 0.8 | P1-6 持久化与恢复落地：§5.1 IPC 扩展（resume_session_id/list_history_sessions/list_session_messages/delete_session）；Store 增 list_messages/find_session_by_agent/delete_session_by_agent（级联）+ 文件库 WAL 多连接；run_prompt 接 SessionRecorder；晚失败 done watcher |
-| 2026-09-25 | 0.7 | P1-5 审批中心落地：§4.3 模式化管线实现（PermissionMode 四档 + ask 规则 + DecisionSource::Mode）；§5.1 IPC 扩展（mode 参数/set_permission_mode/respond_permission/规则 CRUD/permission-request 与 decision-record 事件）；§6 新增 permission_rules 表（迁移 0002）；PermissionRequest 增加 kind 字段 |
-| 2026-09-25 | 0.6 | P1-4 会话视图落地：§4.1 diff 字段改为结构化 DiffPayload（ACP ToolCallContent::Diff 提取）；IPC 新增 read_text_file（write 新文件内容磁盘懒读）；前端 react-virtuoso + @pierre/diffs（依赖替换偏差见 roadmap） |
-| 2026-09-25 | 0.5 | P1-3 多会话管理落地：§5.1 多会话并行说明（客户端会话键路由、active run map 并发）；前端 sessions store + 会话列表/切换；IPC 契约不变（run_prompt 并发调用） |
-| 2026-09-25 | 0.4 | P1-2 事件管道落地：新增 §5.1 Tauri IPC 契约（run_prompt/cancel_run + Channel 批量推送）；§4.3 增补权限模式管线 v2 设计稿与管辖边界（ADR-0006，ZCode 源码研究结论），P1-5/P1-7 验收要点相应重写 |
-| 2026-09-24 | 0.1 | Step 0 初版：分层架构、AgentDriver/AgentEvent/ApprovalBroker/Registry 接口、事件管道、数据模型、进程与安全约定 |
-| 2026-09-25 | 0.3 | P1-1 脚手架落地：apps/desktop 为 Tauri v2 壳（crate `supercode-desktop` 并入 cargo workspace；pnpm-workspace 管理 apps/*）；前端 React 19 + Tailwind v4 + shadcn/ui（radix-nova 预设）；§5 事件管道与命令接入自 P1-2 起 |
-| 2026-09-24 | 0.2 | Phase 0 落地（v0.1.0）：§4.1 对齐 ACP v1 实际 schema（ThoughtChunk、Option 字段、ToolKind 全集）；§4.3 规则引擎 + 留痕流；§4.5 ProcessManager；§4.6 EventAggregator；§4.2 StartMode 与 trait 化节奏；§6 迁移 0001 六表 + SessionRecorder；§7 取消链路与 SDK 托管进程组 |
+## 11. 工作区、看板与终端
 
 ### P2-7 任务 worktree 隔离
 
@@ -708,13 +688,110 @@ P2-7 托管 worktree 的原空间记录继续作为执行归属：创建/恢复�
 
 - 前端使用 `@xterm/xterm@6.0.0` 与 `@xterm/addon-fit@0.11.0`；不加载 canvas/WebGL addon，`allowTransparency=false`，不透明背景，ResizeObserver 同步字符行列。终端由会话详情显式打开，cwd 使用该会话 draft 的实际执行目录（包括 worktree），不使用看板分组路径；目录变更、切换会话/页面、关闭面板会销毁终端，重开为新 shell，不持久化 shell 状态。
 - 桌面端使用 portable-pty 启动用户 shell 的交互实例；独立 PTY 不经过 agent 或审批队列。`open_terminal(id,cwd,cols,rows,onOutput)` / `write_terminal(id,data)` / `resize_terminal(id,cols,rows)` / `close_terminal(id)` / `ack_terminal(id)`；随机客户端 id 在异步启动前确定，关闭与启动共享注册表锁，前端即使在启动中卸载也等待启动结果后关闭，避免泄漏。IPC 使用 Tauri Channel 输出字节块（UTF-8 跨块由 xterm 解码），输出采用逐块应答背压，限制输入和尺寸；命令不阻塞 Tauri 主线程。
-- 后端注册表只拥有本应用创建的 PTY；自然退出回收句柄并通知前端；关闭显式终止 shell 及其子进程并 wait 回收。应用退出/窗口销毁执行同样清理，Unix 通过原生 `getsid` 校验本 PTY 的独立 session，收集并终止各 job process group 中的进程（无法取得 session 时按自身树兜底），Windows 专项仍属 Phase 3。macOS 使用非阻塞 PTY 读取与可中断应答等待，关闭先释放 master/writer 再等待回收，避免 exiting 状态悬挂。终端仅在目录存在且为绝对路径时启动；失败显示错误，不自动创建目录。
+- 后端注册表只拥有本应用创建的 PTY；自然退出回收句柄并通知前端；关闭显式终止 shell 及其子进程并 wait 回收。应用退出/窗口销毁执行同样清理，Unix 通过原生 `getsid` 校验本 PTY 的独立 session，收集并终止各 job process group 中的进程（无法取得 session 时按自身树兜底），Windows 专项 P3-8/P3-9 已按 ADR-0008 延期，未包含在当前 dev 和 macOS 发布范围。macOS 使用非阻塞 PTY 读取与可中断应答等待，关闭先释放 master/writer 再等待回收，避免 exiting 状态悬挂。终端仅在目录存在且为绝对路径时启动；失败显示错误，不自动创建目录。
 - 不改数据库/schema。新增依赖理由：xterm 提供 ANSI/VT 解析和可访问输入，fit addon 匹配面板尺寸；portable-pty 提供真实 PTY/交互 shell 与窗口 resize，替代不支持 job control 的普通管道。
 
 P2-9 依赖选择与实测：5.5.0 在 React StrictMode/面板销毁后存在 viewport 定时回调访问已销毁 renderer 的异常，改用 6.0.0 稳定版，重复开关/切换复测无异常。官方变更见 [xterm 6.0 发布说明](https://github.com/xtermjs/xterm.js/releases/tag/6.0.0)；PTY 读写/resize 使用 [portable-pty](https://github.com/wezterm/wezterm/tree/main/pty)。
 
 ### P2-10 — 整体验收发现的宿主收尾修复
 
-CLI 与桌面宿主一致：driver 返回 `Err` 时，在关闭事件通道、等待 recorder 排空之前补发 `DriverError`，让已有会话落库为 failed；会话未建立时不制造伪档案。新建和续聊均用真实 CLI + 无网络 ACP 对端回归验证。release 版本徽标读取 Tauri 实际 app version，`dev` 后缀仅开发构建显示，不再硬编码版本。Phase 2 tag/main 出口仍受未完成 P2-6 限制。
+CLI 与桌面宿主一致：driver 返回 `Err` 时，在关闭事件通道、等待 recorder 排空之前补发 `DriverError`，让已有会话落库为 failed；会话未建立时不制造伪档案。新建和续聊均用真实 CLI + 无网络 ACP 对端回归验证。release 版本徽标读取 Tauri 实际 app version，`dev` 后缀仅开发构建显示，不再硬编码版本。v0.3.0 按用户批准范围排除 P2-6 后发布；延期不影响已批准版本。
 
-- **2026-10-01 v0.3.0 范围调整**：用户授权提前发布多 ACP agent、worktree、看板与终端；ZCode StreamJson/Start Plan 真实验收延期，独立任务分支不合入本版，发布版保留禁选状态。
+
+
+### Claude CLI 与 ACP 探测边界
+
+内置 Claude 行的 installed_version 仍表示 ACP 适配器版本，不能由 claude --version 替代。新增 cli_version 可空字段，仅原样内置 Claude 命令另行并发探测 claude --version；自定义命令不套用此检测。定义列表（不探测）置 null。UI 单独展示 CLI 已检测版本与 ACP 已检测/未就绪；失败包含缺少程序、退出失败与超时等原因，因此统一“未检测到/未就绪”而非断言未安装。不读取登录或 key，不以版本结果保证认证可用。
+
+## 12. 指挥官契约（dev，截至 P3-6）
+
+### P3-1 — 指挥官计划契约
+
+`commander::TaskPlan { version, objective, tasks }` 是直连 LLM 与宿主之间的 JSON 契约，version 固定为 1，未知字段拒绝。每个 `PlannedTask { id, title, agent_id, prompt, depends_on }` 具有 1～64 字符的 ASCII 字母/数字/连字符/下划线 id，非空 title/prompt；depends_on 可省略为 []。计划必须有 1～64 个任务和非空 objective，总输入最多 1 MiB。agent_id 必须在宿主注册表存在且通过现有 launch 校验（当前仅 ACP）；ZCode 禁选逻辑保持一致。
+
+`TaskPlan::validate(&AgentRegistry) -> Result<ValidatedPlan>` 拒绝重复 id、未知 agent、重复/缺失/自身依赖和环；返回按输入顺序稳定排列的拓扑执行批次。每个批次仅包含依赖在此前批次已完成的任务。该结果仅是静态建议，不创建会话、数据库记录、worktree 或子进程；实际安装探测、工作目录及审批在 P3-4 执行入口重新校验。计划自身不携带权限豁免或 shell 命令执行配置，不能越过既有审批管线。
+
+CLI `supercode plan validate <file>` 读取不超过 1 MiB 的 JSON，按合并后的注册表验证，输出 `ValidatedPlan { plan, batches }` JSON；坏计划返回非零并给出字段/依赖诊断。不调用 LLM，不访问 SQLite，不执行 agent。直连模型响应复用同一契约校验。
+
+
+### P3-2 — 直连 LLM、配置与本机凭据
+
+`LlmConfig { endpoint, model, api_key_env, timeout_secs }` 使用严格 JSON，不包含 key 值。endpoint 接受完整 /chat/completions URL 或 /v1 Base URL（同源补全），要求 HTTPS 或字面 loopback HTTP，禁止 userinfo/query/fragment。model 非空；环境变量名符合 ASCII 命名规则。timeout 默认 60 秒，范围 1～300；配置/目标最多 64 KiB，响应/计划最多 1 MiB。
+
+SQLite 0005 `commander_config(id=1,config_json)` 原子保存配置，无效输入不覆盖旧值；0006 `commander_credentials(scope,key_value)` 按用户选择保存明文密钥。scope 由 origin、规范化接口路径和变量名组成，不跨源复用，切换模型不改变绑定。默认 App/CLI 优先 SQLite key，再读环境变量；显式 CLI `--config` 只读指定普通文件和环境变量，不打开数据库。密钥首尾空白裁剪，非空且 ≤16 KiB，内部空白/非 ASCII/控制字符拒绝。
+
+`LlmClient::from_config` 是环境变量构造入口；默认宿主通过 `Store::commander_client` 解析本机凭据。客户端 reqwest 0.13.5 使用 JSON/rustls，禁重定向与自动重试；敏感 Bearer 头及错误/Debug 不回显密钥、URL、目标或响应原文。不修改 agent 配置，不读取 agent 登录 token。
+
+`generate_plan(objective,registry,cancel)` 一次非流式 POST，包含 model、stream=false、response_format={type:json_object} 和独立 system/user 消息。system 给出 P3-1 契约及 ACP agent 名单，不读取项目文件。响应要求唯一 choice、finish_reason=stop、assistant content 字符串，无 tool_calls/refusal。content 接受裸 JSON 或完整 json/无语言代码围栏，拒绝额外说明；严格反序列化并复用 DAG/agent 校验，objective 固定为原用户目标。发送及读取共用 deadline/CancellationToken；HTTP 错误只输出状态码，语法与字段错误仅分类诊断。
+
+`plan generate` 与 `plan validate` 均输出 `ValidatedPlan { plan,batches }`，但 validate 的输入是 `TaskPlan`；复核 generate 结果须先取其 plan 字段。生成不创建执行会话或派单，Ctrl-C 取消返回非零。
+
+模型发现 `discover_models` 使用同源、同路径前缀 /models GET 与同一凭据来源，允许表单 model 为空，严格解析 data[].id、排序去重，限制 1 MiB/4096 项。不跟随重定向、不探测其他供应商；目录不保证账号计费权限或文本规划能力，查询失败仍允许手填。
+
+桌面设置分别展示已保存配置、当前模型与凭据来源，配置/密钥分开显式保存。password 框保存成功后清空；IPC 来源仅返回 sqlite/environment/missing，不返回 key。模型列表留内存，选择后显式保存；改连接参数清除旧列表。IPC：get_commander_config、save_commander_config、list_commander_models、save_commander_key、commander_credential_source、verify_commander_plan、cancel_commander_plan。
+
+App 示例验证读取已保存配置与凭据，固定待办应用目标；每请求 UUID，最多一个活跃请求，取消/drop/窗口销毁回收 token。只展示合法任务与批次，不执行 agent；结果留内存。SQLite/WAL/SHM/journal、.env 和真实连接配置不入 Git。真实验收结果见 [P3-2](acceptance/p3-2.md)，不在设计契约重复保存过程状态。
+
+参考：[reqwest](https://docs.rs/reqwest/0.13.5/reqwest/struct.ClientBuilder.html)、[MiMo 模型目录](https://mimo.mi.com/docs/zh-CN/api/model/list-models)、[MiMo JSON 输出](https://mimo.mi.com/docs/zh-CN/quick-start/usage-guide/text-generation/structured-output)。
+
+### P3-3 — 计划持久化与执行状态机
+
+0007 commander_runs 保存不可变计划 JSON、工作目录、plan 状态、按原计划顺序排列的任务状态 JSON、revision 和时间戳。计划与全部初始状态单条 INSERT 原子写入；不得含连接配置/key。创建时重新校验 DAG/agent 和 1 MiB 上限，cwd 要求绝对路径（不访问文件）。每次转换读取快照后按 revision 做单条 UPDATE CAS，计划与任务状态原子变化；竞争失败返回 false，让调度器重新读取，非法转换返回分类错误。此任务只提供 Store API，不启动模型或 agent。
+
+计划 draft → running（显式确认）→ succeeded/failed/cancelled/interrupted，终态不可重跑。任务 pending → running（计划 running 且依赖全部 succeeded）→ succeeded/failed；pending 可因失败依赖标记 skipped，running 不可直接 skipped。失败/跳过依赖的全部后代自动 skipped，独立任务继续；全部任务终态后计划有失败则 failed，否则 succeeded。显式取消 draft/running 时所有未终态任务 cancelled，已完成记录保留。任务启动时可绑定 session_id，或在 running 且尚未绑定时单次补绑（UUID 仅引用，不改会话表）；终态不可改绑。
+
+读取/重开库只恢复记录，绝不自动执行；独占调度器启动时可显式 recover_commander_runs 将 running 计划改 interrupted，running 任务 interrupted、pending cancelled；draft 和既有终态不改。不能在 Store::open 自动执行恢复（其他连接可能仍有活跃任务）。P3-4 接入调度器后负责调用恢复、派单和回收进程。
+
+### P3-4 — ACP 派单与批次调度（已集成 dev）
+
+`commander::scheduler::Scheduler` 持有 Store 和注册表；`execute(run_id, DispatchOptions, BrokerFactory, broadcast::Sender<DispatchEvent>, CancellationToken)` 显式执行已确认 draft 计划，返回最终 CommanderRun。Options 为 max_concurrency（1～16）与 workspace_id；cwd 来自不可变计划记录。执行前重校验计划、目录存在/绝对路径、空间存在与各实际 ACP 适配器版本探测。预检失败保持 draft、无会话/任务运行；CAS draft→running 是跨调用唯一认领，不重跑 running/终态。
+
+按 P3-1 稳定拓扑批次派单，同批受并发上限约束，全部结束后才进入下一批；失败后代由 P3-3 标 skipped，独立分支继续。每任务独立本机会话 UUID、AcpDriver、新建 ACP 会话、SessionRecorder 与 broker；事件信封包含 run_id/task_id/session_id/agent_id，输出广播不阻塞执行，SQLite 是持久化事实源。原 cwd、workspace_id、agent_id、审批管线保持。共享目录不自动创建 worktree；此阶段只核心库及验收示例，不新增产品 CLI/UI（P3-5/6）。
+
+BrokerFactory 为每个派单创建独立 ApprovalBroker，宿主可事先订阅接入人工审批；调度器使用 resolve_fail_closed，无订阅的兜底拒绝，显式 ask 仍保持队列语义。取消联动 reject_all_pending，完成拒绝解析后以 <cancelled> 拒绝规则留痕，裁决单独绑定本机会话写 approvals，不借计划提升权限。SessionStarted 经可返回错误的 recorder 写入后绑定任务 session UUID；driver 错误补 DriverError，落库失败使任务失败，不宣称成功。仅 EndTurn 且无持久化错误视为 succeeded；其它停止原因失败，计划取消则保留已有完成结果，其余 cancelled。
+
+取消停止新派单、取消全部自有 driver 并等待协议/进程清理及 recorder 排空，然后原子取消计划；不得杀无关进程。执行 future 意外被丢弃时取消 token，剩余运行记录由独占宿主显式 recover_commander_runs 恢复为 interrupted；普通读取/另一执行调用不自动恢复，以免打断仍活跃计划。P3-4 不引入后台自动恢复或自动重跑。
+
+### P3-5 — 结果汇总与 CLI 闭环（已集成 dev）
+
+`Store::summarize_commander_run(id)` 返回 RunSummary：run_id/objective/cwd/status、七种任务状态计数、按计划顺序的 task 摘要（id/title/agent_id/status/depends_on、本机 session_id、agent_session_id、最后一条 agent 消息 result、truncated）。读取不调用模型、不执行任务、不自动恢复或重跑。消息摘要最多 8 KiB（UTF-8 边界截断），无会话的失败/跳过仍输出明确状态。最后消息按本机会话 UUID 查询，远端 id 相同也不串台；读取引用需核对 agent/cwd 一致，缺失会话可返回空 agent_session_id，不能把其他会话结果归给该任务。状态来源是 SQLite，不使用输出文本推断成功。
+
+CLI `plan run <objective> --cwd <dir> [--agents opencode,codex]` 使用本机 SQLite 模型与密钥生成并校验计划，保存 draft，stdout 输出完整 plan/batches/summary 供审阅；默认不派单。agents 是可选的规划名单限制，未知或非 ACP agent 拒绝，计划及执行重新校验；不改全局注册表。没有限制时用全部已接入 ACP 定义。真实验收限制为 OpenCode+Codex，不处理 Claude/MiMo ACP 环境。
+
+`plan execute <run UUID> --yes [--jobs 2] [--allow ...] [--deny ...]` 显式确认已存 draft，不再次生成/改写计划；复用 P3-4 调度器。没有 --yes 退出 2、无派单；并发范围 1～16。CLI 无交互审批队列，按用户 allow/deny 规则使用独立 broker，未匹配操作 fail-closed，保留裁决落库，不改成 full 权限。事件按 run/task/session 归属写 stderr，stdout 仅最终 summary JSON。Ctrl-C 取消并等待驱动/审批/recorder 排空；成功退出 0，失败/中断/错误退出 1，取消退出 130。预检失败保留 draft 并输出可查询摘要。
+
+`plan report <run UUID>` 输出同一摘要，成功查询退出 0，无论计划状态；不存在退出非零。完整生成输出包含 plan（TaskPlan）、batches 和 summary；执行/报告输出 RunSummary。报告不包含 endpoint/model/key，不调用额外 LLM，不处理桌面入口（P3-6）。没有迁移或新增包；CLI 直接使用锁文件已有 serde 序列化共用报告，复用 SQLite/调度器。
+
+### P3-6 — 桌面指挥官工作区（已集成 dev，macOS 已验收）
+
+新增独立导航“指挥官”：目标和绝对 cwd → 生成并保存 draft → 显示任务、agent、依赖批次及全部 prompt → 明确确认执行 → 进度/审批/结果。模型配置继续使用设置页，页面显示保存的模型与密钥是否就绪及设置入口，不重复输入 key。可限制规划 agent、设置并发 1～16；不创建目录/worktree、不读取项目文件、不自动执行计划。阶段固定变更前确认模式与默认空间，显式显示执行 cwd，避免引入未持久化权限草稿。
+
+历史批次使用 dependency_batches 只读拓扑布局，不要求旧 Agent 仍注册；执行仍完整 validate 与预检。会话导航重新进入时刷新数据库历史，显示指挥官创建的会话。
+
+IPC generate_commander_run(request_id,objective,cwd,agents) 读取本机配置/密钥，限制注册表并校验目录，保存 P3-3 draft；list_commander_run_views/get_commander_run_view 返回计划、批次、P3-5 summary 与 active 标志。execute_commander_run(run_id,confirmed,jobs,on_progress) 要求 confirmed=true 且 draft，复用 P3-4；同 App 最多一个生成或执行，guard 在全部清理后移除；cancel_commander_work(request_id) 只取消本 App 的请求，不改其他 CLI 正在执行记录。Channel 只传 task_id 刷新信号，不传模型输出或凭据，SQLite 是状态与结果事实源；切换导航不取消执行，页面重新进入按库读取，不重发 execute。
+
+DispatchOptions 增 interactive_approvals（默认 false，CLI 行为不变），desktop=true 使用原 broker.resolve 而非 fail-closed。独立 broker 载入全局规则、固定 Ask；待决/裁决转发既有 permission-request/decision-record 并按 AppState.pending 路由 respond_permission。裁决只由调度器写一次 SQLite，转发任务不重复写；前端待决移除同时匹配 ACP session_id/tool_call_id，避免不同 agent 同名工具串台。指挥官任务内联显示其审批卡，审批中心仍可应答；取消联动拒绝挂起请求与裁决留痕。
+
+退出请求有活跃指挥官工作时先阻止退出、取消 token 并等待 guard 清除/driver 回收，再退出。重启从 SQLite 恢复 draft/终态/任务结果与引用，不自动执行或重跑终态。非本 App 活跃的 running 记录显示“其他宿主或遗留运行”，禁止再执行/跨宿主取消；不会自动 recover 全库以免中断 CLI。崩溃遗留记录可由独占宿主显式执行核心恢复接口，桌面不会猜测其它进程已停止。恢复指恢复历史与草稿审阅，不承诺续跑已中断任务。
+
+本阶段不新增迁移/包。布局采用主工作区+历史列表，分隔线组织任务，prompt 按需展开，状态和操作有可读文本；配置不足/预检失败保持草稿并提示，不把安装检测视为推理可用。验收 macOS WebKit；Windows 实机专项仍归 P3-8/9，不能用 macOS 宣称 Windows 通过。
+
+### P3-7 — Codex NativeDriver（已实现，核心库范围）
+
+独立 `driver::NativeDriver` 使用 `codex app-server --listen stdio://`，JSON-RPC 逐行 JSON（无需 jsonrpc 字段）。依据 [官方 App Server 文档](https://learn.chatgpt.com/docs/app-server) 与本机 codex-cli 0.144.5 生成的稳定 schema；不启用 experimentalApi、不假定 initialize 返回不存在的 capability 列表。握手校验 userAgent，未知 RPC/不支持的方法明确失败。新建 thread/start、恢复 thread/resume，然后 turn/start；恢复返回 thread.id 必须与请求相同。保持 cwd，readOnly sandbox + untrusted 服务端审批策略固定，默认不覆盖用户模型/认证。专用验收 example 允许 SUPERCODE_NATIVE_TEST_MODEL 指定单次子进程模型（来源为本机 model/list 默认条目），不写配置；目录不是权限证明，仍须真实完成推理。未消费的通知（包括恢复时旧 turn 的 legacy 通知）忽略；消费的会话、turn、item 事件按 threadId/turnId 校验，不允许跨会话污染；只有 turn/completed.status=completed 映射 EndTurn，interrupted 映射 Cancelled，failed/EOF/错误不是成功。
+
+命令及文件审批分别接入既有 PermissionHandler/ApprovalBroker，kind=execute/edit。每次 RPC 回调使用独立 tool_call_id（包括不透明 RPC id，不能只使用可重复 itemId），提供 accept/decline 两个一次性选项；不提供 acceptForSession/永久规则扩权，updated_input 不支持且拒绝。未知服务端请求回复 method-not-found，权限提升/交互输入等未实现请求不自动放行。审批异步等待，读循环继续处理取消与通知；完成或取消时收尾待决 futures。broker.set_mode 对后续请求生效；已进入队列的请求仍需明确 respond/reject_all_pending，不声称能热改服务器沙箱或撤销已执行操作。
+
+沿用 ProcessManager 独立进程组及清理；stderr 仅留本机临时日志。单帧上限 4 MiB，启动缓冲 32 帧，同时审批最多 32 个，单轮请求身份最多 4096 个；握手/启动 RPC 有超时；取消优先，turn/interrupt 有限宽限后整组回收，未来被丢弃亦取消并清理。事件队列满时取消/错误终态采用 try_send，避免背压阻止清理；宿主也应检查返回结果与取消令牌，不能依赖满队列必有终态。NativeDriver 返回前等待进程退出，不遗留后台 approvals/reader。协议错误仅输出固定诊断，不回显原始远端错误/凭据。
+
+本任务保持具体 driver 方法 `run(cwd,StartMode,prompt,events,permissions,cancel)`；普通宿主优先用 `run_with_broker`，其拥有 pending 队列并在取消/drop 时拒绝和清理，通用 callback 入口的外部队列仍由宿主负责，不提前引入设计示意 trait；提供核心验收 example，尚不注册产品原生入口、不修改现有 codex ACP、指挥官 ACP 约束、UI 或数据库 schema。真实出口已通过，按流程合入 dev。Windows 进程/PTY 与 UI 由 P3-8/9 实机验收，本机不冒充 Windows 通过。
+
+## 13. 设计变更与历史
+
+现行接口在对应章节原位更新；过程、失败尝试和验收结果写任务验收记录，重大决策写 ADR。[历史快照](history/architecture-through-p3-3.md) 保留原变更表与 P3-2/3 演进过程，不作为现行约定。
+
+| 日期 | 变更 | 证据 |
+|---|---|---|
+| 2026-10-08 | P3-10A 整体回归及 P3-10B macOS arm64 安装交付；版本统一 1.0.0，无接口/迁移变更 | [Phase 3](acceptance/phase3.md) |
+| 2026-10-02 | P3-1～4 计划契约、直连 LLM/本机凭据与执行状态持久化已集成 dev | [验收索引](acceptance/README.md) |
+| 2026-10-02 | 文档结构整理，替代过时的环境变量唯一来源与裸 JSON 唯一输出约定 | [整理验收](acceptance/docs-alignment.md) |

@@ -93,6 +93,19 @@ impl AgentDefinition {
         }
     }
 
+    /// Native CLI probe is distinct from ACP readiness; preserve custom overrides.
+    pub fn native_cli_probe(&self) -> Option<Self> {
+        if self.id != "claude-code"
+            || self.command != "npx -y @agentclientprotocol/claude-agent-acp"
+        {
+            return None;
+        }
+        let mut probe = self.clone();
+        probe.command = "claude".into();
+        probe.version_args = vec!["--version".into()];
+        Some(probe)
+    }
+
     /// 探测本机安装：执行 `program <version_args...>`，返回版本号首行；
     /// 未安装 / 超时 / 非零退出 → None。
     pub async fn detect_version(&self) -> Option<String> {
@@ -253,6 +266,24 @@ impl AgentRegistry {
     }
 
     /// 全部条目（内置顺序 + 用户新增）
+    /// An in-memory planning allowlist, never writes user registry settings.
+    pub fn restricted(&self, ids: &[String]) -> Result<Self> {
+        if ids.is_empty() {
+            return Err(crate::error::CoreError::Protocol(
+                "规划 agent 名单不能为空".into(),
+            ));
+        }
+        let mut entries = Vec::new();
+        for id in ids {
+            let def = self.find(id)?;
+            crate::orchestrator::validate_launch(def, None, ".")?;
+            if !entries.iter().any(|d: &AgentDefinition| d.id == def.id) {
+                entries.push(def.clone());
+            }
+        }
+        Ok(Self { entries })
+    }
+
     pub fn entries(&self) -> &[AgentDefinition] {
         &self.entries
     }
@@ -463,6 +494,23 @@ mod tests {
         assert_eq!(reg.entries().len(), before, "解析失败静默忽略");
 
         let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn claude_cli_probe_is_separate_and_does_not_apply_to_custom_commands() {
+        let registry = AgentRegistry::builtin();
+        let claude = registry.find("claude-code").unwrap();
+        let probe = claude.native_cli_probe().unwrap();
+        assert_eq!(probe.command, "claude");
+        assert_eq!(probe.version_args, vec!["--version"]);
+        assert_eq!(
+            claude.command,
+            "npx -y @agentclientprotocol/claude-agent-acp"
+        );
+        let mut custom = claude.clone();
+        custom.command = "/custom/adapter".into();
+        assert!(custom.native_cli_probe().is_none());
+        assert!(registry.find("codex").unwrap().native_cli_probe().is_none());
     }
 
     #[tokio::test]

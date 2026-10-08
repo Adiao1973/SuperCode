@@ -53,11 +53,18 @@ impl SessionRecorder {
 
     /// 消费一条事件并落库。错误只影响持久化，不打断事件流消费。
     pub async fn handle_event(&mut self, event: &AgentEvent) {
+        if let Err(err) = self.handle_event_checked(event).await {
+            eprintln!("· 持久化警告: {err}");
+        }
+    }
+
+    /// Dispatch must not report success when persistence failed.
+    pub async fn handle_event_checked(&mut self, event: &AgentEvent) -> Result<()> {
         // 会话建立前的重放事件（续聊 session/load）：仅前端渲染，不落库
         if !self.session_active && !matches!(event, AgentEvent::SessionStarted { .. }) {
-            return;
+            return Ok(());
         }
-        let result = match event {
+        match event {
             AgentEvent::SessionStarted { session_id } => {
                 self.session_active = true;
                 let mut result = self
@@ -139,9 +146,6 @@ impl SessionRecorder {
                     .await
             }
             _ => Ok(()),
-        };
-        if let Err(err) = result {
-            eprintln!("\x1b[2m· 持久化警告: {err}\x1b[0m");
         }
     }
 

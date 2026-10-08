@@ -76,10 +76,10 @@ export const MODEL_GUIDE = `// ~/.config/opencode/opencode.jsonc（全局；项�
   "model": "<provider>/<model>"
 }
 
-// 例（P0-4 实证）："model": "zhipuai-coding-plan/glm-5.3-flash"`;
+// 示例："model": "zhipuai-coding-plan/glm-5.3-flash"`;
 
 /** 管辖边界一句话：为什么客户端模式/规则管不住 opencode 静默放行的操作 */
 export const JURISDICTION_NOTE =
   "opencode 默认 bash/edit=allow，安全命令与新建文件不发权限询问；" +
-  "SuperCode 的模式与规则只能裁决 agent 主动询问的操作（ADR-0006 管辖边界）。" +
+  "SuperCode 的模式与规则只能裁决 agent 主动询问的操作。" +
   "开启严格模式后，所有 bash/edit 都会转发到 SuperCode 审批。";

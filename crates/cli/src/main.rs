@@ -9,6 +9,8 @@ use std::path::PathBuf;
 use std::process::ExitCode;
 use std::sync::Arc;
 
+mod commander;
+
 use clap::{Parser, Subcommand};
 use tokio::sync::mpsc;
 use tokio_util::sync::CancellationToken;
@@ -38,6 +40,11 @@ struct Cli {
 enum Cmd {
     /// 探测本机已安装的 agent
     Detect,
+    /// 检查指挥官任务计划（不执行任务）
+    Plan {
+        #[command(subcommand)]
+        cmd: PlanCmd,
+    },
     /// 运行一次性 agent 会话（默认 opencode）
     Run {
         /// 发给 agent 的任务提示词
@@ -76,6 +83,41 @@ enum Cmd {
 }
 
 #[derive(Subcommand)]
+enum PlanCmd {
+    /// 校验 JSON 计划并输出依赖执行批次
+    Validate { file: PathBuf },
+    /// 生成并保存 draft 计划供审阅，不派单
+    Run {
+        objective: String,
+        #[arg(long)]
+        cwd: PathBuf,
+        #[arg(long, value_delimiter = ',')]
+        agents: Vec<String>,
+    },
+    /// 显式确认并执行已保存的 draft；未预授权操作拒绝
+    Execute {
+        run_id: Uuid,
+        #[arg(long)]
+        yes: bool,
+        #[arg(long,default_value_t=2,value_parser=clap::value_parser!(u8).range(1..=16))]
+        jobs: u8,
+        #[arg(long = "allow")]
+        allows: Vec<String>,
+        #[arg(long = "deny")]
+        denies: Vec<String>,
+    },
+    /// 只读查询计划结果，不自动恢复或重跑
+    Report { run_id: Uuid },
+    /// 用独立直连 LLM 生成计划（不执行）
+    Generate {
+        objective: String,
+        /// 显式配置 JSON 文件；缺省从本机 SQLite 读取
+        #[arg(long)]
+        config: Option<PathBuf>,
+    },
+}
+
+#[derive(Subcommand)]
 enum SessionsCmd {
     /// 列出最近会话
     List,
@@ -86,6 +128,33 @@ async fn main() -> ExitCode {
     let cli = Cli::parse();
     match cli.cmd {
         Cmd::Detect => cmd_detect().await,
+        Cmd::Plan {
+            cmd: PlanCmd::Validate { file },
+        } => cmd_plan_validate(file),
+        Cmd::Plan {
+            cmd: PlanCmd::Generate { objective, config },
+        } => cmd_plan_generate(objective, config).await,
+        Cmd::Plan {
+            cmd:
+                PlanCmd::Run {
+                    objective,
+                    cwd,
+                    agents,
+                },
+        } => commander::preview(objective, cwd, agents).await,
+        Cmd::Plan {
+            cmd:
+                PlanCmd::Execute {
+                    run_id,
+                    yes,
+                    jobs,
+                    allows,
+                    denies,
+                },
+        } => commander::execute(run_id, yes, jobs as usize, allows, denies).await,
+        Cmd::Plan {
+            cmd: PlanCmd::Report { run_id },
+        } => commander::report(run_id).await,
         Cmd::Run {
             agent,
             prompt,
@@ -113,6 +182,92 @@ async fn main() -> ExitCode {
 enum Target {
     New { agent: String },
     Resume { id: Uuid },
+}
+
+fn cmd_plan_validate(file: PathBuf) -> ExitCode {
+    use std::io::Read as _;
+    use supercode_core::commander::{MAX_PLAN_BYTES, TaskPlan};
+    let result = (|| -> Result<String, String> {
+        if !std::fs::metadata(&file)
+            .map_err(|e| format!("读取计划失败: {e}"))?
+            .is_file()
+        {
+            return Err("计划输入必须为普通文件".into());
+        }
+        let file = std::fs::File::open(file).map_err(|e| format!("读取计划失败: {e}"))?;
+        if !file.metadata().map_err(|e| e.to_string())?.is_file() {
+            return Err("计划输入必须为普通文件".into());
+        }
+        let mut bytes = Vec::new();
+        file.take(MAX_PLAN_BYTES + 1)
+            .read_to_end(&mut bytes)
+            .map_err(|e| e.to_string())?;
+        if bytes.len() as u64 > MAX_PLAN_BYTES {
+            return Err("计划输入超过 1 MiB".into());
+        }
+        let plan: TaskPlan =
+            serde_json::from_slice(&bytes).map_err(|e| format!("计划 JSON 无效: {e}"))?;
+        let validated = plan
+            .validate(&registry::AgentRegistry::load())
+            .map_err(|e| e.to_string())?;
+        serde_json::to_string_pretty(&validated).map_err(|e| e.to_string())
+    })();
+    match result {
+        Ok(json) => {
+            println!("{json}");
+            ExitCode::SUCCESS
+        }
+        Err(error) => {
+            eprintln!("{error}");
+            ExitCode::FAILURE
+        }
+    }
+}
+
+async fn cmd_plan_generate(objective: String, config_file: Option<PathBuf>) -> ExitCode {
+    use supercode_core::commander::llm::{LlmClient, LlmConfig};
+    let result = async {
+        let client = if let Some(path) = config_file {
+            LlmClient::from_config(LlmConfig::read(&path)?)?
+        } else {
+            let store = Store::open_default().await?;
+            let config = store.get_commander_config().await?.ok_or_else(|| {
+                supercode_core::error::CoreError::Protocol(
+                    "请在桌面设置配置指挥官模型，或通过 --config 指定配置文件".into(),
+                )
+            })?;
+            store.commander_client(config).await?
+        };
+        let cancel = CancellationToken::new();
+        let signal_cancel = cancel.clone();
+        let watcher = tokio::spawn(async move {
+            if tokio::signal::ctrl_c().await.is_ok() {
+                signal_cancel.cancel();
+            }
+        });
+        let result = client
+            .generate_plan(&objective, &registry::AgentRegistry::load(), cancel)
+            .await;
+        watcher.abort();
+        result
+    }
+    .await;
+    match result {
+        Ok(plan) => match serde_json::to_string_pretty(&plan) {
+            Ok(json) => {
+                println!("{json}");
+                ExitCode::SUCCESS
+            }
+            Err(_) => {
+                eprintln!("无法序列化计划");
+                ExitCode::FAILURE
+            }
+        },
+        Err(error) => {
+            eprintln!("{error}");
+            ExitCode::FAILURE
+        }
+    }
 }
 
 async fn cmd_detect() -> ExitCode {
