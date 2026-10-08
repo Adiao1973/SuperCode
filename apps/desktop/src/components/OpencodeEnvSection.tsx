@@ -90,7 +90,7 @@ export function OpencodeEnvSection() {
             <code className="text-[11px]">{report.global_model}</code>
           ) : (
             <span className="text-amber-500 text-[11px]">
-              未设置——opencode acp 不继承 auth 默认模型，将回退免费模型（限流严格，P0-4 实证）
+              未设置——opencode acp 不继承 auth 默认模型，将回退免费模型（可能受到限流）
             </span>
           )}
         </div>

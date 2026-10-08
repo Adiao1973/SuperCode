@@ -18,13 +18,13 @@ import {
   Terminal,
 } from "lucide-react";
 
-/** 导航项：id 对应 Phase 1 各视图，hint 标注接入任务号 */
+/** 产品导航项。研发阶段编号仅保留在开发文档中。 */
 const NAV_ITEMS = [
-  { id: "commander", label: "指挥官", icon: LayoutGrid, hint: "P3-6" },
-  { id: "sessions", label: "会话", icon: MessageSquare, hint: "P1-3" },
-  { id: "kanban", label: "任务看板", icon: LayoutGrid, hint: "P1-9" },
-  { id: "approvals", label: "审批中心", icon: ShieldCheck, hint: "P1-5" },
-  { id: "settings", label: "设置", icon: Settings, hint: "P1-5" },
+  { id: "commander", label: "指挥官", icon: LayoutGrid },
+  { id: "sessions", label: "会话", icon: MessageSquare },
+  { id: "kanban", label: "任务看板", icon: LayoutGrid },
+  { id: "approvals", label: "审批中心", icon: ShieldCheck },
+  { id: "settings", label: "设置", icon: Settings },
 ] as const;
 
 type NavId = (typeof NAV_ITEMS)[number]["id"];
@@ -112,7 +112,7 @@ function App() {
         </div>
         <div className="border-t" />
         <nav className="flex flex-col gap-1 p-2">
-          {NAV_ITEMS.map(({ id, label, icon: Icon, hint }) => (
+          {NAV_ITEMS.map(({ id, label, icon: Icon }) => (
             <button
               key={id}
               type="button"
@@ -126,9 +126,6 @@ function App() {
             >
               <Icon className="size-4" />
               {label}
-              <Badge variant="outline" className="ml-auto text-[10px] tabular-nums">
-                {hint}
-              </Badge>
             </button>
           ))}
         </nav>
@@ -145,13 +142,6 @@ function App() {
       <main className="flex min-w-0 flex-1 flex-col">
         <header className="flex h-13 shrink-0 items-center gap-3 border-b px-5">
           <h1 className="text-sm font-semibold">{activeNav.label}</h1>
-          <Badge variant="outline" className="text-[10px]">
-            {nav === "sessions"
-              ? `多会话 · ${activeNav.hint}`
-              : nav === "kanban"
-                ? `按空间组织 · ${activeNav.hint}`
-                : activeNav.hint}
-          </Badge>
         </header>
         <div className={nav === "commander" ? "min-h-0 flex-1" : "hidden"}><CommanderView active={nav === "commander"} onSettings={() => setNav("settings")} /></div>
         {nav === "sessions" && <SessionsWorkspace state={sessions} dispatch={dispatch} />}
