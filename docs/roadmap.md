@@ -4,9 +4,9 @@
 
 ## 当前进度与下一步
 
-- 已发布：v0.3.0（main/tag）；日常集成：dev。
-- Phase 3：P3-1～P3-7 已验收并合入 dev，尚未包含在 v0.3.0 安装包。
-- 平台路线：当前全力开发 macOS；用户授权延期 Windows P3-8/P3-9，排除当前 v1.0.0 macOS 发布范围。P3-10A macOS 整体回归已验收；当前任务为 P3-10B macOS 构建与发布；见 [路线决策](adr/0008-macos-priority.md)。P3-7 为核心库交付，产品 Codex 入口仍使用 ACP。
+- 发布版本：v1.0.0（macOS arm64，远端核对见 P3-10B）；日常集成：dev。
+- Phase 3：P3-1～P3-7 已验收并合入 dev，纳入 v1.0.0 macOS 发布范围。
+- 平台路线：当前全力开发 macOS；用户授权延期 Windows P3-8/P3-9，排除当前 v1.0.0 macOS 发布范围。P3-10A macOS 整体回归已验收；P3-10B 本地验收通过，当前完成远端发布核对；后续任务需另行规划；见 [路线决策](adr/0008-macos-priority.md)。P3-7 为核心库交付，产品 Codex 入口仍使用 ACP。
 - 文档治理：DOC-1 整理见 [记录](acceptance/docs-alignment.md)；DOC-2 平台路线调整见 [授权与验证](acceptance/macos-priority.md)。开发闭环规则继续适用。
 - 延期项：P2-6 ZCode Start Plan CLI 路径未通过真实验收，用户批准排除 v0.3.0，发布版保持禁选；见 [P2-6](acceptance/p2-6.md)。
 - 环境事项：Claude CLI 与 ACP 分开探测；用户要求暂不处理本机 ACP 未就绪。此前接入验收仍保留，不把计划中的 Claude 分配视为当前可运行证明。
@@ -42,7 +42,7 @@
 | P3-8 | Windows 进程与终端适配 | 实现保留 feat/p3-8-windows-runtime，本机回归通过，Windows CI/编译/实机均未验证；见 [延期记录](acceptance/p3-8.md) | 延期：排除当前 macOS 发布范围 |
 | P3-9 | Windows UI 与安装包 | Windows 实机 UI 与安装包验收；待 P3-8 出口通过及有可用环境后恢复 | 延期：尚未启动 |
 | P3-10A | macOS v1.0.0 整体回归 | 先写 Phase 3 macOS 剧本；just verify、真实指挥官拆解→确认→双 Agent 执行→审批/取消→重启恢复，回归会话/worktree/看板/终端；失败修复后复验，不发布；见 [验收记录](acceptance/p3-10a.md) | ✅ 已验收 2026-10-07 |
-| P3-10B | macOS v1.0.0 构建与发布 | 依赖 P3-10A；macOS 安装包与校验和、安装启动实测，复核延期范围与 dev 全绿，再 annotated tag/main/GitHub Release；仅声明实际验收的系统与架构；见 [预写验收](acceptance/p3-10b.md) | 进行中 |
+| P3-10B | macOS v1.0.0 构建与发布 | 依赖 P3-10A；macOS 安装包与校验和、安装启动实测，复核延期范围与 dev 全绿，再 annotated tag/main/GitHub Release；仅声明实际验收的系统与架构；见 [验收记录](acceptance/p3-10b.md) | 本地已验收，远端发布核对中 |
 
 ## 里程碑
 
@@ -51,4 +51,4 @@
 | v0.1.0 | Phase 0 CLI | 已发布 |
 | v0.2.0 | Phase 1 macOS 桌面 MVP | 已发布 |
 | v0.3.0 | Phase 2 多 agent 与工作区体验，排除 P2-6 | 已发布 |
-| v1.0.0 | macOS 指挥官闭环与完整桌面交付；Windows 延期 | P3-10A 回归通过，待 P3-10B 安装包与发布出口；尚未发布 |
+| v1.0.0 | macOS 指挥官闭环与完整桌面交付；Windows 延期 | 功能与安装验收通过；远端核对见 P3-10B |

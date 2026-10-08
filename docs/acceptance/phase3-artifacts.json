@@ -1,0 +1,25 @@
+{
+  "date": "2026-10-08",
+  "version": "1.0.0",
+  "source_code_commit": "44cc00e",
+  "platform": "macOS 26.5.2 arm64",
+  "excluded_tasks": [
+    "P2-6",
+    "P3-8",
+    "P3-9"
+  ],
+  "signing": "ad-hoc; no Developer ID signing or notarization",
+  "artifacts": [
+    {
+      "name": "SuperCode_1.0.0_aarch64.dmg",
+      "bytes": 10643827,
+      "sha256": "812cb99d32d0a63627af7f1307617184b7b1d56bd88215bbd54170a9ffcfbb7e"
+    },
+    {
+      "name": "supercode-desktop",
+      "bytes": 20962816,
+      "sha256": "4d3165efac9d45dee5a0b3206fd2ec7027bec6d094a10049828f6de2971ee242"
+    }
+  ],
+  "release_url": "https://github.com/Adiao1973/SuperCode/releases/tag/v1.0.0"
+}
