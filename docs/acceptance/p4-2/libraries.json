@@ -1,0 +1,129 @@
+[
+  {
+    "package": "motion",
+    "version": "14.0.0",
+    "declaredLicense": "MIT",
+    "peerDependencies": {
+      "react": "^18.0.0 || ^19.0.0",
+      "react-dom": "^18.0.0 || ^19.0.0"
+    },
+    "licenseFile": "motion.txt",
+    "licenseSha256": "1bf0dc3f7727723e5a032ed12164a47cf92c05204cb1a3485f123c24e2833ed1"
+  },
+  {
+    "package": "framer-motion",
+    "version": "14.0.0",
+    "declaredLicense": "MIT",
+    "peerDependencies": {
+      "react": "^18.0.0 || ^19.0.0",
+      "react-dom": "^18.0.0 || ^19.0.0"
+    },
+    "licenseFile": "framer-motion.txt",
+    "licenseSha256": "5ff46083b88563822b0560dd6221ab89d2f74bc97a52d4c97a75020fd62c6f32"
+  },
+  {
+    "package": "react-resizable-panels",
+    "version": "4.14.3",
+    "declaredLicense": "MIT",
+    "peerDependencies": {
+      "react": "^18.0.0 || ^19.0.0",
+      "react-dom": "^18.0.0 || ^19.0.0"
+    },
+    "licenseFile": "react-resizable-panels.txt",
+    "licenseSha256": "a8f1e0280bf14adcf5d017547db85eb5c3bac0feb1690ca98650874002eaa8ea"
+  },
+  {
+    "package": "streamdown",
+    "version": "2.7.0",
+    "declaredLicense": "Apache-2.0",
+    "peerDependencies": {
+      "react": "^18.0.0 || ^19.0.0",
+      "react-dom": "^18.0.0 || ^19.0.0"
+    },
+    "licenseFile": "streamdown.txt",
+    "licenseSha256": "b4f9adb7c568904834d0dd6cc98d16c390d21ca32fc17ae7a267715269bd5529"
+  },
+  {
+    "package": "react-markdown",
+    "version": "10.1.0",
+    "declaredLicense": "MIT",
+    "peerDependencies": {
+      "@types/react": ">=18",
+      "react": ">=18"
+    },
+    "licenseFile": "react-markdown.txt",
+    "licenseSha256": "f6196c64e144f9a6fa9154c3a80bc8b89615a9567934b83a8951879f06ba2aef"
+  },
+  {
+    "package": "remark-gfm",
+    "version": "4.0.1",
+    "declaredLicense": "MIT",
+    "peerDependencies": {},
+    "licenseFile": "remark-gfm.txt",
+    "licenseSha256": "dd1081884a92952802f4803110a6bb543acea9a814c786d58605b4c1219b5ebb"
+  },
+  {
+    "package": "cmdk",
+    "version": "1.1.1",
+    "declaredLicense": "MIT",
+    "peerDependencies": {
+      "react": "^18 || ^19 || ^19.0.0-rc",
+      "react-dom": "^18 || ^19 || ^19.0.0-rc"
+    },
+    "licenseFile": "cmdk.txt",
+    "licenseSha256": "b5acfd21b3b61508365224c40ec1b03ec71091248baaf989d4be916551e7d532"
+  },
+  {
+    "package": "sonner",
+    "version": "2.0.8",
+    "declaredLicense": "MIT",
+    "peerDependencies": {
+      "@types/react": "^18.0.0 || ^19.0.0",
+      "react": "^18.0.0 || ^19.0.0 || ^19.0.0-rc",
+      "react-dom": "^18.0.0 || ^19.0.0 || ^19.0.0-rc"
+    },
+    "licenseFile": "sonner.txt",
+    "licenseSha256": "da9201378c36ffd81f51ad0b305f3f0981e90bc558789210ad65d1161eec3b7d"
+  },
+  {
+    "package": "radix-ui",
+    "version": "1.6.7",
+    "declaredLicense": "MIT",
+    "peerDependencies": {
+      "@types/react": "*",
+      "@types/react-dom": "*",
+      "react": "^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc",
+      "react-dom": "^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc"
+    },
+    "licenseFile": "radix-ui.txt",
+    "licenseSha256": "0e80a2d229d2fd4fc7e8636142ec5d0ff0bc031f14c15b682e2ac01dfd5b5138"
+  },
+  {
+    "package": "react",
+    "version": "19.3.0",
+    "declaredLicense": "MIT",
+    "peerDependencies": {},
+    "licenseFile": "react.txt",
+    "licenseSha256": "da6d3703ed11cbe42bd212c725957c98da23cbff1998c05fa4b3d976d1a58e93"
+  },
+  {
+    "package": "react-dom",
+    "version": "19.3.0",
+    "declaredLicense": "MIT",
+    "peerDependencies": {
+      "react": "^19.3.0"
+    },
+    "licenseFile": "react-dom.txt",
+    "licenseSha256": "da6d3703ed11cbe42bd212c725957c98da23cbff1998c05fa4b3d976d1a58e93"
+  },
+  {
+    "package": "lucide-react",
+    "version": "1.48.0",
+    "declaredLicense": "ISC",
+    "peerDependencies": {
+      "react": "^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0"
+    },
+    "licenseFile": "lucide-react.txt",
+    "licenseSha256": "b495047bd93a9b06913511076f504daba17d5bbeb3e0650f3bb53a4220329c57"
+  }
+]

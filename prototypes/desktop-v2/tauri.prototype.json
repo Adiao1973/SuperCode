@@ -1,0 +1,22 @@
+{
+  "productName": "SuperCode P42 Prototype",
+  "identifier": "com.supercode.prototype.p42",
+  "build": {
+    "beforeDevCommand": "pnpm --dir ../../prototypes/desktop-v2 dev",
+    "devUrl": "http://127.0.0.1:1442",
+    "beforeBuildCommand": "pnpm --dir ../../prototypes/desktop-v2 build",
+    "frontendDist": "../../../prototypes/desktop-v2/dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "SuperCode · 交互原型",
+        "width": 1280,
+        "height": 832,
+        "minWidth": 960,
+        "minHeight": 672
+      }
+    ]
+  }
+}
