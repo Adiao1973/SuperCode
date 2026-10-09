@@ -1,0 +1,33 @@
+{
+  "platform": "macOS Tauri WebKit, debug shell, isolated SUPERCODE_DB/XDG_CONFIG_HOME",
+  "page": "/tests/native/index.html",
+  "input": {
+    "chinese": "中文测试",
+    "shiftEnterCount": 0,
+    "enterCount": 1
+  },
+  "dialog": {
+    "initialFocus": "返回",
+    "tabFocus": [
+      "增加合成计数",
+      "返回"
+    ],
+    "escapeFocus": "打开焦点测试"
+  },
+  "composition": {
+    "before": 1,
+    "during": 1,
+    "after": 2,
+    "method": "Synthetic WebKit DOM events via native Inspector, NOT OS IME"
+  },
+  "images": [
+    {
+      "file": "input.jpg",
+      "sha256": "f44302f76582b9ef4e0eafd52511ddddff02fd4abab19a355e7f73e5a555f1bf"
+    },
+    {
+      "file": "focus.jpg",
+      "sha256": "950806380cc2b97bcaf48e576bf16eaec3dc74eaa00425407ed610b7856e39d3"
+    }
+  ]
+}
