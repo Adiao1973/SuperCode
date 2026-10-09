@@ -1,0 +1,122 @@
+{
+  "date": "2026-10-09",
+  "source": "dev 8ea10f3; product sources identical to v1.0.0; spec c9ae47c",
+  "environment": {
+    "model": "Mac15,9 MacBook Pro",
+    "chip": "Apple M3 Max",
+    "cpuCores": 16,
+    "gpuCores": 40,
+    "memoryGiB": 48,
+    "os": "macOS 26.5.2 (25F84) arm64",
+    "dpr": 2,
+    "display": "60Hz external display connected; actual window display not pinned; observed rAF ~60Hz",
+    "systemLoad": "Other usual applications running"
+  },
+  "fixture": {
+    "initialSessions": 12,
+    "initialMessages": 1022,
+    "longSessionMessages": 1000,
+    "kanbanTasks": 12,
+    "streamChunks": 900,
+    "streamIntervalMs": 50
+  },
+  "startup": {
+    "samplesMs": [
+      1515,
+      715,
+      747,
+      748,
+      724
+    ],
+    "method": "process-cold, warm OS cache; CUA launch plus AX-ready round-trip upper bound, not first paint",
+    "medianMs": 747
+  },
+  "build": {
+    "sourceProductRef": "v1.0.0 / 44cc00e; product diff empty",
+    "initialJs": {
+      "files": 1,
+      "rawBytes": 1300400,
+      "gzipBytes": 369794
+    },
+    "initialJsFiles": [
+      "index-Cjcz4pGo.js"
+    ],
+    "allJs": {
+      "files": 319,
+      "rawBytes": 11571478,
+      "gzipBytes": 2231808
+    },
+    "allCss": {
+      "files": 1,
+      "rawBytes": 52976,
+      "gzipBytes": 9823
+    },
+    "normalAppBytes": 21401361,
+    "normalExecutableBytes": 20962816,
+    "normalExecutableSha256": "4d3165efac9d45dee5a0b3206fd2ec7027bec6d094a10049828f6de2971ee242"
+  },
+  "frames": [
+    {
+      "label": "long-history-scroll-1000",
+      "samples": 1801,
+      "p50Ms": 17,
+      "p95Ms": 18,
+      "maxMs": 27,
+      "gapsOver50Ms": 0,
+      "viewport": [
+        1280,
+        800,
+        2
+      ],
+      "dom": {
+        "minVirtualItems": 10,
+        "maxVirtualItems": 17,
+        "totalElements": 394
+      }
+    },
+    {
+      "label": "stream-20hz",
+      "samples": 1801,
+      "p50Ms": 17,
+      "p95Ms": 29,
+      "maxMs": 33,
+      "gapsOver50Ms": 0,
+      "viewport": [
+        1280,
+        800,
+        2
+      ],
+      "dom": {
+        "minVirtualItems": 1,
+        "maxVirtualItems": 1,
+        "totalElements": 378
+      }
+    }
+  ],
+  "rss": {
+    "normalReleaseHostKiB": [
+      117424
+    ],
+    "probeLongHistoryHostKiB": [
+      126560,
+      126560,
+      126560,
+      126560,
+      126560
+    ],
+    "probeAfterStreamHostKiB": [
+      129152,
+      129152,
+      129152,
+      129152,
+      129152
+    ],
+    "scope": "host process only; does not include attributed WebKit/GPU/network XPC memory"
+  },
+  "limits": [
+    "Startup is launch + AX-ready upper bound, warm OS cache, not first paint.",
+    "Frames are instrumented native WebKit rAF intervals, not compositor FPS or Long Tasks.",
+    "Probe build enables tauri/devtools and distinct bundle identity; ordinary screenshots/startup use normal release.",
+    "No real model/credentials tested in P4-1; synthetic loopback HTTP/ACP only."
+  ]
+}
