@@ -1,0 +1,15 @@
+{
+  "mutation": "appendChunk: replace accumulated Chinese text with latest chunk",
+  "target": "apps/desktop/src/lib/stream.ts",
+  "command": "pnpm --filter @supercode/desktop test tests/replay.test.ts",
+  "exitCode": 1,
+  "failedTest": "retains batch boundaries and joins Chinese chunks before closing the turn",
+  "expected": "你好，世界。",
+  "received": "世界。",
+  "restored": true,
+  "emptySelection": {
+    "command": "pnpm --filter @supercode/desktop test tests/fixture-does-not-exist.test.ts",
+    "exitCode": 1,
+    "result": "No test files found"
+  }
+}

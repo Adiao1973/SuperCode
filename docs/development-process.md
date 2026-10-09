@@ -13,7 +13,7 @@
 2. **小设计**：涉及接口 / 数据模型 / 协议行为变更 → **先更新 `docs/architecture.md` 对应章节**（文档先行），必要时补 ADR；纯内部实现可跳过。
 3. **实现**：TDD 优先——接口契约测试先写（driver 状态机、事件转换、审批队列这类逻辑必须有单测）；小步提交；实现严格对齐文档。
 4. **验证（闭环检验点）**：
-   - 自动：`just verify`（= 前端构建 + `cargo fmt --check` + `cargo clippy --all-targets -- -D warnings` + `cargo test`）必须全绿；
+   - 自动：`just verify`（= 前端测试类型检查 + Vitest + 前端构建 + `cargo fmt --check` + `cargo clippy --all-targets -- -D warnings` + `cargo test`）必须全绿；
    - 手动：执行该任务在 roadmap 预写的**验收命令并核对预期输出**；涉及 UI 的用 `pnpm tauri dev` 人工核对；
    - **不过则回到③，禁止带病前进。**
 5. **闭环归档**：更新 `roadmap.md` 任务状态（有偏差写明原因）；接口变更同步回 `architecture.md`；重大取舍补 ADR；任务分支合回 `dev`。**循环结束时代码与文档一致、roadmap 反映真实进度——这就是闭环。**
@@ -85,6 +85,7 @@ scope: core | cli | desktop | docs | repo
 | 层 | 内容 | 工具 | 要求 |
 |---|---|---|---|
 | 单元测试 | 事件合帧、审批规则引擎、driver 状态机、数据模型 | `cargo test` | 核心逻辑必须有，随实现同提交 |
+| 前端状态/组件 | IPC fixture、事件回放、组件交互及测试方法样例；jsdom 不替代原生 WebKit/IME/布局 | Vitest + Testing Library（`apps/desktop/tests`） | P4-3 起接入 `just verify`，方法与边界见 [测试说明](../apps/desktop/tests/README.md) |
 | 协议集成 | ACP 消息流回放（录制真实 opencode 交互的 stdio 流做 fixture）与本地 opencode 冒烟 | `cargo test --ignored`（冒烟需本机装 opencode，不进常规 verify） | Phase 0 P0-4 起建立 |
 | UI 核对 | 桌面端人工核对清单（每 P1-x 任务验收要点） | `pnpm tauri dev` | 验收留痕 |
 
@@ -100,7 +101,7 @@ scope: core | cli | desktop | docs | repo
 ## 7. 一键命令（justfile）
 
 ```
-just verify     # 前端构建（tauri build.rs 依赖 dist/）+ fmt --check + clippy --deny warnings + cargo test
+just verify     # 前端测试类型检查 + Vitest + 前端构建（tauri build.rs 依赖 dist/）+ fmt --check + clippy --deny warnings + cargo test
 just fix        # fmt + clippy --fix
 just smoke      # 需本机 opencode 的冒烟验收（对应 roadmap 当前 Phase 剧本）
 just dev        # Phase 1 起：pnpm tauri dev（apps/desktop）

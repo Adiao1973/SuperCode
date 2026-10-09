@@ -41,7 +41,7 @@ v0.3.0 包含 Claude Code、Codex、MiMo ACP 接入、Agent 管理、任务 work
 
 可在设置页管理 Agent，在会话中选择已安装并完成认证的 ACP agent。任务看板可跨列/空间拖拽，已有会话及 worktree 保持原执行归属；「隔离会话」建立独立任务目录；会话底部「打开终端」使用实际 cwd，关闭或切换会话/页面会结束 shell。
 
-下一版本 v2.0.0 规划聚焦交互、视觉与动效：可调整工作区、底部输入、流式 Markdown、清晰的指挥官/审批流程、主题与键盘操作。见 [新路线图](docs/roadmap.md)及[设计分析](docs/design/desktop-v2.md)；[P4-1 体验基线](docs/acceptance/p4-1.md)已完成，[P4-2 独立原型](docs/acceptance/p4-2.md)已验收；生产 UI 升级尚未接入，当前下载仍为 v1.0.0。
+下一版本 v2.0.0 规划聚焦交互、视觉与动效：可调整工作区、底部输入、流式 Markdown、清晰的指挥官/审批流程、主题与键盘操作。见 [新路线图](docs/roadmap.md)及[设计分析](docs/design/desktop-v2.md)；[P4-1 体验基线](docs/acceptance/p4-1.md)已完成，[P4-2 独立原型](docs/acceptance/p4-2.md)已验收；[P4-3 前端测试基础](docs/acceptance/p4-3.md)已接入开发检查。生产 UI 升级尚未接入，当前下载仍为 v1.0.0。
 
 ## 环境要求
 
@@ -59,7 +59,7 @@ v0.3.0 包含 Claude Code、Codex、MiMo ACP 接入、Agent 管理、任务 work
 
 ```bash
 git clone <repo> && cd SuperCode
-just verify          # 前端构建 + fmt/clippy/全部测试
+just verify          # 前端类型/测试/构建 + fmt/clippy/全部测试
 just dev             # 桌面端开发模式（Tauri dev）
 just build           # 打包 .app 与 .dmg（target/release/bundle/）
 ```
@@ -144,7 +144,7 @@ tools/         # 辅助脚本（图标生成等）
 ## 开发
 
 ```bash
-just verify    # 前端构建 + fmt --check + clippy(-D warnings) + cargo test —— DoD 硬标准
+just verify    # 前端类型/测试/构建 + fmt --check + clippy(-D warnings) + cargo test —— DoD 硬标准
 just fix       # 自动修复
 just dev       # 桌面开发模式
 just build     # 打包 .app/.dmg
