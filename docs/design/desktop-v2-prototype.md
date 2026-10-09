@@ -24,7 +24,7 @@
 | React / React DOM | 19.3.0 / MIT | 与当前已解析产品版本一致；原型 build 与原生显示通过 |
 | radix-ui | 1.6.7 / MIT | 沿用当前 primitive 体系；Dialog/AlertDialog 实测焦点，不另外叠 UI 框架。受控详情的触发点由原型明确记录/恢复 |
 | Motion（含 framer-motion） | 14.0.0 / MIT | 采用开源核心；原型用 LazyMotion + m + domMax 验证三类动画。生产 P4-5 按实际 layout 需求决定 domAnimation/domMax 并控制加载边界，不引入 Motion+ |
-| react-resizable-panels | 4.14.3 / MIT | 原型 API 为 Group/Panel/Separator，键盘 resize 通过；不能照搬旧 PanelGroup 示例。鼠标人工出口尚需记录，不以无效自动化拖动判库失败或通过 |
+| react-resizable-panels | 4.14.3 / MIT | 原型 API 为 Group/Panel/Separator，键盘 resize 通过；不能照搬旧 PanelGroup 示例。用户原生鼠标拖动补验通过，宽度上下界符合设计；无效自动化拖动不作为通过依据 |
 | cmdk | 1.1.1 / MIT | 保留用于 P4-20；当前原型只检索已加载项目内内容，不实现全库搜索；中文 IME 正式专项后验收 |
 | Sonner | 2.0.8 / MIT | 保留用于短反馈；错误、审批和执行确认仍在原位置显示，不借 Toast 掩盖状态 |
 | react-markdown + remark-gfm | 10.1.0 + 4.0.1 / MIT | **建议生产首选的轻量组合**；本轮中文/表格/未闭合代码对照可读。生产需要流中原文回退、按需高亮及增量/虚拟列表专项 |

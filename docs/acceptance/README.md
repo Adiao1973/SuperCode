@@ -8,7 +8,7 @@
 | Phase 1 / v0.2.0 | [整体验收](phase1.md) |
 | Phase 2 / v0.3.0 | [最终范围与整体验收](phase2.md)，[构建产物记录](phase2-artifacts.json) |
 | Phase 3 / v1.0.0 macOS arm64 | [阶段验收](phase3.md)，[构建产物](phase3-artifacts.json)，[P3-10B 安装与发布](p3-10b.md) |
-| P4-2 原型与选型 | [待验收：独立五页原型、原生证据与选型；真实鼠标分栏待补验](p4-2.md) |
+| P4-2 原型与选型 | [已验收：独立五页原型、原生鼠标/键盘、动效证据与库选型](p4-2.md) |
 | P4-1 体验基线 | [已验收：三尺寸五页、合成走查与原生 WebKit 性能采样](p4-1.md) |
 | P2-2 Agent 设置 | [历史交付报告](../compose/spec/p2-2-agent-settings-ui.md) |
 | P2-3 Claude ACP | [验收](p2-3.md)；本机当前适配器问题按用户要求暂不处理 |
