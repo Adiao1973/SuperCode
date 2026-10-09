@@ -1,0 +1,9 @@
+{
+  "productName": "SuperCode P43",
+  "identifier": "com.supercode.test.p43",
+  "build": {
+    "beforeDevCommand": "pnpm exec vite --host 127.0.0.1 --port 1443 --strictPort",
+    "devUrl": "http://127.0.0.1:1443/tests/native/index.html"
+  },
+  "app": { "windows": [{ "title": "SuperCode · 测试方法", "width": 1100, "height": 720, "minWidth": 800, "minHeight": 600 }] }
+}
