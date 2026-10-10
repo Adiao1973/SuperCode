@@ -3,6 +3,7 @@
  * 消息流用 react-virtuoso 虚拟列表（P1-4：200+ 条目滚动流畅）；
  * edit 类工具的 diff 用 @git-diff-view/react 渲染。
  */
+import { useAppearance } from "@/lib/appearance";
 import { memo, useCallback, useEffect, useRef, useState, type Dispatch } from "react";
 import { MultiFileDiff } from "@pierre/diffs/react";
 import { Virtuoso } from "react-virtuoso";
@@ -440,7 +441,7 @@ export function RunConsole({ session, dispatch }: RunConsoleProps) {
         )}
         {!stream.running && envFresh && envReport?.installed && !envReport.strict && (
           <div className="rounded-md border border-amber-500/40 bg-amber-500/5 px-3 py-2">
-            <div className="flex items-center gap-2 text-[11px] text-amber-600 dark:text-amber-500">
+            <div className="flex items-center gap-2 text-[11px] text-warning">
               <AlertTriangle className="size-3 shrink-0" />
               <span className="min-w-0 flex-1">
                 宽松模式（
@@ -482,7 +483,7 @@ export function RunConsole({ session, dispatch }: RunConsoleProps) {
           </div>
         )}
         {!stream.running && envFresh && envReport?.strict && (
-          <p className="text-[11px] text-emerald-600 dark:text-emerald-500">
+          <p className="text-[11px] text-success">
             ✓ 严格模式已开启（{envReport.project_config_path ?? envReport.global_config_path}）——
             bash/edit 全部经 SuperCode 审批
           </p>
@@ -682,6 +683,7 @@ const DiffBlock = memo(function DiffBlock({
   diff: DiffPayload | null;
   lazyPath?: string | null;
 }) {
+  const { resolved } = useAppearance();
   const [open, setOpen] = useState(false);
   const [lazyDiff, setLazyDiff] = useState<DiffPayload | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -719,7 +721,7 @@ const DiffBlock = memo(function DiffBlock({
         <span className="truncate">{(diff ?? { path: lazyPath })?.path}</span>
         {payload ? (
           <>
-            <span className="text-emerald-500">
+            <span className="text-success">
               +{payload.new_text.replace(/\n$/, "").split("\n").length}
             </span>
             {payload.old_text != null && (
@@ -754,7 +756,7 @@ const DiffBlock = memo(function DiffBlock({
               overflow: "scroll",
               disableFileHeader: true,
               hunkSeparators: "simple",
-              themeType: "dark",
+              themeType: resolved,
             }}
           />
         </div>

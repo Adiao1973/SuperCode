@@ -76,7 +76,7 @@ export function CommanderSettings() {
         <div><h2 className="text-base font-semibold">指挥官模型</h2>
           <p className="mt-1 text-sm">当前保存的模型：<strong className="font-mono">{savedModel || "尚未配置"}</strong></p>
         </div>
-        <span role="status" className={`rounded-full border px-3 py-1 text-xs ${saved ? "border-emerald-500/40 text-emerald-600" : "text-muted-foreground"}`}>
+        <span role="status" className={`rounded-full border px-3 py-1 text-xs ${saved ? "border-emerald-500/40 text-success" : "text-muted-foreground"}`}>
           {busy ? "正在读取或保存…" : saved ? "已保存到本机" : savedModel ? "有未保存的修改" : "等待配置"}
         </span>
       </div>
@@ -145,7 +145,7 @@ export function CommanderSettings() {
         </div>
         <p className="text-muted-foreground mt-2 text-xs">向当前保存的模型发送待办应用示例目标，验证计划格式；会产生一次 API 调用，不执行任务。</p>
         {plan && <div role="status" className="mt-3 text-xs">
-          <p className="font-medium text-emerald-600">模型验证通过 · {plan.plan.tasks.length} 个任务 · {plan.batches.length} 个依赖批次</p>
+          <p className="font-medium text-success">模型验证通过 · {plan.plan.tasks.length} 个任务 · {plan.batches.length} 个依赖批次</p>
           <ol className="mt-2 space-y-1">{plan.plan.tasks.map((task) => <li key={task.id}>{task.title} <span className="text-muted-foreground">· {task.agent_id}</span></li>)}</ol>
         </div>}
       </div>

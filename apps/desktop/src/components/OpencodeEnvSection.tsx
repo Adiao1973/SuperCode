@@ -23,7 +23,7 @@ function LevelChip({ label, level }: { label: string; level: OpencodeEnvReport["
   return (
     <span className="flex items-center gap-1.5 text-[11px]">
       <span className="text-muted-foreground">{label}</span>
-      <Badge variant="outline" className={info.ok ? "border-emerald-500/50 text-emerald-500" : "border-amber-500/50 text-amber-500"}>
+      <Badge variant="outline" className={info.ok ? "border-emerald-500/50 text-success" : "border-amber-500/50 text-warning"}>
         {info.text}
       </Badge>
     </span>
@@ -72,7 +72,7 @@ export function OpencodeEnvSection() {
             variant="outline"
             className={
               report?.installed
-                ? "border-emerald-500/50 text-emerald-500"
+                ? "border-emerald-500/50 text-success"
                 : "border-destructive/50 text-destructive"
             }
           >
@@ -89,7 +89,7 @@ export function OpencodeEnvSection() {
           {report?.global_model ? (
             <code className="text-[11px]">{report.global_model}</code>
           ) : (
-            <span className="text-amber-500 text-[11px]">
+            <span className="text-warning text-[11px]">
               未设置——opencode acp 不继承 auth 默认模型，将回退免费模型（可能受到限流）
             </span>
           )}
@@ -105,7 +105,7 @@ export function OpencodeEnvSection() {
               <LevelChip label="bash" level={report.global_bash} />
               <Badge
                 variant="outline"
-                className={report.strict ? "border-emerald-500/50 text-emerald-500" : "border-amber-500/50 text-amber-500"}
+                className={report.strict ? "border-emerald-500/50 text-success" : "border-amber-500/50 text-warning"}
               >
                 {report.strict ? "已收紧" : "宽松"}
               </Badge>
