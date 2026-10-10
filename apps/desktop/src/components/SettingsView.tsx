@@ -3,6 +3,7 @@
  * 规则三形：`*`、`tool`、`tool(args)`（glob）；效果 allow / deny / ask。
  */
 import { useCallback, useEffect, useState } from "react";
+import { AppearanceSettings } from "@/components/AppearanceSettings";
 import { CommanderSettings } from "@/components/CommanderSettings";
 import { AgentsSection } from "@/components/AgentsSection";
 import { Badge } from "@/components/ui/badge";
@@ -13,9 +14,9 @@ import { addRule, deleteRule, listRules, type RuleEntry } from "@/lib/agent";
 import { Plus, Trash2 } from "lucide-react";
 
 const EFFECT_LABEL: Record<RuleEntry["effect"], { label: string; className: string }> = {
-  allow: { label: "放行", className: "border-emerald-500/50 text-emerald-500" },
+  allow: { label: "放行", className: "border-emerald-500/50 text-success" },
   deny: { label: "拒绝", className: "border-destructive/50 text-destructive" },
-  ask: { label: "询问", className: "border-amber-500/50 text-amber-500" },
+  ask: { label: "询问", className: "border-amber-500/50 text-warning" },
 };
 
 export function SettingsView() {
@@ -69,6 +70,7 @@ export function SettingsView() {
   return (
     <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
       <div className="mx-auto flex max-w-3xl flex-col gap-4">
+        <AppearanceSettings />
         <CommanderSettings />
         <AgentsSection />
         <OpencodeEnvSection />

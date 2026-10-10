@@ -31,7 +31,7 @@ export function PendingCard({
   return (
     <div className="rounded-md border border-amber-500/40 bg-amber-500/5 px-4 py-3">
       <div className="flex items-center gap-2">
-        <ShieldQuestion className="size-4 text-amber-400" />
+        <ShieldQuestion className="size-4 text-warning" />
         <span className="text-sm font-medium">{request.tool_name}</span>
         {request.kind && (
           <Badge variant="outline" className="text-[10px]">

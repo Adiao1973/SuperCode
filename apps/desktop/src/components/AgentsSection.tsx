@@ -249,16 +249,16 @@ export function AgentsSection() {
                 {DRIVER_LABEL[agent.driver_kind]}
               </Badge>
               {agent.installed_version ? (
-                <Badge variant="outline" className="border-emerald-500/50 text-emerald-500 text-[10px]">
+                <Badge variant="outline" className="border-emerald-500/50 text-success text-[10px]">
                   ✓ {agent.installed_version}
                 </Badge>
               ) : (
-                <Badge variant="outline" className="border-amber-500/50 text-amber-500 text-[10px]">
+                <Badge variant="outline" className="border-amber-500/50 text-warning text-[10px]">
                   {agent.driver_kind === "acp" ? "ACP 未就绪（探测失败或超时）" : "未检测到（失败或超时）"}
                 </Badge>
               )}
               {agent.cli_version && (
-                <Badge variant="outline" className="border-emerald-500/50 text-emerald-500 text-[10px]">
+                <Badge variant="outline" className="border-emerald-500/50 text-success text-[10px]">
                   Claude CLI 已安装 · {agent.cli_version}
                 </Badge>
               )}

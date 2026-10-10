@@ -41,3 +41,7 @@ env -u SUPERCODE_LLM_API_KEY SUPERCODE_DB="$scratch/fixture.db" \
 本轮负向对照曾临时把真实 `stream.ts` 的 `last.text + text` 改成 `text`，指定 replay 测试失败后在 finally 恢复，并重新全量通过。复现时先保证工作区干净，不提交破坏实现；[证据](../../../docs/acceptance/p4-3/negative-control.json)。
 
 选型参考：[Vitest 模块替身](https://vitest.dev/guide/mocking/modules)、[Testing Library setup](https://testing-library.com/docs/user-event/setup/)。依赖均为开发依赖，精确元数据见 [验收记录](../../../docs/acceptance/p4-3.md)。
+
+## P4-4 产品外观测试
+
+`appearance.test.tsx` 验真实 Provider/设置组件的保存、系统变化、失败/超时和显示顺序；`terminal-theme.test.tsx` 验 xterm options 颜色更新但 PTY 生命周期不重启；`design-tokens.test.ts` 对 CSS token 的 18 对文字/表面计算 WCAG 对比度。jsdom 的颜色测试不替代原生计算样式，WebKit 深浅/重启及三尺寸证据见 [P4-4](../../../docs/acceptance/p4-4.md)。

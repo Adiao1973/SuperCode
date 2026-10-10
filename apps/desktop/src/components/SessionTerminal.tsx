@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useAppearance } from "@/lib/appearance";
 import { Channel, invoke } from "@tauri-apps/api/core";
 import { Terminal } from "@xterm/xterm";
 import { FitAddon } from "@xterm/addon-fit";
@@ -7,6 +8,10 @@ import "@xterm/xterm/css/xterm.css";
 type Output = { type: "data"; bytes: number[] } | { type: "exit"; code: number | null } | { type: "error"; message: string };
 
 export function SessionTerminal({ cwd, onClose }: { cwd: string; onClose: () => void }) {
+  const { resolved } = useAppearance();
+  const terminal = useRef<Terminal | null>(null);
+  const palette = () => ({ background: getComputedStyle(document.documentElement).getPropertyValue("--background").trim(), foreground: getComputedStyle(document.documentElement).getPropertyValue("--foreground").trim() });
+  useEffect(() => { if (terminal.current) terminal.current.options.theme = palette(); }, [resolved]);
   const host = useRef<HTMLDivElement>(null);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState("正在启动…");
@@ -17,7 +22,8 @@ export function SessionTerminal({ cwd, onClose }: { cwd: string; onClose: () => 
     let ready = false;
     let ended = false;
     let input = Promise.resolve();
-    const term = new Terminal({ allowTransparency: false, theme: { background: "#101418", foreground: "#e5e7eb" }, fontSize: 12, fontFamily: "Menlo, monospace", cursorBlink: true, scrollback: 3000, screenReaderMode: true });
+    const term = new Terminal({ allowTransparency: false, theme: palette(), fontSize: 12, fontFamily: "Menlo, monospace", cursorBlink: true, scrollback: 3000, screenReaderMode: true });
+    terminal.current = term;
     const fit = new FitAddon();
     term.loadAddon(fit);
     term.open(host.current);
@@ -65,7 +71,7 @@ export function SessionTerminal({ cwd, onClose }: { cwd: string; onClose: () => 
     });
     return () => {
       disposed = true;
-      observer.disconnect(); data.dispose(); term.dispose();
+      observer.disconnect(); data.dispose(); term.dispose(); terminal.current = null;
       // Await spawn before close: unmount during startup must not leak its shell.
       void opened.then(() => invoke("close_terminal", { id })).catch(() => {});
     };
@@ -78,7 +84,7 @@ export function SessionTerminal({ cwd, onClose }: { cwd: string; onClose: () => 
         <button type="button" onClick={onClose} className="hover:text-primary" aria-label="关闭终端">关闭终端</button>
       </div>
       {error && <p role="alert" className="text-destructive px-5 pb-1 text-xs">{error}</p>}
-      <div ref={host} className="h-56 min-h-24 max-h-[50vh] resize-y overflow-hidden p-2" style={{ background: "#101418" }} />
+      <div ref={host} className="h-56 min-h-24 max-h-[50vh] resize-y overflow-hidden p-2" style={{ background: "var(--background)" }} />
     </section>
   );
 }

@@ -81,7 +81,7 @@ function DecisionRow({ record }: { record: DecisionRecord }) {
         {sourceLabel(record)}
       </Badge>
       <span className="truncate font-medium">{record.request.tool_name}</span>
-      <span className={allowed ? "text-emerald-500" : "text-destructive"}>
+      <span className={allowed ? "text-success" : "text-destructive"}>
         {allowed ? "放行" : "拒绝"}
       </span>
     </div>
