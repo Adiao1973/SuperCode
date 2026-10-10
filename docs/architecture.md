@@ -795,3 +795,11 @@ DispatchOptions 增 interactive_approvals（默认 false，CLI 行为不变）�
 | 2026-10-08 | P3-10A 整体回归及 P3-10B macOS arm64 安装交付；版本统一 1.0.0，无接口/迁移变更 | [Phase 3](acceptance/phase3.md) |
 | 2026-10-02 | P3-1～4 计划契约、直连 LLM/本机凭据与执行状态持久化已集成 dev | [验收索引](acceptance/README.md) |
 | 2026-10-02 | 文档结构整理，替代过时的环境变量唯一来源与裸 JSON 唯一输出约定 | [整理验收](acceptance/docs-alignment.md) |
+
+### 6.8 外观偏好与首帧（P4-4）
+
+SQLite 迁移 0008 新增 `appearance_preferences(id=1, theme CHECK system/light/dark)`，旧库无行时默认 system；不修改已有会话、配置或凭据表。DTO `AppearancePreferences { theme: system|light|dark }` 拒绝未知字段。IPC `get_appearance_preferences()` 返回偏好、`save_appearance_preferences(preferences)` 校验并原子 upsert。SQLite 为唯一持久事实源，无 localStorage 缓存，不导出用户数据库。
+
+主窗口配置初始 `visible=false`。前端在 mount 前读取偏好，设置根 dark 类、data-theme 与 color-scheme，React 首帧完成后调用 `appearance_ready(dark: bool)`；命令仅设置调用窗口不透明背景色并 show。读取失败或 5 秒超时采用系统主题、展示可重试错误，再显示窗口，不能静默把回退偏好写入 SQLite。保存成功才更新当前偏好；失败保留旧主题并显示错误，保存期间禁用重复操作。系统主题只在 system 偏好时影响 resolved theme，监听 change 并清理。
+
+颜色/字体/间距/圆角由 CSS token 统一，图标与主要控件继承语义色。终端通过更新现有 xterm options.theme、diff 通过 themeType 跟随 resolved theme；不能把主题变化加入 PTY 启动 effect 依赖。减少动态/密度等偏好不在此迁移中预建，按后续任务设计。
