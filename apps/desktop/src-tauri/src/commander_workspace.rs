@@ -123,6 +123,47 @@ pub async fn get_commander_run_view(
 ) -> Result<RunView, String> {
     view(state.store().await, &work, run_id).await
 }
+/// Shared by manual input, native picker and generation (TOCTOU recheck).
+#[tauri::command]
+pub fn validate_commander_directory(path: String) -> Result<(), String> {
+    let directory = std::path::Path::new(&path);
+    if !directory.is_absolute() || !directory.is_dir() {
+        return Err("请选择已存在的绝对工作目录".into());
+    }
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn pick_commander_directory(
+    window: tauri::WebviewWindow,
+    default_path: Option<String>,
+) -> Result<Option<String>, String> {
+    use tauri_plugin_dialog::DialogExt;
+    let mut picker = window
+        .dialog()
+        .file()
+        .set_title("选择工作项目目录")
+        .set_parent(&window)
+        .set_can_create_directories(false);
+    if let Some(path) = default_path.filter(|p| validate_commander_directory(p.clone()).is_ok()) {
+        picker = picker.set_directory(path);
+    }
+    let (sender, receiver) = tokio::sync::oneshot::channel();
+    picker.pick_folder(move |path| {
+        let _ = sender.send(path);
+    });
+    let Some(path) = receiver.await.map_err(|_| "目录选择器已关闭")? else {
+        return Ok(None);
+    };
+    let path = path.into_path().map_err(|e| e.to_string())?;
+    let path = path
+        .into_os_string()
+        .into_string()
+        .map_err(|_| "目录路径不是有效 UTF-8")?;
+    validate_commander_directory(path.clone())?;
+    Ok(Some(path))
+}
+
 #[tauri::command]
 pub async fn generate_commander_run(
     state: tauri::State<'_, AppState>,
@@ -132,9 +173,7 @@ pub async fn generate_commander_run(
     cwd: String,
     agents: Vec<String>,
 ) -> Result<RunView, String> {
-    if !std::path::Path::new(&cwd).is_absolute() || !std::path::Path::new(&cwd).is_dir() {
-        return Err("请选择已存在的绝对工作目录".into());
-    }
+    validate_commander_directory(cwd.clone())?;
     let guard = work.begin(request_id)?;
     let store = state.store().await;
     let registry = AgentRegistry::load()
@@ -259,6 +298,31 @@ pub async fn execute_commander_run(
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn planning_directory_requires_existing_absolute_directory() {
+        let root = std::env::temp_dir().join(format!("sc-p413-{}", Uuid::new_v4()));
+        std::fs::create_dir_all(&root).unwrap();
+        let file = root.join("file.txt");
+        std::fs::write(&file, "fixture").unwrap();
+        assert!(validate_commander_directory(root.to_string_lossy().into_owned()).is_ok());
+        for invalid in [
+            "".into(),
+            ".".into(),
+            file.to_string_lossy().into_owned(),
+            root.join("missing").to_string_lossy().into_owned(),
+        ] {
+            assert!(validate_commander_directory(invalid).is_err());
+        }
+        let registry = AgentRegistry::load();
+        assert!(registry.restricted(&[]).is_err());
+        assert!(registry.restricted(&["unknown-p413".into()]).is_err());
+        assert!(registry.restricted(&["zcode".into()]).is_err());
+        assert!(registry
+            .restricted(&["opencode".into(), "mimo".into()])
+            .is_ok());
+        std::fs::remove_dir_all(&root).unwrap();
+        assert!(validate_commander_directory(root.to_string_lossy().into_owned()).is_err());
+    }
     #[test]
     fn explicit_confirmation_is_required() {
         assert!(confirmed(false).is_err());

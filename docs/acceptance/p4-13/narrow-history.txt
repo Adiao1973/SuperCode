@@ -1,0 +1,2 @@
+There has been no change in the accessibility tree for Window: "SuperCode · 规划目标验收".
+The focused UI element is 2 HTML content Description: SuperCode, URL: 127.0.0.1:1453/

@@ -1,0 +1,74 @@
+Window: "SuperCode · 规划目标验收", App: SuperCode P411.
+0 standard window SuperCode · 规划目标验收, Secondary Actions: Raise
+	1 scroll area
+		2 HTML content Description: SuperCode, URL: 127.0.0.1:1453/
+			3 container 应用导航
+				4 text SuperCode v1.0.0
+				5 container 模块
+					6 button 指挥官
+					7 button 会话
+					8 button 任务看板
+					9 button 审批中心
+					10 button 设置
+				11 button (expanded) 折叠导航, Secondary Actions: Collapse
+			12 container
+				13 heading 指挥官, Value: 1
+					14 text 指挥官
+				15 pop up button 当前项目：中文规划项目
+				16 container 计划历史
+					17 heading 计划历史, Value: 2
+						18 text 计划历史
+					19 button 刷新
+					20 text 生成的计划会保存在这里。重新打开应用不会自动执行。
+				21 container 规划目标
+					22 heading 规划目标, Value: 2
+						23 text 规划目标
+					24 text 描述目标，选择项目和 Agent，再生成计划供审阅。
+					25 button 模型设置
+					26 container
+						27 text 尚未配置指挥官模型 配置可用不代表推理已验证
+						28 button 刷新配置与 Agent
+					29 container
+						30 text 任务目标
+						31 text entry area (settable) 任务目标, Value: [text entry area: 任务目标], Placeholder: 说明要实现什么，以及必须遵守的约束
+							32 text 说明要实现什么，以及必须遵守的约束
+						33 container 工作项目
+							34 text 工作项目
+							35 pop up button 项目空间, Value: 中文规划项目 · /tmp/sc-p413/project
+							36 button 使用当前项目
+							37 text field (settable) 工作目录, Value: /tmp/sc-p413/project, Placeholder: 选择已存在的项目目录
+							38 button 选择目录
+							39 text 使用已存在的绝对目录；选择项目仅用于本次规划。
+						40 container 参与规划的 Agent
+							41 text 参与规划的 Agent
+							42 container
+								43 checkbox OpenCode (opencode), Value: 1
+								44 text OpenCode opencode  · ACP 已接入
+							45 container
+								46 checkbox Claude Code (claude-code), Value: 0
+								47 text Claude Code claude-code  · ACP 已接入
+							48 container
+								49 checkbox Codex (codex), Value: 0
+								50 text Codex codex  · ACP 已接入
+							51 container
+								52 checkbox MiMo (mimo), Value: 0
+								53 text MiMo mimo  · ACP 已接入
+							54 container
+								55 checkbox (disabled) ZCode (zcode), Value: 0
+								56 text ZCode zcode  · 驱动尚未接入，暂不可选
+							57 text 已接入不代表已安装或已登录；执行前仍会检查。此处不会启动 Agent 或探测版本。
+						58 button (disabled) 生成计划
+						59 text 将调用指挥官模型；生成后先审阅，确认前不执行任务。
+	60 close button
+	61 full screen button Help: this button also has an action to zoom the window, Secondary Actions: zoom the window
+	62 minimize button
+	63 text SuperCode · 规划目标验收
+64 menu bar
+	65 SuperCode P411
+	66 File
+	67 Edit
+	68 View
+	69 Window
+	70 Help
+
+The focused UI element is 13 heading 指挥官, Value: 1

@@ -1,0 +1,40 @@
+
+> @supercode/desktop@1.0.0 test /Users/adiaozhou/Code/SuperCode/apps/desktop
+> vitest run -- commander-input.test.tsx
+
+
+ RUN  v5.0.3 /Users/adiaozhou/Code/SuperCode/apps/desktop
+
+ ❯ tests/commander-input.test.tsx (0 test)
+Not implemented: HTMLCanvasElement's getContext() method: without installing the canvas npm package
+Not implemented: HTMLCanvasElement's getContext() method: without installing the canvas npm package
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/commander-input.test.tsx [ tests/commander-input.test.tsx ]
+Error: Failed to resolve import "../src/components/CommanderInput" from "tests/commander-input.test.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /Users/adiaozhou/Code/SuperCode/apps/desktop/tests/commander-input.test.tsx:4:31
+  2  |  import userEvent from "@testing-library/user-event";
+  3  |  import { expect, it, vi } from "vitest";
+  4  |  import { CommanderInput } from "../src/components/CommanderInput";
+     |                                  ^
+  5  |  import { calls, handle } from "./fixtures/tauri";
+  6  |  var _jsxFileName = "/Users/adiaozhou/Code/SuperCode/apps/desktop/tests/commander-input.test.tsx";
+ ❯ TransformPluginContext._formatLog ../../node_modules/.pnpm/vite@8.3.1_@types+node@24.10.1_jiti@2.7.0/node_modules/vite/dist/node/chunks/node.js:8736:39
+ ❯ TransformPluginContext.error ../../node_modules/.pnpm/vite@8.3.1_@types+node@24.10.1_jiti@2.7.0/node_modules/vite/dist/node/chunks/node.js:8733:14
+ ❯ normalizeUrl ../../node_modules/.pnpm/vite@8.3.1_@types+node@24.10.1_jiti@2.7.0/node_modules/vite/dist/node/chunks/node.js:26423:18
+ ❯ ../../node_modules/.pnpm/vite@8.3.1_@types+node@24.10.1_jiti@2.7.0/node_modules/vite/dist/node/chunks/node.js:26493:30
+ ❯ TransformPluginContext.transform ../../node_modules/.pnpm/vite@8.3.1_@types+node@24.10.1_jiti@2.7.0/node_modules/vite/dist/node/chunks/node.js:26459:4
+ ❯ EnvironmentPluginContainer.transform ../../node_modules/.pnpm/vite@8.3.1_@types+node@24.10.1_jiti@2.7.0/node_modules/vite/dist/node/chunks/node.js:8515:14
+ ❯ loadAndTransform ../../node_modules/.pnpm/vite@8.3.1_@types+node@24.10.1_jiti@2.7.0/node_modules/vite/dist/node/chunks/node.js:19998:26
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 19 passed (20)
+      Tests  68 passed (68)
+   Start at  22:07:29
+   Duration  2.61s (environment 41%, tests 19%, setup 15%, import 15%, transform 9%)
+
+ ELIFECYCLE  Test failed. See above for more details.

@@ -1,12 +1,12 @@
 # SuperCode Roadmap
 
-> 当前任务状态的唯一入口。更新：2026-10-11。执行规则见 [开发流程](development-process.md)，现行实现见 [架构](architecture.md)，2.0 分析与选型见 [设计方向](design/desktop-v2.md)。版本阶段不等于功能已经交付。
+> 当前任务状态的唯一入口。更新：2026-10-12。执行规则见 [开发流程](development-process.md)，现行实现见 [架构](architecture.md)，2.0 分析与选型见 [设计方向](design/desktop-v2.md)。版本阶段不等于功能已经交付。
 
 ## 当前进度与下一步
 
 - 已发布 **v1.0.0**：macOS Apple Silicon，main/tag/GitHub Release；[阶段验收](acceptance/phase3.md)、[产物与安装发布](acceptance/p3-10b.md)。Phase 3 在批准范围内闭环完成。
 - 下一版本目标 **v2.0.0：桌面交互与视觉体验升级**，内部编号 **Phase 4 / P4-x**，避免与已发布的 Phase 2（v0.3.0）混淆。产品版本仍为 1.0.0；本文件不触发改版本、安装依赖或实现功能。
-- 本轮 DOC-3 路线规划见 [记录](acceptance/v2-roadmap.md)。**P4-1 基线与体验清单已验收**，见 [记录](acceptance/p4-1.md)；P4-2 独立原型与兼容选型已验收，见 [记录](acceptance/p4-2.md)；P4-3 前端验证与 fixture 基础已验收，见 [记录](acceptance/p4-3.md)；P4-4 设计 token、主题与外观偏好已验收，见 [记录](acceptance/p4-4.md)。P4-5 动效基础与减少动态已验收，见 [记录](acceptance/p4-5.md)。P4-6 AppShell、导航与焦点已验收，见 [记录](acceptance/p4-6.md)。P4-7 工作区/详情/终端可调整分栏已验收，见 [记录](acceptance/p4-7.md)。P4-8 会话列表与上下文定位已验收，见 [记录](acceptance/p4-8.md)。P4-9 底部输入区与配置弹层已验收并接入 dev，见 [记录](acceptance/p4-9.md)。P4-10 流式 Markdown 与代码阅读已验收并接入 dev，见 [记录](acceptance/p4-10.md)。P4-11 滚动锚点与思考/工具折叠已验收，见 [记录](acceptance/p4-11.md)。P4-12 工具与 diff 详情层次已验收，见 [记录](acceptance/p4-12.md)。下一任务 P4-13 指挥官目标输入与项目/Agent 选择。
+- 本轮 DOC-3 路线规划见 [记录](acceptance/v2-roadmap.md)。**P4-1 基线与体验清单已验收**，见 [记录](acceptance/p4-1.md)；P4-2 独立原型与兼容选型已验收，见 [记录](acceptance/p4-2.md)；P4-3 前端验证与 fixture 基础已验收，见 [记录](acceptance/p4-3.md)；P4-4 设计 token、主题与外观偏好已验收，见 [记录](acceptance/p4-4.md)。P4-5 动效基础与减少动态已验收，见 [记录](acceptance/p4-5.md)。P4-6 AppShell、导航与焦点已验收，见 [记录](acceptance/p4-6.md)。P4-7 工作区/详情/终端可调整分栏已验收，见 [记录](acceptance/p4-7.md)。P4-8 会话列表与上下文定位已验收，见 [记录](acceptance/p4-8.md)。P4-9 底部输入区与配置弹层已验收并接入 dev，见 [记录](acceptance/p4-9.md)。P4-10 流式 Markdown 与代码阅读已验收并接入 dev，见 [记录](acceptance/p4-10.md)。P4-11 滚动锚点与思考/工具折叠已验收，见 [记录](acceptance/p4-11.md)。P4-12 工具与 diff 详情层次已验收，见 [记录](acceptance/p4-12.md)。P4-13 指挥官目标输入与项目/Agent 选择已验收，见 [记录](acceptance/p4-13.md)。下一任务 P4-14 计划审阅与确认。
 - 研发平台继续聚焦 macOS，见 [ADR-0008](adr/0008-macos-priority.md)。Windows P3-8/P3-9、ZCode P2-6 继续延期；Claude ACP 本机环境问题按用户要求暂不处理；NativeDriver 保持核心库范围，产品 Codex 使用 ACP。
 - 日常从 dev 切最小任务分支；每项文档先行、实现、自动/实际桌面验收、归档、--no-ff 合 dev。状态只用待办/进行中/待验收/已验收/延期；出口未过不合 dev，不提前跨任务实现。
 
@@ -68,7 +68,7 @@
 
 | ID | 任务 / 依赖 | 估计 | 特有验收与预期 | 状态 |
 |---|---|---|---|---|
-| P4-13 | 指挥官目标输入与项目/Agent 选择 / P4-12 | 1.5天 | 当前项目预填、存在目录选择、已接入 Agent 多选、模型状态可跳设置；未配置/Agent 不可用有解释；生成前无 agent 启动，Agent ID/目录约束仍后端校验 | 待办 |
+| P4-13 | 指挥官目标输入与项目/Agent 选择 / P4-12 | 1.5天 | 当前项目预填、存在目录选择、已接入 Agent 多选、模型状态可跳设置；未配置/Agent 不可用有解释；生成前无 agent 启动，Agent ID/目录约束仍后端校验 | 已验收 |
 | P4-14 | 计划审阅与确认 / P4-13 | 2天 | 任务列表+详情呈现完整 prompt/依赖/批次与 Agent；小窗口可读；标准确认弹层展示目录/权限/并发、焦点正确；未确认不执行、双击确认不重复派单，Esc 仅关闭确认不裁决任务 | 待办 |
 | P4-15 | 执行监控、结果与会话跳转 / P4-14 | 2天 | 运行/排队/失败/跳过/取消分明，所有前置成功才启动后继；点击结果定位正确本机会话（验证本地 UUID 与 ACP id 映射），切页运行不中断；重启读历史不重跑、失活 running 不伪记完成，不用前端动画代替 SQLite 状态 | 待办 |
 | P4-16 | 审批上下文与裁决反馈 / P4-15 | 1.5天 | 会话/计划内联与审批中心一致：所属任务、命令/变更/完整输入可查看；并发同名工具互不串台，连点只裁决一次；请求失败留卡可理解，取消/退出清队列；无新增批量放行/永久扩权 | 待办 |
@@ -111,4 +111,4 @@
 |---|---|---|
 | v0.1.0 / v0.2.0 / v0.3.0 | CLI、桌面 MVP、多 Agent 工作区 | 已发布；见历史验收 |
 | v1.0.0 | macOS arm64 指挥官与桌面完整闭环 | 已发布 |
-| v2.0.0 | macOS 工作台交互、视觉与动效升级 | P4-1～12 已验收，P4-13～24 待办 |
+| v2.0.0 | macOS 工作台交互、视觉与动效升级 | P4-1～13 已验收，P4-14～24 待办 |
