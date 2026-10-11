@@ -70,3 +70,7 @@ env -u SUPERCODE_LLM_API_KEY SUPERCODE_DB="$scratch/fixture.db" \
 ## P4-10 流式 Markdown 与代码阅读
 
 `markdown.test.tsx` 使用真实 renderer + streamReducer 核对中文半闭合增量、完成/历史一致、持续流合并解析、完成条目 DOM 保持、精确代码/全文复制（含 CRLF、引用、列表与尾部空行）、原文/超限回退、按需高亮长度/语言边界、危险 URL/HTML/图片、外链确认与失败、剪贴板失败反馈和焦点恢复。无网络/真实凭据；原生深浅/窄窗/复制/重开/20Hz 证据见 [P4-10](../../../docs/acceptance/p4-10.md)。该采样不替代 P4-11 阅读锚点或最终 release 性能回归。
+
+## P4-11 阅读锚点与折叠
+
+`reading.test.tsx` 核对阅读意图、未读与跳转、时间线重置、按 key/偏移恢复、1000 项 reducer 回放和 600 次活动文本更新、折叠跨虚拟卸载保留。可见行几何测试仅验证锚点选择契约，jsdom 不验证真实滚动/ResizeObserver；原生跟随、折叠、会话/模块恢复与帧采样见 [P4-11](../../../docs/acceptance/p4-11.md)。

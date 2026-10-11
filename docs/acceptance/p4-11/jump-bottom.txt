@@ -1,0 +1,80 @@
+Window: "SuperCode · 阅读锚点验收", App: SuperCode P411.
+0 standard window SuperCode · 阅读锚点验收, Secondary Actions: Raise
+	1 scroll area
+		2 HTML content Description: SuperCode, URL: 127.0.0.1:1451/
+			3 container 应用导航
+				4 text SuperCode v1.0.0
+				5 container 模块
+					6 button 指挥官
+					7 button 会话
+					8 button 任务看板
+					9 button 审批中心
+					10 button 设置
+				11 button (expanded) 折叠导航, Secondary Actions: Collapse
+			12 container
+				13 heading 会话, Value: 1
+					14 text 会话
+				15 pop up button 当前项目：默认空间
+				16 button (expanded) 隐藏会话列表, Secondary Actions: Collapse
+				17 text 会话（ 3 ）
+				18 button 压测, Help: 向当前会话注入 320 条合成事件（虚拟列表滚动压测，仅开发模式）
+				19 button 新建项目空间（绑定一个项目目录）
+				20 button 新建会话（⌘N，默认空间）
+				21 text field (settable) 按标题过滤会话, Placeholder: 过滤标题…
+				22 text 默认空间 3
+				23 button 在默认空间新建会话
+				24 button 选择会话 P411 会话 A
+				25 button 删除会话 P411 会话 A, Help: 删除会话
+				26 button 选择会话 P411 会话 B
+				27 button 删除会话 P411 会话 B, Help: 删除会话
+				28 button 选择会话 新会话
+				29 button 删除会话 新会话, Help: 删除会话
+				30 splitter 调整会话列表宽度, Value: 25.856
+				31 container 当前会话上下文
+					32 heading P411 会话 B, Value: 2
+						33 text P411 会话 B
+					34 text 默认空间 opencode /tmp/sc-p411/project
+				35 toggle button 查看原文, Value: off
+				36 button 复制全文
+				37 heading 实时消息, Value: 2
+					38 text 实时消息
+				39 text 增量 1：中文输出，阅读旧消息时不抢滚动。 增量 2：中文输出，阅读旧消息时不抢滚动。 增量 3：中文输出，阅读旧消息时不抢滚动。 增量 4：中文输出，阅读旧消息时不抢滚动。 增量 5：中文输出，阅读旧消息时不抢滚动。 增量 6：中文输出，阅读旧消息时不抢滚动。 增量 7：中文输出，阅读旧消息时不抢滚动。 增量 8：中文输出，阅读旧消息时不抢滚动。 增量 9：中文输出，阅读旧消息时不抢滚动。 增量 10：中文输出，阅读旧消息时不抢滚动。 增量 11：中文输出，阅读旧消息时不抢滚动。 增量 12：中文输出，阅读旧消息时不抢滚动。 增量 13：中文输出，阅读旧消息时不抢滚动。 增量 14：中文输出，阅读旧消息时不抢滚动。 增量 15：中文输出，阅读旧消息时不抢滚动。 增量 16：中文输出，阅读旧消息时不抢滚动。 增量 17：中文输出，阅读旧消息时不抢滚动。 增量 18：中文输出，阅读旧消息时不抢滚动。 增量 19：中文输出，阅读旧消息时不抢滚动。 增量 20：中文输出，阅读旧消息时不抢滚动。 增量 21：中文输出，阅读旧消息时不抢滚动。 增量 22：中文输出，阅读旧消息时不抢滚动。 增量 23：中文输出，阅读旧消
+				40 text 本轮完成
+				41 splitter (disabled) 调整终端高度, Help: 上下键调整；Enter 收起或展开终端
+				42 container 会话输入区
+					43 text entry area (settable) 任务提示词, Value: [text entry area: 任务提示词]
+						44 text (settable) 固定三十秒采样
+					45 pop up button 配置会话
+					46 button 运行
+					47 text Enter 运行 · Shift-Enter 换行 · ⌘R 运行 · ⌘. 停止
+					48 button 宽松权限：部分操作不会进入审批 · 查看配置
+				49 button 打开终端
+				50 text 已结束
+			51 container (expanded) Secondary Actions: Collapse
+				52 summary P411 测量, Value: on
+					53 text P411 测量
+				54 button 记录 30 秒
+				55 text {
+  "top": 126787,
+  "height": 127194,
+  "viewport": 407,
+  "key": "message-4004",
+  "offset": -9910,
+  "text": "查看原文复制全文实时消息\n增量 1：中文输出，阅读旧消息时不抢滚动。\n增量 2：中文输出，阅读旧消息时不抢滚动。\n增量 3：中文输出，阅读旧消息时不抢滚动。\n增量 4：中文输出，阅读旧消息时不抢滚动。",
+  "rows": 2,
+  "unread": false
+}
+				56 button 读取锚点
+	57 close button
+	58 full screen button Help: this button also has an action to zoom the window, Secondary Actions: zoom the window
+	59 minimize button
+	60 text SuperCode · 阅读锚点验收
+61 menu bar
+	62 SuperCode P411
+	63 File
+	64 Edit
+	65 View
+	66 Window
+	67 Help
+
+The focused UI element is 2 HTML content Description: SuperCode, URL: 127.0.0.1:1451/

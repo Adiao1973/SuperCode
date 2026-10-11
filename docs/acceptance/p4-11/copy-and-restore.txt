@@ -1,0 +1,161 @@
+Window: "SuperCode · 阅读锚点验收", App: SuperCode P411.
+0 standard window SuperCode · 阅读锚点验收, Secondary Actions: Raise
+	1 scroll area
+		2 HTML content Description: SuperCode, URL: 127.0.0.1:1451/
+			3 container 应用导航
+				4 text SuperCode v1.0.0
+				5 container 模块
+					6 button 指挥官
+					7 button 会话
+					8 button 任务看板
+					9 button 审批中心
+					10 button 设置
+				11 button (expanded) 折叠导航, Secondary Actions: Collapse
+			12 container
+				13 heading 会话, Value: 1
+					14 text 会话
+				15 pop up button 当前项目：默认空间
+				16 button (expanded) 隐藏会话列表, Secondary Actions: Collapse
+				17 text 会话（ 3 ）
+				18 button 压测, Help: 向当前会话注入 320 条合成事件（虚拟列表滚动压测，仅开发模式）
+				19 button 新建项目空间（绑定一个项目目录）
+				20 button 新建会话（⌘N，默认空间）
+				21 text field (settable) 按标题过滤会话, Placeholder: 过滤标题…
+				22 text 默认空间 3
+				23 button 在默认空间新建会话
+				24 button 选择会话 P411 会话 A
+				25 button 删除会话 P411 会话 A, Help: 删除会话
+				26 button 选择会话 P411 会话 B
+				27 button 删除会话 P411 会话 B, Help: 删除会话
+				28 button 选择会话 新会话
+				29 button 删除会话 新会话, Help: 删除会话
+				30 splitter 调整会话列表宽度, Value: 25.856
+				31 container 当前会话上下文
+					32 heading P411 会话 A, Value: 2
+						33 text P411 会话 A
+					34 text 默认空间 opencode /tmp/sc-p411/project
+				35 button (collapsed) 读取合成文件 322 完成, Secondary Actions: Expand
+				36 toggle button 查看原文, Value: off
+				37 button 复制全文
+				38 heading 历史正文 323, Value: 2
+					39 text 历史正文 323
+				40 container
+					41 text 这是中文混合历史  第 323 组 ，可选择与复制。
+				42 button (expanded) 思考 · 完成 · 思考 323：先检查边界。, Secondary Actions: Collapse
+				43 text 思考 323：先检查边界。
+完整思考第二行
+完整中文思考内容。完整中文思考内容。完整中文思考内容。完整中文思考内容。完整中文思考内容。完整中文思考内容。完整中文思考内容。完整中文思考内容。完整中文思考内容。完整中文思考内容。完整中文思考内容。完整中文思考内容。完整中文思考内容。完整中文思考内容。完整中文思考内容。完整中文思考内容。完整中文思考内容。完整中文思考内容。完整中文思考内容。完整中文思考内容。
+				44 button 复制思考
+				45 text 已复制
+				46 button (expanded) 读取合成文件 323 完成, Secondary Actions: Collapse
+				47 container
+					48 text /fixture/file-323.txt :1
+				49 text 工具 323 完整输出
+中文工具输出
+中文工具输出
+中文工具输出
+中文工具输出
+中文工具输出
+中文工具输出
+中文工具输出
+中文工具输出
+中文工具输出
+中文工具输出
+中文工具输出
+中文工具输出
+中文工具输出
+中文工具输出
+中文工具输出
+中文工具输出
+中文工具输出
+中文工具输出
+中文工具输出
+中文工具输出
+
+				50 button
+				51 button 复制工具输出
+				52 text 已复制
+				53 toggle button 查看原文, Value: off
+				54 button 复制全文
+				55 heading 历史正文 324, Value: 2
+					56 text 历史正文 324
+				57 container
+					58 text 这是中文混合历史  第 324 组 ，可选择与复制。
+				59 button (collapsed) 思考 · 完成 · 思考 324：先检查边界。, Secondary Actions: Expand
+				60 button (collapsed) 读取合成文件 324 完成, Secondary Actions: Expand
+				61 toggle button 查看原文, Value: off
+				62 button 复制全文
+				63 heading 历史正文 325, Value: 2
+					64 text 历史正文 325
+				65 container
+					66 text 这是中文混合历史  第 325 组 ，可选择与复制。
+				67 button (collapsed) 思考 · 完成 · 思考 325：先检查边界。, Secondary Actions: Expand
+				68 button (collapsed) 读取合成文件 325 完成, Secondary Actions: Expand
+				69 toggle button 查看原文, Value: off
+				70 button 复制全文
+				71 heading 历史正文 326, Value: 2
+					72 text 历史正文 326
+				73 container
+					74 text 这是中文混合历史  第 326 组 ，可选择与复制。
+				75 button (collapsed) 思考 · 完成 · 思考 326：先检查边界。, Secondary Actions: Expand
+				76 button (collapsed) 读取合成文件 326 完成, Secondary Actions: Expand
+				77 button 新消息 · 回到底部
+				78 splitter (disabled) 调整终端高度, Help: 上下键调整；Enter 收起或展开终端
+				79 container 会话输入区
+					80 text entry area (settable) 任务提示词, Value: [text entry area: 任务提示词]
+						81 text (settable) 工具 323 完整输出
+中文工具输出
+中文工具输出
+中文工具输出
+中文工具输出
+中文工具输出
+中文工具输出
+中文工具输出
+中文工具输出
+中文工具输出
+中文工具输出
+中文工具输出
+中文工具输出
+中文工具输出
+中文工具输出
+中文工具输出
+中文工具输出
+中文工具输出
+中文工具输出
+中文工具输出
+中文工具输出
+
+					82 pop up button 配置会话
+					83 button 运行
+					84 text Enter 运行 · Shift-Enter 换行 · ⌘R 运行 · ⌘. 停止
+					85 button 宽松权限：部分操作不会进入审批 · 查看配置
+				86 button 打开终端
+				87 text 已结束
+			88 container (expanded) Secondary Actions: Collapse
+				89 summary P411 测量, Value: on
+					90 text P411 测量
+				91 button 记录 30 秒
+				92 text {
+  "top": 114216,
+  "height": 117195,
+  "viewport": 407,
+  "key": "tool-1935",
+  "offset": -40.625,
+  "text": "读取合成文件 322完成",
+  "rows": 20,
+  "unread": true
+}
+				93 button 读取锚点
+	94 close button
+	95 full screen button Help: this button also has an action to zoom the window, Secondary Actions: zoom the window
+	96 minimize button
+	97 text SuperCode · 阅读锚点验收
+98 menu bar
+	99 SuperCode P411
+	100 File
+	101 Edit
+	102 View
+	103 Window
+	104 Help
+
+The focused UI element is 80 text entry area (settable) 任务提示词, Value: [text entry area: 任务提示词]

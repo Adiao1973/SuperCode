@@ -1,0 +1,134 @@
+Window: "SuperCode · 阅读锚点验收", App: SuperCode P411.
+0 standard window SuperCode · 阅读锚点验收, Secondary Actions: Raise
+	1 scroll area
+		2 HTML content Description: SuperCode, URL: 127.0.0.1:1451/
+			3 container 应用导航
+				4 text SuperCode v1.0.0
+				5 container 模块
+					6 button 指挥官
+					7 button 会话
+					8 button 任务看板
+					9 button 审批中心
+					10 button 设置
+				11 button (expanded) 折叠导航, Secondary Actions: Collapse
+			12 container
+				13 heading 会话, Value: 1
+					14 text 会话
+				15 pop up button 当前项目：默认空间
+				16 button (expanded) 隐藏会话列表, Secondary Actions: Collapse
+				17 text 会话（ 3 ）
+				18 button 压测, Help: 向当前会话注入 320 条合成事件（虚拟列表滚动压测，仅开发模式）
+				19 button 新建项目空间（绑定一个项目目录）
+				20 button 新建会话（⌘N，默认空间）
+				21 text field (settable) 按标题过滤会话, Placeholder: 过滤标题…
+				22 text 默认空间 3
+				23 button 在默认空间新建会话
+				24 button 选择会话 P411 会话 A
+				25 button 删除会话 P411 会话 A, Help: 删除会话
+				26 button 选择会话 P411 会话 B
+				27 button 删除会话 P411 会话 B, Help: 删除会话
+				28 button 选择会话 新会话
+				29 button 删除会话 新会话, Help: 删除会话
+				30 splitter 调整会话列表宽度, Value: 25.856
+				31 container 当前会话上下文
+					32 heading P411 会话 B, Value: 2
+						33 text P411 会话 B
+					34 text 默认空间 opencode /tmp/sc-p411/project
+				35 button (collapsed) 思考 · 完成 · 思考 288：先检查边界。, Secondary Actions: Expand
+				36 button (collapsed) 读取合成文件 288 完成, Secondary Actions: Expand
+				37 toggle button 查看原文, Value: off
+				38 button 复制全文
+				39 heading 历史正文 289, Value: 2
+					40 text 历史正文 289
+				41 container
+					42 text 这是中文混合历史  第 289 组 ，可选择与复制。
+				43 button (collapsed) 思考 · 完成 · 思考 289：先检查边界。, Secondary Actions: Expand
+				44 button (collapsed) 读取合成文件 289 完成, Secondary Actions: Expand
+				45 toggle button 查看原文, Value: off
+				46 button 复制全文
+				47 heading 历史正文 290, Value: 2
+					48 text 历史正文 290
+				49 container
+					50 text 这是中文混合历史  第 290 组 ，可选择与复制。
+				51 button (collapsed) 思考 · 完成 · 思考 290：先检查边界。, Secondary Actions: Expand
+				52 button (collapsed) 读取合成文件 290 完成, Secondary Actions: Expand
+				53 toggle button 查看原文, Value: off
+				54 button 复制全文
+				55 heading 历史正文 291, Value: 2
+					56 text 历史正文 291
+				57 container
+					58 text 这是中文混合历史  第 291 组 ，可选择与复制。
+				59 button (collapsed) 思考 · 完成 · 思考 291：先检查边界。, Secondary Actions: Expand
+				60 button (collapsed) 读取合成文件 291 完成, Secondary Actions: Expand
+				61 toggle button 查看原文, Value: off
+				62 button 复制全文
+				63 heading 历史正文 292, Value: 2
+					64 text 历史正文 292
+				65 container
+					66 text 这是中文混合历史  第 292 组 ，可选择与复制。
+				67 button (collapsed) 思考 · 完成 · 思考 292：先检查边界。, Secondary Actions: Expand
+				68 button (collapsed) 读取合成文件 292 完成, Secondary Actions: Expand
+				69 toggle button 查看原文, Value: off
+				70 button 复制全文
+				71 heading 历史正文 293, Value: 2
+					72 text 历史正文 293
+				73 container
+					74 text 这是中文混合历史  第 293 组 ，可选择与复制。
+				75 button (collapsed) 思考 · 完成 · 思考 293：先检查边界。, Secondary Actions: Expand
+				76 button (collapsed) 读取合成文件 293 完成, Secondary Actions: Expand
+				77 toggle button 查看原文, Value: off
+				78 button 复制全文
+				79 heading 历史正文 294, Value: 2
+					80 text 历史正文 294
+				81 container
+					82 text 这是中文混合历史  第 294 组 ，可选择与复制。
+				83 button (collapsed) 思考 · 完成 · 思考 294：先检查边界。, Secondary Actions: Expand
+				84 button (collapsed) 读取合成文件 294 完成, Secondary Actions: Expand
+				85 toggle button 查看原文, Value: off
+				86 button 复制全文
+				87 heading 历史正文 295, Value: 2
+					88 text 历史正文 295
+				89 container
+					90 text 这是中文混合历史  第 295 组 ，可选择与复制。
+				91 button 新消息 · 回到底部
+				92 splitter (disabled) 调整终端高度, Help: 上下键调整；Enter 收起或展开终端
+				93 container 会话输入区
+					94 text entry area (settable) 任务提示词, Value: [text entry area: 任务提示词]
+						95 text (settable) 固定三十秒采样
+					96 pop up button 配置会话
+					97 button 运行
+					98 text Enter 运行 · Shift-Enter 换行 · ⌘R 运行 · ⌘. 停止
+					99 button 宽松权限：部分操作不会进入审批 · 查看配置
+				100 button 打开终端
+				101 text 已结束
+			102 container (expanded) Secondary Actions: Collapse
+				103 summary P411 测量, Value: on
+					104 text P411 测量
+				105 button 记录 30 秒
+				106 text {
+  "durationMs": 30000,
+  "frames": 1799,
+  "p95Ms": 18,
+  "over50ms": 0,
+  "messageMounts": 11,
+  "messageRemovals": 5,
+  "mutations": 67,
+  "visibleMessages": 7,
+  "domNodes": 487,
+  "img": 0,
+  "remoteImages": 0
+}
+				107 button 读取锚点
+	108 close button
+	109 full screen button Help: this button also has an action to zoom the window, Secondary Actions: zoom the window
+	110 minimize button
+	111 text SuperCode · 阅读锚点验收
+112 menu bar
+	113 SuperCode P411
+	114 File
+	115 Edit
+	116 View
+	117 Window
+	118 Help
+
+The focused UI element is 103 summary P411 测量, Value: on
