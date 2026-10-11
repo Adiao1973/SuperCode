@@ -1,0 +1,18 @@
+{
+  "method": "Same pnpm build/Vite 8.3.1; gzip level 9, mtime=0; sum initial entry and HTML modulepreloads. Before entry had no other preload/shared initial scripts. Dynamic chunks excluded from initial bytes.",
+  "beforeInitialGzipBytes": 429474,
+  "afterInitialGzipBytes": 431433,
+  "increasePercent": 0.456,
+  "initialChunks": {
+    "index-nzBpfq7Z.js": 421200,
+    "rolldown-runtime-hePW80VL.js": 430,
+    "react-Cvdyeg_0.js": 3025,
+    "lib-DVUllYX9.js": 6778
+  },
+  "lazyEntries": {
+    "MarkdownBody-DyUXd_1m.js": 41842,
+    "code-highlight-DrqptWps.js": 639
+  },
+  "budgetPercent": 20,
+  "passed": true
+}

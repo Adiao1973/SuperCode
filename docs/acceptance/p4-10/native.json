@@ -1,0 +1,54 @@
+{
+  "platform": "macOS arm64",
+  "date": "2026-10-11",
+  "runtime": "Tauri dev binary + isolated SQLite/XDG + synthetic ACP; no model/key/network",
+  "sessions": [
+    {
+      "title": "P410 历史 Markdown",
+      "status": "completed",
+      "agentMessages": 320,
+      "lastAgentMessage": {
+        "characters": 163,
+        "sha256": "fec9b06324a809e95a396b64027c6fea8fe88520c35ab2f099c25bec4b9ca0b9"
+      }
+    },
+    {
+      "title": "P410 流式验收",
+      "status": "completed",
+      "agentMessages": 3,
+      "lastAgentMessage": {
+        "characters": 168317,
+        "sha256": "623d7f86b44aaa9de437fe7af8bc7efd40c0c695a4a00cf28fae77269fb94bfc"
+      }
+    }
+  ],
+  "sampling": {
+    "runtime": "native WKWebView dev, rAF proxy; not release-wide performance certification",
+    "durationMs": 30000,
+    "frames": 1798,
+    "p95Ms": 20,
+    "over50ms": 0,
+    "messageMounts": 0,
+    "messageRemovals": 0,
+    "visibleMessages": 1,
+    "domNodes": 297,
+    "imageElements": 0,
+    "imageResourceRequests": 0
+  },
+  "passed": [
+    "Chinese incremental heading/fence/table/link stream",
+    "320-message virtualized history, then native restart",
+    "light/dark + reduce + 960x640/1280x800 layout",
+    "on-demand highlighting; theme switch preserves tokens",
+    "exact code copy including blank trailing line via native paste",
+    "long single-line JSON copy and whole-source copy via native paste",
+    "source toggle and oversized completed message automatic raw fallback",
+    "external link confirmation initially focuses cancel; Escape returns link",
+    "no raw HTML execution, no image requests; unsafe link inert"
+  ],
+  "limits": [
+    "100ms stream parsing coalescing; active >32K / any >128K UTF-16 code units shows full source",
+    "highlight <=16K UTF-16 units and 200 lines, finite languages, explicit click",
+    "rAF measurement approximates frame pacing; release/1000 mixed history and scroll anchoring remain later tasks"
+  ]
+}
