@@ -254,7 +254,7 @@ it("preserves the real session host, draft, running Channel and PTY across modul
   await act(async () => finish());
   await user.click(within(nav).getByRole("button", { name: "会话" }));
   expect(screen.getByRole("button", { name: "运行" })).toBeEnabled();
-  expect(screen.getByText(/本轮完成/)).toBeVisible();
+  expect(await screen.findByText(/本轮完成/)).toBeVisible();
   expect(calls.filter((c) => c.command === "run_prompt")).toHaveLength(1);
   expect(calls.filter((c) => c.command === "open_terminal")).toHaveLength(1);
   expect(calls.filter((c) => c.command === "close_terminal")).toHaveLength(0);
