@@ -70,9 +70,30 @@ it("generates a draft through the real workspace host without dispatch or startu
     ).toHaveLength(1),
   );
   expect(screen.getByRole("button", { name: "审阅并执行" })).toBeEnabled();
+  fireEvent.change(screen.getByLabelText("并发上限"), { target: { value: "1.5" } });
+  expect(screen.getByRole("button", { name: "审阅并执行" })).toBeDisabled();
+  expect(screen.getByRole("alert")).toHaveTextContent("1～16");
+  fireEvent.change(screen.getByLabelText("并发上限"), { target: { value: "3" } });
+  fireEvent.click(screen.getByRole("button", { name: "审阅并执行" }));
+  expect(screen.getByRole("dialog")).toHaveTextContent("并发：3");
+  fireEvent.keyDown(screen.getByRole("dialog"), { key: "Escape" });
+  await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
   expect(
     calls.filter((c) =>
-      /execute_commander_run|run_prompt|list_agents/.test(c.command),
+      /execute_commander_run|run_prompt|list_agents|cancel|respond|permission/.test(c.command),
     ),
   ).toHaveLength(0);
+  let finish!: (value: typeof view) => void;
+  handle("execute_commander_run", (args) => {
+    expect(args).toMatchObject({ runId: "fixture-run", confirmed: true, jobs: 3 });
+    return new Promise<typeof view>((resolve) => { finish = resolve; });
+  });
+  fireEvent.click(screen.getByRole("button", { name: "审阅并执行" }));
+  const execute = screen.getByRole("button", { name: "确认执行" });
+  fireEvent.click(execute);
+  fireEvent.click(execute);
+  await waitFor(() => expect(calls.filter((c) => c.command === "execute_commander_run")).toHaveLength(1));
+  finish(view);
+  await waitFor(() => expect(screen.getByRole("button", { name: "审阅并执行" })).toBeEnabled());
+
 });

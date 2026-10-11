@@ -18,9 +18,16 @@ export function ConfirmPlanDialog({
   cwd: string;
   jobs: number;
 }) {
+  const submitted = useRef(false);
   const back = useRef<HTMLButtonElement>(null);
   return (
-    <Dialog.Root open={open} onOpenChange={onOpenChange}>
+    <Dialog.Root
+      open={open}
+      onOpenChange={(next) => {
+        if (next) submitted.current = false;
+        onOpenChange(next);
+      }}
+    >
       <Dialog.Trigger asChild>
         <Button disabled={disabled}>审阅并执行</Button>
       </Dialog.Trigger>
@@ -50,7 +57,14 @@ export function ConfirmPlanDialog({
                 返回审阅
               </Button>
             </Dialog.Close>
-            <Button disabled={disabled} onClick={onConfirm}>
+            <Button
+              disabled={disabled}
+              onClick={() => {
+                if (disabled || submitted.current) return;
+                submitted.current = true;
+                onConfirm();
+              }}
+            >
               确认执行
             </Button>
           </div>
