@@ -74,3 +74,7 @@ env -u SUPERCODE_LLM_API_KEY SUPERCODE_DB="$scratch/fixture.db" \
 ## P4-11 阅读锚点与折叠
 
 `reading.test.tsx` 核对阅读意图、未读与跳转、时间线重置、按 key/偏移恢复、1000 项 reducer 回放和 600 次活动文本更新、折叠跨虚拟卸载保留。可见行几何测试仅验证锚点选择契约，jsdom 不验证真实滚动/ResizeObserver；原生跟随、折叠、会话/模块恢复与帧采样见 [P4-11](../../../docs/acceptance/p4-11.md)。
+
+## P4-12 工具与 diff 详情
+
+`tool-details.test.tsx` 核对初始参数及首个终态接收时间、命令/参数/输出精确复制、按需磁盘读取、失败重试及过期响应丢弃、长 diff 完整原文回退、渲染失败局部恢复。`diff-preview.test.tsx` 核对异步初始化提示、5 秒无内容超时与就绪后取消计时。渲染器 mock 仅验证恢复契约；真实 WebKit 对照、系统剪贴板粘贴、深浅主题、减少动态与窄窗口证据见 [P4-12](../../../docs/acceptance/p4-12.md)。
