@@ -681,6 +681,14 @@ MotionNotice 仅用于非交互短反馈，入场/退出不承载运行宿主、
 
 ## 11. 工作区、看板与终端
 
+### P4-6 — AppShell、导航与焦点
+
+AppShell 提供五个模块、可折叠导航、全局待审批计数和当前会话项目定位。折叠状态仅当前窗口内存，不新增迁移/IPC 或配置事实源；项目上下文来自现有 workspaces 与活动会话 draft.cwd，不猜测 Git 仓库或改执行目录。计数直接订阅 PermissionCenter 队列，折叠仍有可读名称及提示，不额外裁决审批。
+
+会话与指挥官宿主持续挂载，模块切页使用 hidden/inert 隔离不可见面板，不用动画 key 重建运行宿主。会话切页保留草稿、Channel 与已开 PTY，后台事件继续按原 key 更新；切回不重复 run_prompt/open_terminal，退出/关闭仍走原收尾。各页快捷键必须检查页面 active、组合输入、弹层和终端焦点，隐藏会话不能拦截 Cmd-R/Cmd-.。现有会话之间的选择生命周期不在本任务改造。
+
+项目定位使用现有 Radix modal Popover（Tab 圈定、Esc/回焦），指挥官确认用 Radix Dialog（初焦返回审阅、Tab 圈定、Esc 只关闭、回到触发器），内容与执行契约不变。导航后焦点移至模块标题，弹层存在时全局快捷键不抢焦点；关闭弹层不调用执行/审批。切离指挥官关闭其确认弹层，保留目标草稿与运行宿主。960×640 下主操作可达，研究编号只在注释/文档，不进入标题。
+
 ### P2-7 任务 worktree 隔离
 
 `core::worktree` 用 Git 参数数组创建 `supercode/task-<task UUID>` 分支，基于项目 HEAD（不复制未提交源码）。托管目录及独立 JSON 记录位于 Git common dir 的 `supercode-worktrees/` 下；任务 UUID 唯一，重复请求复用既有目录，不替换已有同名分支。记录 task_id/workspace_id/project/path/branch，重启可恢复，不新增数据库表。
