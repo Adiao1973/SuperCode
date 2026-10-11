@@ -151,7 +151,7 @@ it("keeps active context/drafts and routes two real RunConsole Channels while fi
   expect(calls).toHaveLength(beforeFilter);
   fireEvent.click(screen.getByRole("button", { name: "清除标题过滤" }));
   fireEvent.click(screen.getByRole("button", { name: "选择会话 Beta 中文" }));
-  expect(screen.getByPlaceholderText("工作目录")).toHaveValue(
+  expect(screen.getByLabelText("当前会话上下文")).toHaveTextContent(
     "/fixture/actual-b",
   );
   expect(screen.getByLabelText("当前会话上下文")).toHaveTextContent("mimo");
@@ -171,7 +171,7 @@ it("keeps active context/drafts and routes two real RunConsole Channels while fi
   fireEvent.click(screen.getByRole("button", { name: "选择会话 Alpha 中文" }));
   expect(screen.getByText("ONLY-A")).toBeVisible();
   expect(screen.queryByText("ONLY-B")).not.toBeInTheDocument();
-  expect(screen.getByPlaceholderText("工作目录")).toHaveValue(
+  expect(screen.getByLabelText("当前会话上下文")).toHaveTextContent(
     "/fixture/actual-a",
   );
   expect(

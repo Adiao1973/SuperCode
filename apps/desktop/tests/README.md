@@ -61,3 +61,7 @@ env -u SUPERCODE_LLM_API_KEY SUPERCODE_DB="$scratch/fixture.db" \
 ## P4-8 会话列表与归属
 
 `session-list.test.tsx` 验本地标题过滤、空结果清除、历史状态与错误，真实 SessionsWorkspace/RunConsole 在两个独立 Channel 下切换、过滤、新建时保留草稿/目录/Agent/空间且不串流；过滤本身不产生 IPC。jsdom 不验证像素布局、原生焦点或真实进程，960×640、深浅/减少动态、键盘和产品 ACP 合成对端落库/重启见 [原生验收](../../../docs/acceptance/p4-8.md)。
+
+## P4-9 底部输入与配置
+
+`composer.test.tsx` 用真实 RunConsole 验 Enter/组合输入/229/结束保护、长多行文本、防重入、停止、Radix 焦点与回焦、规则传参、运行/托管目录锁定及模式热切换；AppShell 用终端 DOM 目标核对全局快捷键免疫。合成 composition 事件不等于真实中文输入法，原生已核对布局/粘贴/切页/运行取消，实际中文 IME 已由用户补验确认正常，见 [记录](../../../docs/acceptance/p4-9.md)。

@@ -173,7 +173,10 @@ export function TerminalPanels({
         });
       }}
     >
-      <Panel id="session-content-panel" minSize={300}>
+      <Panel
+        id="session-content-panel"
+        minSize={size.height ? Math.min(300, size.height * 0.55) : 300}
+      >
         <div className="flex h-full min-h-0 flex-col overflow-y-auto">
           {children}
         </div>
@@ -200,7 +203,7 @@ export function TerminalPanels({
         id="session-terminal-panel"
         panelRef={panel}
         defaultSize={0}
-        minSize={96}
+        minSize={size.height ? Math.min(96, size.height * 0.45) : 96}
         maxSize={size.height ? Math.min(360, size.height * 0.45) : 360}
         collapsible
         collapsedSize={0}

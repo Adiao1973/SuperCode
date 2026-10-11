@@ -189,6 +189,13 @@ it("preserves the real session host, draft, running Channel and PTY across modul
   await waitFor(() =>
     expect(calls.filter((c) => c.command === "open_terminal")).toHaveLength(1),
   );
+  const terminalHost = document.querySelector("[data-session-terminal]")!;
+  for (const key of ["r", ".", "n", "1"])
+    fireEvent.keyDown(terminalHost, { key, metaKey: true });
+  expect(calls.filter((c) => c.command === "run_prompt")).toHaveLength(0);
+  expect(calls.filter((c) => c.command === "cancel_run")).toHaveLength(0);
+  expect(calls.filter((c) => c.command === "close_terminal")).toHaveLength(0);
+  expect(prompt).toHaveValue("合成草稿，不连接真实模型");
   handle("save_layout_preferences", () => undefined);
   fireEvent.keyDown(screen.getByRole("separator", { name: "调整终端高度" }), {
     key: "Enter",

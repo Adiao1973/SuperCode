@@ -73,6 +73,9 @@ function App() {
         e.defaultPrevented ||
         e.isComposing ||
         e.keyCode === 229 ||
+        (e.target as HTMLElement | null)?.closest?.(
+          "[data-session-terminal]",
+        ) ||
         document.querySelector("[role=dialog]")
       )
         return;
