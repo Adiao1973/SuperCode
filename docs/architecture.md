@@ -723,6 +723,13 @@ P2-7 托管 worktree 的原空间记录继续作为执行归属：创建/恢复�
 
 依赖依据：[dnd-kit 官方 DndContext](https://dndkit.com/legacy/api-documentation/context-provider/dnd-context/) 与 [useDraggable](https://dndkit.com/legacy/api-documentation/draggable/use-draggable/)。不变更数据库 schema。
 
+### P4-8 — 会话列表与上下文定位
+
+- 会话列表沿用现有工作空间归属与排序；项目组显示名称、完整目录提示及可见/总数，默认组和未知归属兜底不丢会话。列表以标题为主，状态、Agent 和实际 cwd 为次级信息；选中项使用 aria-current，操作按钮与选择按钮分离，键盘可达。
+- 标题过滤仅在本机内存执行：trim 后大小写无关的连续子串匹配，只匹配 title，不读取消息、不请求 IPC、不承诺全文检索。隐藏无匹配项目组；无匹配显示清除入口。过滤不改变 activeKey，不卸载当前详情或取消运行；当前会话被过滤时明确提示并可清除恢复。新建会话清除过滤，外部快捷键激活的会话即使不匹配仍保留详情。
+- 详情顶部常显会话标题、工作空间名、Agent 与实际 cwd；选择历史/草稿不改写其 cwd/agentId/workspaceId，运行 Channel 仍闭包绑定客户端 key。切换会话沿用现有终端关闭行为，切页仍保留宿主。本轮不新增更名接口或数据库迁移；标题继续由首轮 prompt/历史标题生成。
+- 历史状态保留在前端 entry 的 historyStatus，尚未载入事件时显示历史完成/失败/取消/中断；新运行与实时事件优先，invokeError 显示出错，避免将历史失败标成空闲。状态不从正文推断，不新增后台运行恢复。
+
 ### P2-9 — 会话内嵌终端
 
 - 前端使用 `@xterm/xterm@6.0.0` 与 `@xterm/addon-fit@0.11.0`；不加载 canvas/WebGL addon，`allowTransparency=false`，不透明背景，ResizeObserver 同步字符行列。终端由会话详情显式打开，cwd 使用该会话 draft 的实际执行目录（包括 worktree），不使用看板分组路径；目录变更、切换会话/页面、关闭面板会销毁终端，重开为新 shell，不持久化 shell 状态。

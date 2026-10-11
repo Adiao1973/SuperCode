@@ -1,0 +1,104 @@
+Window: "SuperCode · 会话定位验收", App: SuperCode P48.
+0 standard window SuperCode · 会话定位验收, Secondary Actions: Raise
+	1 scroll area
+		2 HTML content Description: SuperCode, URL: 127.0.0.1:1448/
+			3 container 应用导航
+				4 text SuperCode v1.0.0
+				5 container 模块
+					6 button 指挥官
+					7 button 会话
+					8 button 任务看板
+					9 button 审批中心
+					10 button 设置
+				11 button (expanded) 折叠导航, Secondary Actions: Collapse
+			12 container
+				13 heading 会话, Value: 1
+					14 text 会话
+				15 pop up button 当前项目：界面项目
+				16 button (expanded) 隐藏会话列表, Secondary Actions: Collapse
+				17 text 会话（ 3 ）
+				18 button 压测, Help: 向当前会话注入 320 条合成事件（虚拟列表滚动压测，仅开发模式）
+				19 button 新建项目空间（绑定一个项目目录）
+				20 button 新建会话（⌘N，默认空间）
+				21 text field (settable) 按标题过滤会话, Placeholder: 过滤标题…
+				22 text 界面项目 1
+				23 button 在「界面项目」中新建会话（cwd 预填空间路径）
+				24 button 删除该空间（会话移入默认空间，不删除）
+				25 container /tmp/sc-p48/project-a
+					26 text /tmp/sc-p48/project-a
+				27 button 选择会话 Alpha 中文界面与很长的标题定位检查
+				28 button (disabled) 删除会话 Alpha 中文界面与很长的标题定位检查, Help: 运行中不可删除
+				29 text 协议项目 1
+				30 button 在「协议项目」中新建会话（cwd 预填空间路径）
+				31 button 删除该空间（会话移入默认空间，不删除）
+				32 container /tmp/sc-p48/project-b
+					33 text /tmp/sc-p48/project-b
+				34 button 选择会话 Beta API 独立协议检查
+				35 button (disabled) 删除会话 Beta API 独立协议检查, Help: 运行中不可删除
+				36 text 默认空间 1
+				37 button 在默认空间新建会话
+				38 button 选择会话 新会话
+				39 button 删除会话 新会话, Help: 删除会话
+				40 splitter 调整会话列表宽度, Value: 25.856
+				41 container 当前会话上下文
+					42 heading Alpha 中文界面与很长的标题定位检查, Value: 2
+						43 text Alpha 中文界面与很长的标题定位检查
+					44 text 界面项目 opencode /tmp/sc-p48/project-a
+				45 text entry area (settable) Value: [text entry area], Placeholder: 任务提示词
+					46 text (settable) A-ONLY 中文界面
+				47 pop up button (disabled) Agent, Value: OpenCode
+				48 text field (disabled, settable) Value: /tmp/sc-p48/project-a, Placeholder: 工作目录
+				49 pop up button Description: 权限模式：plan 计划(全拒绝) / ask 确认 / autoedit 自动编辑 / full 完全访问, Value: 确认
+				50 text entry area (settable) Value: [text entry area], Placeholder: 预授权规则（每行一条，如 write 或 bash(git *)）
+					51 container (settable)
+						52 text (settable) read
+						53 text (settable) write
+						54 text (settable) edit
+						55 text (settable) bash(ls *)
+				56 button 停止
+				57 text Agent 发起的权限请求按当前模式与规则处理；需确认时在会话内审批。  · 会话 
+				58 container
+					59 text … tory-1
+				60 container
+					61 text 合成对端 A-ONLY 中文界面 · p48-history-1
+A-ONLY 中文界面 独立片段 1
+A-ONLY 中文界面 独立片段 2
+A-ONLY 中文界面 独立片段 3
+A-ONLY 中文界面 独立片段 4
+A-ONLY 中文界面 独立片段 5
+A-ONLY 中文界面 独立片段 6
+A-ONLY 中文界面 独立片段 7
+A-ONLY 中文界面 独立片段 8
+A-ONLY 中文界面 独立片段 9
+A-ONLY 中文界面 独立片段 10
+A-ONLY 中文界面 独立片段 11
+A-ONLY 中文界面 独立片段 12
+A-ONLY 中文界面 独立片段 13
+A-ONLY 中文界面 独立片段 14
+A-ONLY 中文界面 独立片段 15
+A-ONLY 中文界面 独立片段 16
+A-ONLY 中文界面 独立片段 17
+A-ONLY 中文界面 独立片段 18
+A-ONLY 中文界面 独立片段 19
+A-ONLY 中文界面 独立片段 20
+A-ONLY 中文界面 独立片段 21
+A-ONLY 中文界面 独立片段 22
+A-ONLY 中文界面 独立片段 23
+A-ONLY 中文界面 独立片段 24
+A-ONLY 中 ▍
+				62 splitter (disabled) 调整终端高度, Help: 上下键调整；Enter 收起或展开终端
+				63 button 打开终端
+				64 text 运行中
+	65 close button
+	66 full screen button Help: this button also has an action to zoom the window, Secondary Actions: zoom the window
+	67 minimize button
+	68 text SuperCode · 会话定位验收
+69 menu bar
+	70 SuperCode P48
+	71 File
+	72 Edit
+	73 View
+	74 Window
+	75 Help
+
+The focused UI element is 2 HTML content Description: SuperCode, URL: 127.0.0.1:1448/
