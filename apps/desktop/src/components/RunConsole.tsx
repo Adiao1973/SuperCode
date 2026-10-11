@@ -83,11 +83,12 @@ const STOP_LABELS: Record<string, string> = {
 };
 
 interface RunConsoleProps {
+  visible?: boolean;
   session: SessionEntry;
   dispatch: Dispatch<SessionsAction>;
 }
 
-export function RunConsole({ session, dispatch }: RunConsoleProps) {
+export function RunConsole({ session, dispatch, visible = true }: RunConsoleProps) {
   const { draft, stream } = session;
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -234,6 +235,7 @@ export function RunConsole({ session, dispatch }: RunConsoleProps) {
   // Cmd/Ctrl+R 运行、Cmd/Ctrl+. 停止：焦点免疫（仅作用于当前活动会话）
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      if (!visible || e.defaultPrevented || e.isComposing || e.keyCode === 229 || document.querySelector("[role=dialog]")) return;
       if ((e.target as HTMLElement | null)?.closest("[data-session-terminal]")) return;
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "r") {
         e.preventDefault();
@@ -246,7 +248,7 @@ export function RunConsole({ session, dispatch }: RunConsoleProps) {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [start, stop]);
+  }, [start, stop, visible]);
 
   return (
     <div className="flex h-full flex-col">

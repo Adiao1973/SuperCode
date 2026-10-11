@@ -1,44 +1,39 @@
 import { useEffect, useReducer, useState } from "react";
+import { AppShell, type NavId } from "@/components/AppShell";
+import type { Workspace } from "@/lib/agent";
 import { getVersion } from "@tauri-apps/api/app";
 import { CommanderView } from "@/components/CommanderView";
-import { Badge } from "@/components/ui/badge";
 import { ApprovalsView } from "@/components/ApprovalsView";
 import { KanbanView } from "@/components/KanbanView";
 import { SessionsWorkspace } from "@/components/SessionsWorkspace";
 import { SettingsView } from "@/components/SettingsView";
 import { listHistorySessions } from "@/lib/agent";
 import { permissionCenter } from "@/lib/permissions";
-import { cn } from "@/lib/utils";
 import { initialSessionsState, sessionsReducer } from "@/lib/sessions";
-import {
-  LayoutGrid,
-  MessageSquare,
-  Settings,
-  ShieldCheck,
-  Terminal,
-} from "lucide-react";
-
-/** 产品导航项。研发阶段编号仅保留在开发文档中。 */
-const NAV_ITEMS = [
-  { id: "commander", label: "指挥官", icon: LayoutGrid },
-  { id: "sessions", label: "会话", icon: MessageSquare },
-  { id: "kanban", label: "任务看板", icon: LayoutGrid },
-  { id: "approvals", label: "审批中心", icon: ShieldCheck },
-  { id: "settings", label: "设置", icon: Settings },
-] as const;
-
-type NavId = (typeof NAV_ITEMS)[number]["id"];
 
 function App() {
   const [version, setVersion] = useState<string | null>(null);
-  useEffect(() => { void getVersion().then(setVersion).catch(() => {}); }, []);
+  useEffect(() => {
+    void getVersion()
+      .then(setVersion)
+      .catch(() => {});
+  }, []);
   const [nav, setNav] = useState<NavId>("sessions");
-  const [sessions, dispatch] = useReducer(
-    sessionsReducer,
-    undefined,
-    () => initialSessionsState(),
+  const [sessions, dispatch] = useReducer(sessionsReducer, undefined, () =>
+    initialSessionsState(),
   );
-  const activeNav = NAV_ITEMS.find((item) => item.id === nav) ?? NAV_ITEMS[0];
+  const [pendingCount, setPendingCount] = useState(0);
+  const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
+  useEffect(
+    () => permissionCenter.onPending((items) => setPendingCount(items.length)),
+    [],
+  );
+  const activeSession = sessions.items.find(
+    (item) => item.key === sessions.activeKey,
+  );
+  const workspace = workspaces.find(
+    (item) => item.id === activeSession?.workspaceId,
+  );
 
   // Refresh persisted sessions on entry, including commander-created sessions.
   useEffect(() => {
@@ -74,6 +69,13 @@ function App() {
   // 全局快捷键：⌘N 新建会话、⌘1..8 切换会话（配合详情页 ⌘R 运行 / ⌘. 停止）
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      if (
+        e.defaultPrevented ||
+        e.isComposing ||
+        e.keyCode === 229 ||
+        document.querySelector("[role=dialog]")
+      )
+        return;
       if (!(e.metaKey || e.ctrlKey)) {
         return;
       }
@@ -98,79 +100,77 @@ function App() {
   }, [sessions.items]);
 
   return (
-    <div className="bg-background text-foreground flex h-dvh">
-      {/* 侧栏：品牌 + 模块导航 + agent 状态（多 agent 注册表为 Phase 2） */}
-      <aside className="bg-sidebar flex w-56 shrink-0 flex-col border-r">
-        <div className="flex items-center gap-2 px-4 py-4">
-          <Terminal className="text-primary size-5" />
-          <span className="font-heading text-base font-semibold tracking-tight">
-            SuperCode
-          </span>
-          <Badge variant="secondary" className="ml-auto text-[10px]">
-            {version ? `v${version}` : ""}{import.meta.env.DEV ? " dev" : ""}
-          </Badge>
-        </div>
-        <div className="border-t" />
-        <nav className="flex flex-col gap-1 p-2">
-          {NAV_ITEMS.map(({ id, label, icon: Icon }) => (
-            <button
-              key={id}
-              type="button"
-              onClick={() => setNav(id)}
-              className={cn(
-                "hover:bg-sidebar-accent flex items-center gap-2.5 rounded-md px-3 py-2 text-sm transition-colors",
-                nav === id
-                  ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                  : "text-sidebar-foreground/80",
-              )}
-            >
-              <Icon className="size-4" />
-              {label}
-            </button>
-          ))}
-        </nav>
-        <div className="mt-auto p-4">
-          <div className="border-t py-3" />
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <span className="size-2 rounded-full bg-emerald-500" />
-            ACP Agents · 在会话中选择（管理与环境见设置）
-          </div>
-        </div>
-      </aside>
-
-      {/* 主区 */}
-      <main className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-13 shrink-0 items-center gap-3 border-b px-5">
-          <h1 className="text-sm font-semibold">{activeNav.label}</h1>
-        </header>
-        <div className={nav === "commander" ? "min-h-0 flex-1" : "hidden"}><CommanderView active={nav === "commander"} onSettings={() => setNav("settings")} /></div>
-        {nav === "sessions" && <SessionsWorkspace state={sessions} dispatch={dispatch} />}
-        {nav === "approvals" && <ApprovalsView />}
-        {nav === "settings" && <SettingsView />}
-        {nav === "kanban" && (
-          <KanbanView
-            onWorktreeSession={(workspace, task, worktree) => {
-              const existing = sessions.items.find((entry) => entry.taskId === task.id);
+    <AppShell
+      nav={nav}
+      onNavigate={setNav}
+      pendingCount={pendingCount}
+      version={version}
+      project={{
+        name:
+          workspace?.name ??
+          (activeSession?.workspaceId === "default" ? "默认空间" : "项目空间"),
+        cwd: activeSession?.draft.cwd ?? "",
+        agent: activeSession?.draft.agentId ?? "",
+      }}
+    >
+      <div
+        hidden={nav !== "commander"}
+        inert={nav !== "commander"}
+        className={nav === "commander" ? "min-h-0 flex-1" : "hidden"}
+      >
+        <CommanderView
+          active={nav === "commander"}
+          onSettings={() => setNav("settings")}
+        />
+      </div>
+      <div
+        hidden={nav !== "sessions"}
+        inert={nav !== "sessions"}
+        className={nav === "sessions" ? "flex min-h-0 flex-1" : "hidden"}
+      >
+        <SessionsWorkspace
+          state={sessions}
+          dispatch={dispatch}
+          visible={nav === "sessions"}
+          onWorkspacesChange={setWorkspaces}
+        />
+      </div>
+      {nav === "approvals" && <ApprovalsView />}
+      {nav === "settings" && <SettingsView />}
+      {nav === "kanban" && (
+        <KanbanView
+          onWorktreeSession={(workspace, task, worktree) => {
+            const existing = sessions.items.find(
+              (entry) => entry.taskId === task.id,
+            );
+            setNav("sessions");
+            if (existing) dispatch({ type: "activate", key: existing.key });
+            else
+              dispatch({
+                type: "new",
+                workspace,
+                taskId: task.id,
+                cwd: worktree.path,
+                prompt: task.title,
+              });
+          }}
+          bindableSessions={sessions.items.map((it) => ({
+            key: it.key,
+            title: it.title,
+            acpSessionId: it.acpSessionId,
+          }))}
+          onOpenSession={(agentSessionId) => {
+            const target = sessions.items.find(
+              (it) => it.acpSessionId === agentSessionId,
+            );
+            if (target) {
               setNav("sessions");
-              if (existing) dispatch({ type: "activate", key: existing.key });
-              else dispatch({ type: "new", workspace, taskId: task.id, cwd: worktree.path, prompt: task.title });
-            }}
-            bindableSessions={sessions.items.map((it) => ({
-              key: it.key,
-              title: it.title,
-              acpSessionId: it.acpSessionId,
-            }))}
-            onOpenSession={(agentSessionId) => {
-              const target = sessions.items.find((it) => it.acpSessionId === agentSessionId);
-              if (target) {
-                setNav("sessions");
-                dispatch({ type: "activate", key: target.key });
-              }
-            }}
-          />
-        )}
-      </main>
-    </div>
+              dispatch({ type: "activate", key: target.key });
+            }
+          }}
+        />
+      )}
+    </AppShell>
   );
 }
 

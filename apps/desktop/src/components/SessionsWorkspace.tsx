@@ -33,6 +33,8 @@ import {
 } from "lucide-react";
 
 interface SessionsWorkspaceProps {
+  visible?: boolean;
+  onWorkspacesChange?: (workspaces: Workspace[]) => void;
   state: SessionsState;
   dispatch: React.Dispatch<SessionsAction>;
 }
@@ -44,7 +46,7 @@ const STATUS_TONE: Record<string, string> = {
   idle: "bg-muted-foreground/30",
 };
 
-export function SessionsWorkspace({ state, dispatch }: SessionsWorkspaceProps) {
+export function SessionsWorkspace({ state, dispatch, visible = true, onWorkspacesChange }: SessionsWorkspaceProps) {
   const active = state.items.find((it) => it.key === state.activeKey) ?? null;
   const [confirmKey, setConfirmKey] = useState<string | null>(null);
   const [confirmWs, setConfirmWs] = useState<string | null>(null);
@@ -57,11 +59,13 @@ export function SessionsWorkspace({ state, dispatch }: SessionsWorkspaceProps) {
 
   const refreshWorkspaces = useCallback(async () => {
     try {
-      setWorkspaces(await listWorkspaces());
+      const values = await listWorkspaces();
+      setWorkspaces(values);
+      onWorkspacesChange?.(values);
     } catch {
       /* 空间列表加载失败不阻塞会话：按默认空间单组展示 */
     }
-  }, []);
+  }, [onWorkspacesChange]);
 
   useEffect(() => {
     void refreshWorkspaces();
@@ -292,7 +296,7 @@ export function SessionsWorkspace({ state, dispatch }: SessionsWorkspaceProps) {
       {/* 活动会话详情 */}
       <section className="min-w-0 flex-1">
         {active ? (
-          <RunConsole key={active.key} session={active} dispatch={dispatch} />
+          <RunConsole key={active.key} session={active} dispatch={dispatch} visible={visible} />
         ) : (
           <div className="text-muted-foreground flex h-full flex-col items-center justify-center gap-3 text-sm">
             <MessageSquarePlus className="size-8 opacity-40" />
