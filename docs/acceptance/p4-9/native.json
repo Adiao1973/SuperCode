@@ -29,7 +29,10 @@
     "terminal focus Command-R/period/N/1 does not run or switch",
     "light/dark/reduce layout"
   ],
-  "pending": [
-    "actual Chinese IME candidate commit Enter"
-  ]
+  "pending": [],
+  "user_confirmation": {
+    "date": "2026-10-11",
+    "reply": "正常了",
+    "scope": "Actual Chinese IME follow-up acceptance after switching from English spelling suggestion; user reported normal behavior."
+  }
 }
