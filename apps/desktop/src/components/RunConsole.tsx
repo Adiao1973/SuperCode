@@ -4,6 +4,7 @@
  * edit 类工具的 diff 用 @git-diff-view/react 渲染。
  */
 import { Dialog } from "radix-ui";
+import { MessageMarkdown } from "./MessageMarkdown";
 import { useAppearance } from "@/lib/appearance";
 import {
   memo,
@@ -924,12 +925,7 @@ const StreamItemView = memo(function StreamItemView({
         </p>
       );
     case "message":
-      return (
-        <p className="text-foreground/90 text-sm leading-relaxed whitespace-pre-wrap">
-          {item.text}
-          {item.active && <span className="text-primary animate-pulse">▍</span>}
-        </p>
-      );
+      return <MessageMarkdown text={item.text} active={item.active} />;
     case "user_message":
       return (
         <div className="flex justify-end">

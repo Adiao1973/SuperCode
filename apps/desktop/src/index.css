@@ -151,3 +151,21 @@ html[data-motion="reduce"] *, html[data-motion="reduce"] *::before, html[data-mo
   scroll-behavior: auto !important;
 }
 [data-slot="tooltip-content"] { animation-duration: var(--motion-presence); animation-timing-function: var(--motion-ease); }
+
+/* P4-10: bounded reading surfaces; no per-token/layout animation. */
+.message-markdown { font-size: 13px; line-height: 1.75; overflow-wrap: anywhere; }
+.message-markdown > :first-child { margin-top: 0; }
+.message-markdown p, .message-markdown ul, .message-markdown ol, .message-markdown blockquote { margin: .7em 0; }
+.message-markdown h1, .message-markdown h2, .message-markdown h3, .message-markdown h4 { margin: 1em 0 .5em; font-weight: 650; line-height: 1.4; }
+.message-markdown h1 { font-size: 1.5em; } .message-markdown h2 { font-size: 1.3em; } .message-markdown h3 { font-size: 1.15em; }
+.message-markdown ul { list-style: disc; padding-left: 1.5em; } .message-markdown ol { list-style: decimal; padding-left: 1.5em; }
+.message-markdown blockquote { border-left: 2px solid var(--border); padding-left: 1em; color: var(--muted-foreground); }
+.message-markdown :not(pre) > code { background: var(--muted); border-radius: 3px; padding: .1em .3em; font-size: .92em; }
+.markdown-link { color: var(--primary); text-decoration: underline; text-underline-offset: 3px; text-align: left; }
+.markdown-code { min-width: 0; margin: .8em 0; border: 1px solid var(--border); border-radius: 6px; background: var(--muted); overflow: hidden; }
+.markdown-code pre { max-height: 24rem; overflow: auto; padding: 12px; font-size: 12px; line-height: 1.6; white-space: pre; overflow-wrap: normal; }
+.markdown-table { max-width: 100%; overflow-x: auto; margin: .8em 0; }
+.markdown-table table { border-collapse: collapse; font-size: 12px; }
+.markdown-table th, .markdown-table td { border: 1px solid var(--border); padding: 5px 10px; text-align: left; }
+.markdown-table th { background: var(--muted); font-weight: 600; }
+.syntax-token { color: var(--syntax-light); } .dark .syntax-token { color: var(--syntax-dark); }
