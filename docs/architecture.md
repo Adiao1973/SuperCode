@@ -730,6 +730,13 @@ P2-7 托管 worktree 的原空间记录继续作为执行归属：创建/恢复�
 - 详情顶部常显会话标题、工作空间名、Agent 与实际 cwd；选择历史/草稿不改写其 cwd/agentId/workspaceId，运行 Channel 仍闭包绑定客户端 key。切换会话沿用现有终端关闭行为，切页仍保留宿主。本轮不新增更名接口或数据库迁移；标题继续由首轮 prompt/历史标题生成。
 - 历史状态保留在前端 entry 的 historyStatus，尚未载入事件时显示历史完成/失败/取消/中断；新运行与实时事件优先，invokeError 显示出错，避免将历史失败标成空闲。状态不从正文推断，不新增后台运行恢复。
 
+### P4-9 — 底部输入区与配置弹层
+
+- 消息/审批与终端继续由现有宿主承载；输入区是详情底部固定 flex 区，不随消息滚动，不因配置弹层或模块切换重建。长提示词在限高输入框内滚动，960×640 仍能触达运行/停止。摘要常显 Agent、模式、实际目录与规则数量；目录完整值可通过提示/配置查看，警告仍有常显入口。
+- 配置复用 Radix modal Dialog，键盘焦点圈定、Esc 关闭并回触发按钮；Agent/cwd/mode/rules 直接编辑现有 session draft，不引入独立保存按钮、数据库或 IPC。运行中/已有 ACP id 锁 Agent，运行中/已有 ACP id/托管 task 锁目录；解释锁定原因。模式运行中仍调用 set_permission_mode；规则是下一轮的预授权输入，不冒充热更新。
+- 输入框 Enter 运行、Shift-Enter 换行；组合输入期间（isComposing、229、本地 composition 状态及结束后短窗口）Enter 不运行；粘贴仅修改 draft，不触发执行。运行中 Enter 不开新轮，start 同步互斥避免同一事件循环重复 invoke。⌘R/⌘. 保留，仅当前可见详情生效，组合输入/弹层/终端内不抢键。
+- 运行仍用固定客户端 key 路由 Channel；新建/续聊、cwd/workspace/task/Agent/规则/权限管线无语义变化。底部停止直接请求 cancel_run，不等待动画；本轮不改消息渲染或滚动锚点（P4-10/11）。
+
 ### P2-9 — 会话内嵌终端
 
 - 前端使用 `@xterm/xterm@6.0.0` 与 `@xterm/addon-fit@0.11.0`；不加载 canvas/WebGL addon，`allowTransparency=false`，不透明背景，ResizeObserver 同步字符行列。终端由会话详情显式打开，cwd 使用该会话 draft 的实际执行目录（包括 worktree），不使用看板分组路径；目录变更、切换会话/页面、关闭面板会销毁终端，重开为新 shell，不持久化 shell 状态。
