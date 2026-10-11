@@ -1,0 +1,48 @@
+P4-6 / 2026-10-11 / just verify
+pnpm --filter @supercode/desktop test:typecheck
+> @supercode/desktop@1.0.0 test:typecheck /Users/adiaozhou/Code/SuperCode/apps/desktop
+> vitest run
+ Test Files  11 passed (11)
+      Tests  34 passed (34)
+> tsc && vite build
+cargo fmt --check
+cargo clippy --all-targets -- -D warnings
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 10.69s
+cargo test
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 11.06s
+     Running unittests src/main.rs (target/debug/deps/supercode-8c02f3311089f1f8)
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/commander_cli.rs (target/debug/deps/commander_cli-3b12daac1fcecacf)
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.63s
+     Running tests/failed_run.rs (target/debug/deps/failed_run-b7d1c1628f4a3b5e)
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.32s
+     Running tests/plan_generate.rs (target/debug/deps/plan_generate-98689dbe6a9b4296)
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.22s
+     Running tests/plan_validate.rs (target/debug/deps/plan_validate-8b61672eff1442bb)
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+     Running unittests src/lib.rs (target/debug/deps/supercode_core-c311482b06d9c078)
+test result: ok. 79 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.47s
+     Running tests/acp_contract.rs (target/debug/deps/acp_contract-8a0ab19ca7593e7b)
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.14s
+     Running tests/commander_config.rs (target/debug/deps/commander_config-8bceaa79fa9db78a)
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+     Running tests/commander_plan.rs (target/debug/deps/commander_plan-6bcf1e711e2171f2)
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/commander_runs.rs (target/debug/deps/commander_runs-c96ab4e07b98126d)
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+     Running tests/commander_scheduler.rs (target/debug/deps/commander_scheduler-2f288b777fbefcc2)
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.54s
+     Running tests/commander_summary.rs (target/debug/deps/commander_summary-2318bef13e681d35)
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+     Running tests/llm_contract.rs (target/debug/deps/llm_contract-2c5f4f23fbc40f35)
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.06s
+     Running tests/native_driver.rs (target/debug/deps/native_driver-b17501a5879a8e17)
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.65s
+     Running unittests src/lib.rs (target/debug/deps/supercode_desktop_lib-f53d7dd305a859cc)
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.26s
+     Running unittests src/main.rs (target/debug/deps/supercode_desktop-e7bb10a30e0fda75)
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+   Doc-tests supercode_core
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+   Doc-tests supercode_desktop_lib
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s

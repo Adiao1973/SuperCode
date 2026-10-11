@@ -49,3 +49,7 @@ env -u SUPERCODE_LLM_API_KEY SUPERCODE_DB="$scratch/fixture.db" \
 ## P4-5 产品动效测试
 
 `motion.test.tsx` 验真实偏好 Provider、系统变化、写失败/读取超时、减少模式即时移除及复制立即执行；`motion-fallback.test.tsx` 模拟可选特性 chunk 加载失败，内容与设置保持可用。终端主题测试同时验证 cursorBlink 更新且 PTY 不重建，审批测试在完整 MotionProvider 中验证裁决 RPC 立即发出、pending 期间不重复响应。原生 CSS/Motion 对照与重启见 [P4-5](../../../docs/acceptance/p4-5.md)，jsdom 不冒充帧率验证。
+
+## P4-6 Shell 与生命周期测试
+
+`app-shell.test.tsx` 验真实 App/RunConsole 的跨模块草稿、挂起 Channel、隐藏页快捷键、审批徽标与终端 open/close 次数；真实 Radix Popover/Dialog 验焦点圈定、Esc 回焦和显式确认。VirtuosoMockContext 只补 jsdom 布局尺寸，不替换消息组件。xterm 渲染被替换，实际 shell 的切页保留与关闭在 [原生验收](../../../docs/acceptance/p4-6.md) 单独核对。
