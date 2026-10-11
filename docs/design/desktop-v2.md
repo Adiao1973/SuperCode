@@ -1,6 +1,6 @@
 # v2.0.0 桌面体验分析与设计方向
 
-> 规划日期：2026-10-08。本文是目标与选型建议，不代表已实现设计。P4-1 的测量见 [基线](../acceptance/p4-1.md)，P4-2 独立原型与精确候选见 [决策](desktop-v2-prototype.md)；dev 已接入 P4-4 主题与外观偏好，见 [设计 token](desktop-v2-appearance.md)；P4-5 动效基础见 [规范](desktop-v2-motion.md)，布局仍按后续任务推进。任务顺序/状态只看 [roadmap](../roadmap.md)，开发规则只看 [development-process](../development-process.md)。
+> 规划日期：2026-10-08。本文是目标与选型建议，不代表已实现设计。P4-1 的测量见 [基线](../acceptance/p4-1.md)，P4-2 独立原型与精确候选见 [决策](desktop-v2-prototype.md)；dev 已接入 P4-4 主题与外观偏好，见 [设计 token](desktop-v2-appearance.md)；P4-5 动效基础见 [规范](desktop-v2-motion.md)，P4-6 已接入产品 AppShell、折叠导航与项目定位，运行宿主保持和键盘焦点见 [验收](../acceptance/p4-6.md)；可调整分栏仍按后续任务推进。任务顺序/状态只看 [roadmap](../roadmap.md)，开发规则只看 [development-process](../development-process.md)。
 
 ## 1. 结论与边界
 

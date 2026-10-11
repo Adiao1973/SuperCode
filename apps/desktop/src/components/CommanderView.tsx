@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Channel, invoke } from "@tauri-apps/api/core";
+import { ConfirmPlanDialog } from "@/components/ConfirmPlanDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PendingCard } from "@/components/PendingCard";
@@ -18,6 +19,7 @@ export function CommanderView({ active, onSettings }: { active: boolean; onSetti
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [confirm, setConfirm] = useState(false);
+  useEffect(() => { if (!active) setConfirm(false); }, [active]);
   const [pending, setPending] = useState<PendingPermission[]>([]);
   const request = useRef<string | null>(null);
   const refresh = async (id?: string) => {
@@ -79,7 +81,7 @@ export function CommanderView({ active, onSettings }: { active: boolean; onSetti
         </form>
         {error && <p role="alert" className="text-destructive rounded border border-destructive/30 p-3 text-sm">{error}</p>}
         {selected && <section className="border-t pt-5">
-          <div className="mb-4 flex items-start justify-between gap-4"><div><h3 className="font-semibold">{selected.run.plan.objective}</h3><p className="text-muted-foreground mt-1 break-all text-sm">{selected.run.cwd} · {labels[selected.run.status]}</p></div>{selected.run.status === "draft" && <Button disabled={busy || history.some(v => v.active)} onClick={() => setConfirm(true)}>审阅并执行</Button>}</div>
+          <div className="mb-4 flex items-start justify-between gap-4"><div><h3 className="font-semibold">{selected.run.plan.objective}</h3><p className="text-muted-foreground mt-1 break-all text-sm">{selected.run.cwd} · {labels[selected.run.status]}</p></div>{selected.run.status === "draft" && <ConfirmPlanDialog open={confirm} onOpenChange={setConfirm} onConfirm={() => void execute()} disabled={busy || history.some(v => v.active)} count={selected.run.plan.tasks.length} cwd={selected.run.cwd} jobs={jobs} />}</div>
           {selected.run.status === "running" && !selected.active && !busy && <p className="text-muted-foreground mb-4 text-sm">此记录可能来自其他进程或已中断的执行。当前应用不会自动恢复或取消它。</p>}
           {selected.batches.map((batch, index) => <div key={index} className="mb-5"><h4 className="text-muted-foreground mb-2 text-xs">第 {index + 1} 批 · {batch.join("、")}</h4>{batch.map(id => {
             const task = selected.summary.tasks.find(t => t.id === id)!;
@@ -89,6 +91,5 @@ export function CommanderView({ active, onSettings }: { active: boolean; onSetti
         </section>}
       </div>
     </main>
-    {confirm && selected && <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-6"><div role="dialog" aria-modal="true" aria-label="确认执行计划" className="bg-background w-full max-w-lg rounded-lg border p-6"><h2 className="text-lg font-semibold">确认执行计划</h2><p className="mt-3 text-sm">将启动 {selected.run.plan.tasks.length} 个任务，按照依赖顺序执行。请确认已查看各任务的完整提示词。</p><p className="mt-3 break-all text-sm">目录：{selected.run.cwd}</p><p className="mt-2 text-sm">并发：{jobs} · 工作空间：默认 · 权限：变更前确认</p><div className="mt-6 flex justify-end gap-2"><Button variant="outline" onClick={() => setConfirm(false)}>返回审阅</Button><Button onClick={() => void execute()}>确认执行</Button></div></div></div>}
   </div>;
 }
