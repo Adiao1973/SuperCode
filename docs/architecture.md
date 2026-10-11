@@ -647,6 +647,12 @@ MotionProvider 监听 `(prefers-reduced-motion: reduce)`，system 才跟随；�
 
 MotionNotice 仅用于非交互短反馈，入场/退出不承载运行宿主、审批或取消按钮；退出节点无指针交互且不参与播报。本轮以复制反馈接入存在变化，后续布局/消息动效复用基础。事件与 RPC 在操作时立即发出，不在 onAnimationComplete 中派单/裁决；减少模式即时反馈、无持续闪动。
 
+### 6.10 本机分栏偏好（P4-7）
+
+迁移 0010 新增单例 `layout_preferences(id=1, session_list_width INTEGER CHECK 180..400, session_list_collapsed INTEGER CHECK 0/1, terminal_height INTEGER CHECK 96..360, terminal_collapsed INTEGER CHECK 0/1)`。严格 DTO 为同名四字段，默认 224/false/224/false，拒绝未知字段、缺字段及越界。IPC `get_layout_preferences()` / `save_layout_preferences(preferences)` 原子 upsert，不改会话/凭据/其它偏好。只存像素偏好与用户收拢意图，不存终端打开状态、PTY id、路径或窗口派生尺寸。
+
+启动并行读取主题、动效、分栏偏好；失败/5 秒超时用默认可用布局，显示可重试错误，读取成功前不写入默认值。前端 LayoutProvider 为内存工作副本，保存串行、合并最新操作（拖动结束写、非每个 pointermove 写），失败显示可重试提示，保留当前可用布局；重试保存只写布局。自动约束/窗口 resize/隐藏模块不写偏好，不能以自动收拢覆盖用户意图。
+
 ## 7. 进程生命周期管理
 
 - **ACP 连接（AcpDriver）**：进程生命周期交由 `agent-client-protocol` SDK 管理——`AcpAgent` 以独立进程组 spawn（unix process_group(0)，专治 npx 包装器孤儿问题），连接结束由 ChildGuard 整组回收，stderr 捕获进错误信息；`AcpAgent::with_debug` 可拿到原始收发行做日志。
@@ -688,6 +694,14 @@ AppShell 提供五个模块、可折叠导航、全局待审批计数和当前�
 会话与指挥官宿主持续挂载，模块切页使用 hidden/inert 隔离不可见面板，不用动画 key 重建运行宿主。会话切页保留草稿、Channel 与已开 PTY，后台事件继续按原 key 更新；切回不重复 run_prompt/open_terminal，退出/关闭仍走原收尾。各页快捷键必须检查页面 active、组合输入、弹层和终端焦点，隐藏会话不能拦截 Cmd-R/Cmd-.。现有会话之间的选择生命周期不在本任务改造。
 
 项目定位使用现有 Radix modal Popover（Tab 圈定、Esc/回焦），指挥官确认用 Radix Dialog（初焦返回审阅、Tab 圈定、Esc 只关闭、回到触发器），内容与执行契约不变。导航后焦点移至模块标题，弹层存在时全局快捷键不抢焦点；关闭弹层不调用执行/审批。切离指挥官关闭其确认弹层，保留目标草稿与运行宿主。960×640 下主操作可达，研究编号只在注释/文档，不进入标题。
+
+### P4-7 — 工作区/详情/终端可调整分栏
+
+沿用 P4-2 验证的 react-resizable-panels 4.14.3（MIT），仅接入现有会话工作区：横向列表/详情、纵向内容/终端。Separator 支持鼠标、方向键、Home/End 与 Enter 收拢，提供名称、方向和数值；用细线/抓手与统一 120ms 颜色反馈，不给运行宿主加布局进入/退出动画或变化 key。减少动态模式保持即时尺寸变化。
+
+会话列表默认 224px、展开最小 180px、最大 400px，详情最小 460px；工作区可用宽度低于 780px 自动收拢列表，变宽后按用户原意恢复，不记自动收拢。始终可通过列表按钮显式收拢/展开；窄窗口时显示收拢原因，不能强行展开挤掉主区。终端默认 224px、最小 96px、最大 360px 且不超过可用区 45%，上方主内容最小 300px/不足时允许滚动；高度计算只在实际可见容器尺寸有效时进行。手动收起终端仅隐藏面板、保留 SessionTerminal/PTY；关闭终端/切换 cwd/会话/退出仍按已有生命周期清理，终端打开状态不持久化。切模块不重建任何 Panel 宿主。
+
+xterm ResizeObserver 在宿主宽高为零/隐藏时跳过 fit/resize，恢复显示后按实际尺寸拟合；不将尺寸/收拢/主题加入 PTY 启动 effect。输入、ANSI、中文、Ctrl-C、Channel 背压/关闭与退出语义不变。布局读取与保存错误在工作区可见，允许重试；不调用模型，不上传 SQLite。
 
 ### P2-7 任务 worktree 隔离
 
