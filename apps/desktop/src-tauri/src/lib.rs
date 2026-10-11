@@ -962,6 +962,8 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             appearance::get_appearance_preferences,
+            appearance::get_motion_preferences,
+            appearance::save_motion_preferences,
             appearance::save_appearance_preferences,
             appearance::appearance_ready,
             commander_workspace::generate_commander_run,

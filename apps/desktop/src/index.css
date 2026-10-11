@@ -141,3 +141,13 @@ html { background: var(--background); }
 body { margin: 0; }
 select, option { background-color: var(--background); color: var(--foreground); }
 :focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+
+/* P4-5: one timing policy shared with motionTokens. No transition gates an action. */
+:root { --motion-micro: 120ms; --motion-presence: 180ms; --motion-ease: cubic-bezier(0.2, 0, 0, 1); }
+button, select, input, textarea, [role="button"] { transition-duration: var(--motion-micro); transition-timing-function: var(--motion-ease); }
+html[data-motion="reduce"] *, html[data-motion="reduce"] *::before, html[data-motion="reduce"] *::after {
+  animation: none !important;
+  transition: none !important;
+  scroll-behavior: auto !important;
+}
+[data-slot="tooltip-content"] { animation-duration: var(--motion-presence); animation-timing-function: var(--motion-ease); }

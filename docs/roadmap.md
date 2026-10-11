@@ -6,7 +6,7 @@
 
 - 已发布 **v1.0.0**：macOS Apple Silicon，main/tag/GitHub Release；[阶段验收](acceptance/phase3.md)、[产物与安装发布](acceptance/p3-10b.md)。Phase 3 在批准范围内闭环完成。
 - 下一版本目标 **v2.0.0：桌面交互与视觉体验升级**，内部编号 **Phase 4 / P4-x**，避免与已发布的 Phase 2（v0.3.0）混淆。产品版本仍为 1.0.0；本文件不触发改版本、安装依赖或实现功能。
-- 本轮 DOC-3 路线规划见 [记录](acceptance/v2-roadmap.md)。**P4-1 基线与体验清单已验收**，见 [记录](acceptance/p4-1.md)；P4-2 独立原型与兼容选型已验收，见 [记录](acceptance/p4-2.md)；P4-3 前端验证与 fixture 基础已验收，见 [记录](acceptance/p4-3.md)；P4-4 设计 token、主题与外观偏好已验收，见 [记录](acceptance/p4-4.md)。下一任务 P4-5 动效基础与减少动态。
+- 本轮 DOC-3 路线规划见 [记录](acceptance/v2-roadmap.md)。**P4-1 基线与体验清单已验收**，见 [记录](acceptance/p4-1.md)；P4-2 独立原型与兼容选型已验收，见 [记录](acceptance/p4-2.md)；P4-3 前端验证与 fixture 基础已验收，见 [记录](acceptance/p4-3.md)；P4-4 设计 token、主题与外观偏好已验收，见 [记录](acceptance/p4-4.md)。P4-5 动效基础与减少动态已验收，见 [记录](acceptance/p4-5.md)。下一任务 P4-6 AppShell、导航与焦点。
 - 研发平台继续聚焦 macOS，见 [ADR-0008](adr/0008-macos-priority.md)。Windows P3-8/P3-9、ZCode P2-6 继续延期；Claude ACP 本机环境问题按用户要求暂不处理；NativeDriver 保持核心库范围，产品 Codex 使用 ACP。
 - 日常从 dev 切最小任务分支；每项文档先行、实现、自动/实际桌面验收、归档、--no-ff 合 dev。状态只用待办/进行中/待验收/已验收/延期；出口未过不合 dev，不提前跨任务实现。
 
@@ -36,7 +36,7 @@
 
 ### 建议技术方向
 
-沿用 shadcn/Radix + Tailwind，建议增量采用 Motion、cmdk、react-resizable-panels、Sonner；Streamdown 先做对照样例；保留 dnd-kit、react-virtuoso、xterm 与现有 diff。具体许可、适配风险、动效及预算见 [设计方向](design/desktop-v2.md)。选型必须通过 P4-2 的 React 19/Tauri WebKit 检查后才固定，不在规划阶段大量安装库；P4-2 的独立原型选型结果见 [决策](design/desktop-v2-prototype.md)，尚未进入生产依赖。
+沿用 shadcn/Radix + Tailwind，建议增量采用 Motion、cmdk、react-resizable-panels、Sonner；Streamdown 先做对照样例；保留 dnd-kit、react-virtuoso、xterm 与现有 diff。具体许可、适配风险、动效及预算见 [设计方向](design/desktop-v2.md)。选型必须通过 P4-2 的 React 19/Tauri WebKit 检查后才固定，不在规划阶段大量安装库；P4-2 的独立原型选型结果见 [决策](design/desktop-v2-prototype.md)，P4-5 已将 Motion 14.0.0 接入生产依赖，其他候选仍按各自任务进入。
 
 ### 任务与依赖
 
@@ -50,7 +50,7 @@
 | P4-2 | 视觉/交互原型与库选型 / P4-1 | 2天 | 产出三种尺寸、深浅主题的关键页面及空/错/加载状态可审阅原型，录制切换/抽屉/落位 3 类动效；在最小 Tauri 样例验证 Motion/分栏/Markdown、锁定候选版本与 LICENSE；解释保留/淘汰库，不替换运行宿主 | 已验收 |
 | P4-3 | 前端验证与 fixture 基础 / P4-2 | 1.5天 | 在 just verify 接入 Vitest/Testing Library 等必要前端检查；建立现有 IPC fixture 边界与稳定事件回放、主题/减少动态/IME/焦点测试方法；证明失败用例会失败、无真实 key/API；浏览器组件测试不替代 Tauri 实机出口 | 已验收 |
 | P4-4 | 设计 token、主题与外观偏好 / P4-3 | 1.5天 | 统一字体/间距/圆角/表面/语义色/控件状态，深/浅/系统主题无闪白、对比度达设计目标；偏好仅本机持久化，先设计接口/迁移，1.0 fixture 升级后会话/凭据数据不丢 | 已验收 |
-| P4-5 | 动效基础与减少动态 / P4-4 | 1天 | 统一时长/缓动/存在退出与 Motion lazy loading；系统/减少/完整偏好正确，减少模式无大位移/持续闪动；动画不延迟取消/审批、不重复事件；不装第二套动画引擎 | 待办 |
+| P4-5 | 动效基础与减少动态 / P4-4 | 1天 | 统一时长/缓动/存在退出与 Motion lazy loading；系统/减少/完整偏好正确，减少模式无大位移/持续闪动；动画不延迟取消/审批、不重复事件；不装第二套动画引擎 | 已验收 |
 | P4-6 | AppShell、导航与焦点 / P4-5 | 2天 | 五个入口、待审批计数、折叠导航与当前项目定位；960×640 不遮挡主操作，切页保持执行宿主/输入草稿；Dialog/Popover 焦点圈定、Esc/回焦正确，所有标题无研发编号 | 待办 |
 | P4-7 | 工作区/详情/终端可调整分栏 / P4-6 | 1.5天 | 鼠标和键盘调整、最小宽度/自动收拢/尺寸记忆，重启恢复合法布局；xterm resize、中文/ANSI/Ctrl-C/关闭/切页/退出清理均过，展开动效不制造 PTY 重连 | 待办 |
 
@@ -111,4 +111,4 @@
 |---|---|---|
 | v0.1.0 / v0.2.0 / v0.3.0 | CLI、桌面 MVP、多 Agent 工作区 | 已发布；见历史验收 |
 | v1.0.0 | macOS arm64 指挥官与桌面完整闭环 | 已发布 |
-| v2.0.0 | macOS 工作台交互、视觉与动效升级 | P4-1～4 已验收，P4-5～24 待办 |
+| v2.0.0 | macOS 工作台交互、视觉与动效升级 | P4-1～5 已验收，P4-6～24 待办 |

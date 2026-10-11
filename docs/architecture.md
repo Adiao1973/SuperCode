@@ -637,7 +637,15 @@ SQLite 迁移 0008 新增 `appearance_preferences(id=1, theme CHECK system/light
 
 主窗口配置初始 `visible=false`。前端在 mount 前读取偏好，设置根 dark 类、data-theme 与 color-scheme，React 提交且 layout effect 已应用主题后调用 `appearance_ready(dark: bool, theme: system|light|dark)`；命令仅设置调用窗口不透明背景色、匹配的原生主题并 show（system 使用 None 恢复 OS 跟随）。读取失败或 5 秒超时采用系统主题、展示可重试错误，再显示窗口，不能静默把回退偏好写入 SQLite。保存成功才更新当前偏好；失败保留旧主题并显示错误，保存期间禁用重复操作。系统主题只在 system 偏好时影响 resolved theme，监听 change 并清理。
 
-颜色/字体/间距/圆角由 CSS token 统一，图标与主要控件继承语义色。终端通过更新现有 xterm options.theme、diff 通过 themeType 跟随 resolved theme；不能把主题变化加入 PTY 启动 effect 依赖。减少动态/密度等偏好不在此迁移中预建，按后续任务设计。
+颜色/字体/间距/圆角由 CSS token 统一，图标与主要控件继承语义色。终端通过更新现有 xterm options.theme、diff 通过 themeType 跟随 resolved theme；不能把主题变化加入 PTY 启动 effect 依赖。动效偏好独立使用 0009（§6.9）；密度等后续偏好不在本迁移中预建。
+
+### 6.9 动效基础与减少动态（P4-5）
+
+迁移 0009 新增本机单例 `motion_preferences(id=1, motion CHECK system/reduce/full)`，无行默认 system；不修改 0008 外观 DTO 或历史表。严格 DTO `MotionPreferences { motion }`，IPC `get_motion_preferences()` / `save_motion_preferences(preferences)` 原子 upsert，未知字段/枚举拒绝。与主题独立保存，避免更新一项覆盖另一项。前端启动并行读取两类偏好；读取失败/超时保守回退 reduce、显示可重试错误，不写回回退值。
+
+MotionProvider 监听 `(prefers-reduced-motion: reduce)`，system 才跟随；根 data-motion=reduce/full 在显示前应用。减少模式停止既有 CSS spin/pulse/位移动画、平滑滚动与终端光标闪动，禁用 Motion 位移/退出等待；完整模式统一 120ms 微交互、180ms 存在变化、ease [0.2,0,0,1]。仅使用开源 Motion 14.0.0，LazyMotion strict + m + 异步 domAnimation，不安装另一引擎；既有 tw-animate-css 是 CSS 工具，统一受偏好控制。特性未加载/加载失败时内容直接显示可用，不阻塞操作。
+
+MotionNotice 仅用于非交互短反馈，入场/退出不承载运行宿主、审批或取消按钮；退出节点无指针交互且不参与播报。本轮以复制反馈接入存在变化，后续布局/消息动效复用基础。事件与 RPC 在操作时立即发出，不在 onAnimationComplete 中派单/裁决；减少模式即时反馈、无持续闪动。
 
 ## 7. 进程生命周期管理
 

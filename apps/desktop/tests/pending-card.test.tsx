@@ -1,6 +1,7 @@
 import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { expect, it } from "vitest";
+import { MotionProvider } from "../src/lib/motion";
 import { PendingCard } from "../src/components/PendingCard";
 import { calls, handle } from "./fixtures/tauri";
 import { pending } from "./fixtures/permissions";
@@ -15,7 +16,11 @@ it("disables both decisions while one approval response is pending", async () =>
       }),
   );
   const user = userEvent.setup();
-  render(<PendingCard pending={pending()} />);
+  render(
+    <MotionProvider initial={{ preferences: { motion: "full" }, error: null }}>
+      <PendingCard pending={pending()} />
+    </MotionProvider>,
+  );
   await user.click(screen.getByRole("button", { name: "允许一次" }));
   expect(screen.getByRole("button", { name: "允许一次" })).toBeDisabled();
   expect(screen.getByRole("button", { name: "拒绝" })).toBeDisabled();

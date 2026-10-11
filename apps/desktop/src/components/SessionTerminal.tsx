@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useMotionPreference } from "@/lib/motion";
 import { useAppearance } from "@/lib/appearance";
 import { Channel, invoke } from "@tauri-apps/api/core";
 import { Terminal } from "@xterm/xterm";
@@ -9,6 +10,8 @@ type Output = { type: "data"; bytes: number[] } | { type: "exit"; code: number |
 
 export function SessionTerminal({ cwd, onClose }: { cwd: string; onClose: () => void }) {
   const { resolved } = useAppearance();
+  const { reduced } = useMotionPreference();
+  useEffect(() => { if (terminal.current) terminal.current.options.cursorBlink = !reduced; }, [reduced]);
   const terminal = useRef<Terminal | null>(null);
   const palette = () => ({ background: getComputedStyle(document.documentElement).getPropertyValue("--background").trim(), foreground: getComputedStyle(document.documentElement).getPropertyValue("--foreground").trim() });
   useEffect(() => { if (terminal.current) terminal.current.options.theme = palette(); }, [resolved]);
@@ -22,7 +25,7 @@ export function SessionTerminal({ cwd, onClose }: { cwd: string; onClose: () => 
     let ready = false;
     let ended = false;
     let input = Promise.resolve();
-    const term = new Terminal({ allowTransparency: false, theme: palette(), fontSize: 12, fontFamily: "Menlo, monospace", cursorBlink: true, scrollback: 3000, screenReaderMode: true });
+    const term = new Terminal({ allowTransparency: false, theme: palette(), fontSize: 12, fontFamily: "Menlo, monospace", cursorBlink: !reduced, scrollback: 3000, screenReaderMode: true });
     terminal.current = term;
     const fit = new FitAddon();
     term.loadAddon(fit);
