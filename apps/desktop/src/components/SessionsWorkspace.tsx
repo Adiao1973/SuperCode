@@ -3,7 +3,7 @@
  * 会话按工作空间分节——项目空间（绑定项目根路径）+ 默认空间（不绑项目的聊天/电脑操作）。
  * 项目空间内新建会话 cwd 预填空间路径；删除项目空间仅摘分组，会话移入默认空间。
  */
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 import {
   DEFAULT_WORKSPACE,
   sessionStatus,
+  filterSessionTitle,
   type SessionEntry,
   type SessionsAction,
   type SessionsState,
@@ -30,6 +31,7 @@ import {
   MessageSquarePlus,
   Plus,
   Trash2,
+  Search,
   X,
 } from "lucide-react";
 
@@ -54,6 +56,13 @@ export function SessionsWorkspace({
   onWorkspacesChange,
 }: SessionsWorkspaceProps) {
   const active = state.items.find((it) => it.key === state.activeKey) ?? null;
+  const [query, setQuery] = useState("");
+  const knownKeys = useRef(new Set(state.items.map((entry) => entry.key)));
+  useEffect(() => {
+    if (state.activeKey && !knownKeys.current.has(state.activeKey))
+      setQuery("");
+    knownKeys.current = new Set(state.items.map((entry) => entry.key));
+  }, [state.activeKey, state.items]);
   const [confirmKey, setConfirmKey] = useState<string | null>(null);
   const [confirmWs, setConfirmWs] = useState<string | null>(null);
 
@@ -100,6 +109,26 @@ export function SessionsWorkspace({
       ),
     }));
   }, [workspaces, state.items]);
+
+  const filteredGroups = groups
+    .map((group) => ({
+      ...group,
+      visibleSessions: group.sessions.filter((entry) =>
+        filterSessionTitle(entry.title, query),
+      ),
+    }))
+    .filter((group) => !query.trim() || group.visibleSessions.length > 0);
+  const matchCount = filteredGroups.reduce(
+    (n, group) => n + group.visibleSessions.length,
+    0,
+  );
+  const activeWorkspace = groups.find((group) =>
+    group.sessions.some((entry) => entry.key === active?.key),
+  )?.workspace;
+  const newSession = (workspace?: Workspace) => {
+    setQuery("");
+    dispatch({ type: "new", workspace });
+  };
 
   const createSpace = useCallback(async () => {
     if (!newPath.trim()) {
@@ -191,7 +220,7 @@ export function SessionsWorkspace({
                 size="sm"
                 variant="ghost"
                 className="h-7 px-2"
-                onClick={() => dispatch({ type: "new" })}
+                onClick={() => newSession()}
                 title="新建会话（⌘N，默认空间）"
               >
                 <MessageSquarePlus className="size-4" />
@@ -199,6 +228,43 @@ export function SessionsWorkspace({
             </div>
           </div>
 
+          <div className="relative mx-3 mb-3">
+            <Search
+              aria-hidden="true"
+              className="text-muted-foreground pointer-events-none absolute left-2 top-2 size-3.5"
+            />
+            <Input
+              aria-label="按标题过滤会话"
+              placeholder="过滤标题…"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Escape" && !event.nativeEvent.isComposing) {
+                  event.stopPropagation();
+                  setQuery("");
+                }
+              }}
+              className="h-8 pl-7 pr-7 text-xs"
+            />
+            {query && (
+              <button
+                type="button"
+                aria-label="清除标题过滤"
+                onClick={() => setQuery("")}
+                className="text-muted-foreground hover:text-foreground absolute right-1 top-1 rounded p-1 focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <X className="size-4" />
+              </button>
+            )}
+          </div>
+          {query.trim() && (
+            <p
+              role="status"
+              className="text-muted-foreground px-3 pb-2 text-[11px]"
+            >
+              找到 {matchCount} 个会话
+            </p>
+          )}
           {creating && (
             <div className="space-y-1.5 px-3 pb-2">
               <div className="flex gap-1.5">
@@ -244,7 +310,15 @@ export function SessionsWorkspace({
           )}
 
           <div className="min-h-0 flex-1 overflow-y-auto px-2 pb-2">
-            {groups.map(({ workspace, sessions }) => (
+            {matchCount === 0 && query.trim() && (
+              <div className="space-y-2 px-2 py-6 text-center">
+                <p className="text-sm">没有匹配的会话</p>
+                <p className="text-muted-foreground text-xs">
+                  试试其他标题，或清除过滤。
+                </p>
+              </div>
+            )}
+            {filteredGroups.map(({ workspace, sessions, visibleSessions }) => (
               <section key={workspace.id} className="mb-2">
                 <div className="group/ws flex items-center gap-1.5 px-1.5 py-1">
                   <Folder className="text-muted-foreground size-3 shrink-0" />
@@ -255,13 +329,15 @@ export function SessionsWorkspace({
                     {workspace.name}
                   </span>
                   <span className="text-muted-foreground/60 shrink-0 text-[10px] tabular-nums">
-                    {sessions.length}
+                    {query.trim()
+                      ? `${visibleSessions.length}/${sessions.length}`
+                      : sessions.length}
                   </span>
                   <Button
                     size="sm"
                     variant="ghost"
                     className="h-5 w-5 shrink-0 px-0"
-                    onClick={() => dispatch({ type: "new", workspace })}
+                    onClick={() => newSession(workspace)}
                     title={
                       workspace.kind === "project"
                         ? `在「${workspace.name}」中新建会话（cwd 预填空间路径）`
@@ -286,7 +362,7 @@ export function SessionsWorkspace({
                         }
                       }}
                       className={cn(
-                        "hidden shrink-0 px-0.5 group-hover/ws:block",
+                        "shrink-0 rounded px-0.5 opacity-0 group-hover/ws:opacity-100 focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring",
                         confirmWs === workspace.id
                           ? "text-destructive text-[10px] font-medium"
                           : "text-muted-foreground/50 hover:text-destructive",
@@ -300,8 +376,16 @@ export function SessionsWorkspace({
                     </button>
                   )}
                 </div>
-                <div className="flex flex-col gap-1">
-                  {sessions.map((entry) => (
+                {workspace.path && (
+                  <p
+                    title={workspace.path}
+                    className="text-muted-foreground truncate px-1.5 pb-2 font-mono text-[10px]"
+                  >
+                    {workspace.path}
+                  </p>
+                )}
+                <div className="flex flex-col gap-0.5">
+                  {visibleSessions.map((entry) => (
                     <SessionListItem
                       key={entry.key}
                       entry={entry}
@@ -333,22 +417,54 @@ export function SessionsWorkspace({
       }
     >
       {/* 活动会话详情 */}
-      <section className="h-full min-w-0">
+      <section className="flex h-full min-w-0 flex-col">
+        {active && (
+          <div
+            aria-label="当前会话上下文"
+            className="shrink-0 border-b px-4 py-2.5"
+          >
+            <h2 title={active.title} className="truncate text-sm font-medium">
+              {active.title}
+            </h2>
+            <p className="text-muted-foreground flex min-w-0 items-center gap-2 text-[11px]">
+              <span className="max-w-32 truncate" title={activeWorkspace?.name}>
+                {activeWorkspace?.name ?? "默认空间"}
+              </span>
+              <span className="shrink-0">{active.draft.agentId}</span>
+              <span
+                title={active.draft.cwd}
+                className="min-w-0 truncate font-mono"
+              >
+                {active.draft.cwd}
+              </span>
+            </p>
+            {query.trim() && !filterSessionTitle(active.title, query) && (
+              <p className="text-muted-foreground pt-1 text-[11px]">
+                当前会话不在筛选结果中{" "}
+                <button
+                  type="button"
+                  className="text-primary underline underline-offset-2"
+                  onClick={() => setQuery("")}
+                >
+                  显示当前会话
+                </button>
+              </p>
+            )}
+          </div>
+        )}
         {active ? (
-          <RunConsole
-            key={active.key}
-            session={active}
-            dispatch={dispatch}
-            visible={visible}
-          />
+          <div className="min-h-0 flex-1">
+            <RunConsole
+              key={active.key}
+              session={active}
+              dispatch={dispatch}
+              visible={visible}
+            />
+          </div>
         ) : (
           <div className="text-muted-foreground flex h-full flex-col items-center justify-center gap-3 text-sm">
             <MessageSquarePlus className="size-8 opacity-40" />
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => dispatch({ type: "new" })}
-            >
+            <Button size="sm" variant="outline" onClick={() => newSession()}>
               新建会话
             </Button>
           </div>
@@ -373,61 +489,72 @@ function SessionListItem({
 }) {
   const status = sessionStatus(entry);
   return (
-    <button
-      type="button"
-      onClick={onActivate}
+    <div
       className={cn(
-        "group hover:bg-sidebar-accent flex w-full flex-col gap-0.5 rounded-md px-2.5 py-2 text-left transition-colors",
-        active ? "bg-sidebar-accent" : "",
-        confirmDelete && "border-destructive/60 border",
+        "group flex items-start rounded-md transition-colors hover:bg-sidebar-accent",
+        active && "bg-sidebar-accent",
+        confirmDelete && "ring-1 ring-destructive/60",
       )}
     >
-      <span className="flex w-full items-center gap-2">
-        <span
-          className={cn(
-            "size-1.5 shrink-0 rounded-full",
-            STATUS_TONE[status.tone],
-          )}
-        />
-        <span className="truncate text-[13px]">{entry.title}</span>
-        <span
-          role="button"
-          tabIndex={-1}
-          title={
-            entry.stream.running
-              ? "运行中不可删除"
-              : confirmDelete
-                ? "再点一次确认删除"
-                : "删除会话"
-          }
-          onClick={(e) => {
-            e.stopPropagation();
-            if (!entry.stream.running) {
-              onDelete();
-            }
-          }}
-          className={cn(
-            "ml-auto hidden shrink-0 px-1 group-hover:block",
-            confirmDelete
-              ? "text-destructive text-[10px] font-medium"
-              : "text-muted-foreground/50 hover:text-destructive",
-          )}
-        >
-          {confirmDelete ? "确认?" : <Trash2 className="size-3.5" />}
-        </span>
-      </span>
-      <span className="text-muted-foreground flex w-full items-center gap-2 pl-3.5 text-[10px]">
-        {status.label}
-        {entry.pendingApprovals.length > 0 ? (
-          <span className="text-warning">
-            {entry.pendingApprovals.length} 待审批
+      <button
+        type="button"
+        aria-label={`选择会话 ${entry.title}`}
+        aria-current={active ? "true" : undefined}
+        onClick={onActivate}
+        className="flex min-w-0 flex-1 flex-col gap-1 rounded-md px-2.5 py-2.5 text-left outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+      >
+        <span className="flex w-full items-center gap-2">
+          <span
+            aria-hidden="true"
+            className={cn(
+              "size-1.5 shrink-0 rounded-full",
+              STATUS_TONE[status.tone],
+            )}
+          />
+          <span
+            title={entry.title}
+            className="truncate text-[13px] font-medium"
+          >
+            {entry.title}
           </span>
-        ) : (
-          entry.acpSessionId && (
-            <code className="truncate">…{entry.acpSessionId.slice(-6)}</code>
-          )
+        </span>
+        <span className="text-muted-foreground flex w-full items-center gap-2 pl-3.5 text-[10px]">
+          <span>{status.label}</span>
+          <span className="truncate">{entry.draft.agentId}</span>
+          {entry.pendingApprovals.length > 0 && (
+            <span className="text-warning shrink-0">
+              {entry.pendingApprovals.length} 待审批
+            </span>
+          )}
+        </span>
+        <span
+          title={entry.draft.cwd}
+          className="text-muted-foreground w-full truncate pl-3.5 font-mono text-[10px]"
+        >
+          {entry.draft.cwd}
+        </span>
+      </button>
+      <button
+        type="button"
+        disabled={entry.stream.running}
+        aria-label={`删除会话 ${entry.title}`}
+        title={
+          entry.stream.running
+            ? "运行中不可删除"
+            : confirmDelete
+              ? "再点一次确认删除"
+              : "删除会话"
+        }
+        onClick={onDelete}
+        className={cn(
+          "mr-1 mt-2 shrink-0 rounded p-1 opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed",
+          confirmDelete
+            ? "text-destructive opacity-100 text-[10px]"
+            : "text-muted-foreground hover:text-destructive",
         )}
-      </span>
-    </button>
+      >
+        {confirmDelete ? "确认?" : <Trash2 className="size-3.5" />}
+      </button>
+    </div>
   );
 }
