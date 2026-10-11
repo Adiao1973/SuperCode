@@ -23,6 +23,7 @@ import {
   type SessionsState,
 } from "@/lib/sessions";
 import { WorkspacePanels } from "@/components/WorkspacePanels";
+import { createReadingMemory, type ReadingMemory } from "@/lib/reading";
 import { RunConsole } from "@/components/RunConsole";
 import {
   Check,
@@ -57,6 +58,20 @@ export function SessionsWorkspace({
 }: SessionsWorkspaceProps) {
   const active = state.items.find((it) => it.key === state.activeKey) ?? null;
   const [query, setQuery] = useState("");
+  const readingCache = useRef(new Map<string, ReadingMemory>());
+  useEffect(() => {
+    const keys = new Set(state.items.map((entry) => entry.key));
+    for (const key of readingCache.current.keys())
+      if (!keys.has(key)) readingCache.current.delete(key);
+  }, [state.items]);
+  const readingFor = (key: string) => {
+    let memory = readingCache.current.get(key);
+    if (!memory) {
+      memory = createReadingMemory();
+      readingCache.current.set(key, memory);
+    }
+    return memory;
+  };
   const knownKeys = useRef(new Set(state.items.map((entry) => entry.key)));
   useEffect(() => {
     if (state.activeKey && !knownKeys.current.has(state.activeKey))
@@ -456,6 +471,7 @@ export function SessionsWorkspace({
           <div className="min-h-0 flex-1">
             <RunConsole
               key={active.key}
+              readingMemory={readingFor(active.key)}
               session={active}
               dispatch={dispatch}
               visible={visible}

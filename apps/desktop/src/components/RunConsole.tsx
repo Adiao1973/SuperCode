@@ -15,7 +15,12 @@ import {
   type Dispatch,
 } from "react";
 import { MultiFileDiff } from "@pierre/diffs/react";
-import { Virtuoso } from "react-virtuoso";
+import {
+  MessageTimeline,
+  TimelineDisclosure,
+  TimelineCopy,
+} from "./MessageTimeline";
+import { createReadingMemory, type ReadingMemory } from "@/lib/reading";
 import { Badge } from "@/components/ui/badge";
 import { TerminalPanels } from "@/components/WorkspacePanels";
 import { useLayoutPreferences } from "@/lib/layout";
@@ -99,6 +104,7 @@ const STOP_LABELS: Record<string, string> = {
 
 interface RunConsoleProps {
   visible?: boolean;
+  readingMemory?: ReadingMemory;
   session: SessionEntry;
   dispatch: Dispatch<SessionsAction>;
 }
@@ -107,10 +113,11 @@ export function RunConsole({
   session,
   dispatch,
   visible = true,
+  readingMemory,
 }: RunConsoleProps) {
   const { draft, stream } = session;
   const { preferences: layout, update: updateLayout } = useLayoutPreferences();
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const localReading = useRef(createReadingMemory());
 
   const [configOpen, setConfigOpen] = useState(false);
   const configClose = useRef<HTMLButtonElement>(null);
@@ -342,7 +349,7 @@ export function RunConsole({
           }
         >
           {/* 事件流时间线：虚拟列表（合帧批 → 单次 dispatch → 仅活动 chunk 重渲染） */}
-          <div ref={scrollRef} className="min-h-0 flex-1">
+          <div className="min-h-0 flex-1">
             {stream.items.length === 0 ? (
               <p className="text-muted-foreground py-8 text-center text-sm">
                 {stream.running
@@ -352,17 +359,11 @@ export function RunConsole({
                     : "选择 Agent 并输入任务，点击「运行」开始。"}
               </p>
             ) : (
-              <Virtuoso
-                style={{ height: "100%" }}
-                data={stream.items}
-                computeItemKey={(_, item) => item.key}
-                followOutput="auto"
-                increaseViewportBy={{ top: 600, bottom: 600 }}
-                itemContent={(_, item) => (
-                  <div className="mx-auto max-w-3xl px-5 pb-3">
-                    <StreamItemView item={item} />
-                  </div>
-                )}
+              <MessageTimeline
+                items={stream.items}
+                memory={readingMemory ?? localReading.current}
+                visible={visible}
+                renderItem={renderStreamItem}
               />
             )}
           </div>
@@ -912,6 +913,8 @@ export function RunConsole({
   );
 }
 
+const renderStreamItem = (item: StreamItem) => <StreamItemView item={item} />;
+
 const StreamItemView = memo(function StreamItemView({
   item,
 }: {
@@ -920,9 +923,22 @@ const StreamItemView = memo(function StreamItemView({
   switch (item.kind) {
     case "thought":
       return (
-        <p className="text-muted-foreground border-l-2 py-1 pl-3 text-sm whitespace-pre-wrap italic">
-          {item.text}
-        </p>
+        <div className="border-l-2 py-1 pl-3 text-muted-foreground">
+          <TimelineDisclosure
+            itemKey={item.key}
+            summary={
+              <span className="min-w-0 truncate text-xs">
+                思考 · {item.active ? "生成中" : "完成"} ·{" "}
+                {item.text.split("\n", 1)[0].slice(0, 120)}
+              </span>
+            }
+          >
+            <p className="whitespace-pre-wrap break-words text-sm italic">
+              {item.text}
+            </p>
+            <TimelineCopy text={item.text} label="复制思考" />
+          </TimelineDisclosure>
+        </div>
       );
     case "message":
       return <MessageMarkdown text={item.text} active={item.active} />;
@@ -975,38 +991,51 @@ const ToolView = memo(function ToolView({
   const status = TOOL_STATUS[item.status];
   return (
     <div className="rounded-md border px-3 py-2">
-      <div className="flex items-center gap-2">
-        <Icon className="text-muted-foreground size-3.5" />
-        <span className="text-sm font-medium">
-          {item.title || item.name || "工具调用"}
-        </span>
-        {item.name && item.title && (
-          <code className="text-muted-foreground text-[11px]">{item.name}</code>
-        )}
-        <Badge
-          variant="outline"
-          className={`ml-auto text-[10px] ${status.className}`}
-        >
-          {status.label}
-        </Badge>
-      </div>
-      {item.locations.length > 0 && (
-        <div className="text-muted-foreground mt-1 truncate font-mono text-[11px]">
-          {item.locations.map((loc, i) => (
-            <span key={i}>
-              {loc.path}
-              {loc.line != null ? `:${loc.line}` : ""}
-              {i < item.locations.length - 1 ? " · " : ""}
+      <TimelineDisclosure
+        itemKey={item.key}
+        summary={
+          <span className="flex min-w-0 flex-1 items-center gap-2">
+            <Icon className="text-muted-foreground size-3.5" />
+            <span className="text-sm font-medium">
+              {item.title || item.name || "工具调用"}
             </span>
-          ))}
-        </div>
-      )}
-      {item.content.length > 0 && (
-        <pre className="text-muted-foreground mt-1 max-h-40 overflow-y-auto font-mono text-[11px] whitespace-pre-wrap break-all">
-          {item.content.join("\n")}
-        </pre>
-      )}
-      <DiffBlock diff={item.diff} lazyPath={writeLazyPath(item)} />
+            {item.name && item.title && (
+              <code className="text-muted-foreground text-[11px]">
+                {item.name}
+              </code>
+            )}
+            <Badge
+              variant="outline"
+              className={`ml-auto text-[10px] ${status.className}`}
+            >
+              {status.label}
+            </Badge>
+          </span>
+        }
+      >
+        {item.locations.length > 0 && (
+          <div className="text-muted-foreground mt-1 truncate font-mono text-[11px]">
+            {item.locations.map((loc, i) => (
+              <span key={i}>
+                {loc.path}
+                {loc.line != null ? `:${loc.line}` : ""}
+                {i < item.locations.length - 1 ? " · " : ""}
+              </span>
+            ))}
+          </div>
+        )}
+        {item.content.length > 0 && (
+          <pre className="text-muted-foreground mt-1 max-h-40 overflow-y-auto font-mono text-[11px] whitespace-pre-wrap break-all">
+            {item.content.join("\n")}
+          </pre>
+        )}
+        {(item.diff || writeLazyPath(item)) && (
+          <DiffBlock diff={item.diff} lazyPath={writeLazyPath(item)} />
+        )}
+        {item.content.length > 0 && (
+          <TimelineCopy text={item.content.join("\n")} label="复制工具输出" />
+        )}
+      </TimelineDisclosure>
     </div>
   );
 });
