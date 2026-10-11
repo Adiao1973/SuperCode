@@ -1,0 +1,60 @@
+{
+  "method": "Native macOS WebKit inspector: actual CopyableBlock click, requestAnimationFrame samples for 2s; temporary animate-spin/pulse CSS probes; no real API. Frames are observations, not a performance benchmark or video.",
+  "readings": {
+    "reduce": {
+      "kind": "reduce",
+      "spin": "none",
+      "active": 0,
+      "pulse": "none",
+      "pulseActive": 0,
+      "frames": 121,
+      "moved": 0,
+      "exitHidden": false,
+      "first": {
+        "t": 15,
+        "transform": "none",
+        "opacity": "1",
+        "hidden": null
+      },
+      "last": {
+        "t": 2000,
+        "transform": null,
+        "opacity": null
+      }
+    },
+    "full": {
+      "kind": "full",
+      "spin": "spin",
+      "active": 1,
+      "pulse": "pulse",
+      "pulseActive": 1,
+      "frames": 121,
+      "moved": 24,
+      "exitHidden": true,
+      "first": {
+        "t": 23,
+        "transform": "matrix(1, 0, 0, 1, 0, 8)",
+        "opacity": "0",
+        "hidden": null
+      },
+      "last": {
+        "t": 2001,
+        "transform": null,
+        "opacity": null
+      }
+    },
+    "restart": {
+      "kind": "restart",
+      "resolved": "reduce",
+      "theme": "light",
+      "cssDuration": "0s",
+      "osReduce": false
+    },
+    "system": {
+      "osReduce": false,
+      "resolved": "full",
+      "theme": "dark",
+      "source": "initial native console observation; OS setting was not modified"
+    }
+  }
+}

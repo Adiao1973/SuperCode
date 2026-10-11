@@ -637,7 +637,7 @@ SQLite 迁移 0008 新增 `appearance_preferences(id=1, theme CHECK system/light
 
 主窗口配置初始 `visible=false`。前端在 mount 前读取偏好，设置根 dark 类、data-theme 与 color-scheme，React 提交且 layout effect 已应用主题后调用 `appearance_ready(dark: bool, theme: system|light|dark)`；命令仅设置调用窗口不透明背景色、匹配的原生主题并 show（system 使用 None 恢复 OS 跟随）。读取失败或 5 秒超时采用系统主题、展示可重试错误，再显示窗口，不能静默把回退偏好写入 SQLite。保存成功才更新当前偏好；失败保留旧主题并显示错误，保存期间禁用重复操作。系统主题只在 system 偏好时影响 resolved theme，监听 change 并清理。
 
-颜色/字体/间距/圆角由 CSS token 统一，图标与主要控件继承语义色。终端通过更新现有 xterm options.theme、diff 通过 themeType 跟随 resolved theme；不能把主题变化加入 PTY 启动 effect 依赖。减少动态/密度等偏好不在此迁移中预建，按后续任务设计。
+颜色/字体/间距/圆角由 CSS token 统一，图标与主要控件继承语义色。终端通过更新现有 xterm options.theme、diff 通过 themeType 跟随 resolved theme；不能把主题变化加入 PTY 启动 effect 依赖。动效偏好独立使用 0009（§6.9）；密度等后续偏好不在本迁移中预建。
 
 ### 6.9 动效基础与减少动态（P4-5）
 

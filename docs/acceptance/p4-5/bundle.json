@@ -1,0 +1,15 @@
+{
+  "package": "motion",
+  "version": "14.0.0",
+  "license": "MIT",
+  "features": "async domAnimation; LazyMotion strict + motion/react-m",
+  "chunks": [
+    {
+      "file": "motion-features-BLLdIemf.js",
+      "bytes": 37795,
+      "gzipBytes": 14375
+    }
+  ],
+  "dynamicImportInEntry": true,
+  "licenseSha256": "1bf0dc3f7727723e5a032ed12164a47cf92c05204cb1a3485f123c24e2833ed1"
+}
