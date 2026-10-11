@@ -1,0 +1,19 @@
+
+> @supercode/desktop@1.0.0 test /Users/adiaozhou/Code/SuperCode/apps/desktop
+> vitest run
+
+
+ RUN  v5.0.3 /Users/adiaozhou/Code/SuperCode/apps/desktop
+
+Not implemented: HTMLCanvasElement's getContext() method: without installing the canvas npm package
+Not implemented: HTMLCanvasElement's getContext() method: without installing the canvas npm package
+
+ Test Files  22 passed (22)
+      Tests  76 passed (76)
+   Start at  06:31:56
+   Duration  2.84s (environment 40%, tests 22%, import 16%, setup 14%, transform 8%)
+
+Environment  jsdom was created 22 times · 12.17s total, 40% of tracked time
+             create it once per worker with pool: 'vmThreads' (keeps per-file isolation)
+             learn more: https://vitest.dev/guide/improving-performance#test-environments
+

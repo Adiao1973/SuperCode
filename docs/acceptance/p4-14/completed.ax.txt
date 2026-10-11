@@ -1,0 +1,106 @@
+Window: "SuperCode · 规划目标验收", App: SuperCode P411.
+0 standard window SuperCode · 规划目标验收, Secondary Actions: Raise
+	1 scroll area
+		2 HTML content Description: SuperCode, URL: 127.0.0.1:1453/
+			3 container 应用导航
+				4 text SuperCode v1.0.0
+				5 container 模块
+					6 button 指挥官
+					7 button 会话
+					8 button 任务看板
+					9 button 审批中心
+					10 button 设置
+				11 button (expanded) 折叠导航, Secondary Actions: Collapse
+			12 container
+				13 heading 指挥官, Value: 1
+					14 text 指挥官
+				15 pop up button 当前项目：默认空间
+				16 button (collapsed) 计划历史（1）, Secondary Actions: Expand
+				17 container 规划目标
+					18 heading 规划目标, Value: 2
+						19 text 规划目标
+					20 text 描述目标，选择项目和 Agent，再生成计划供审阅。
+					21 button 模型设置
+					22 container
+						23 text p413-loopback-fixture · 配置可用 配置可用不代表推理已验证
+						24 button 刷新配置与 Agent
+					25 container
+						26 text 任务目标
+						27 text entry area (settable) 任务目标, Value: [text entry area: 任务目标], Placeholder: 说明要实现什么，以及必须遵守的约束
+							28 text 说明要实现什么，以及必须遵守的约束
+						29 container 工作项目
+							30 text 工作项目
+							31 pop up button 项目空间, Value: 当前目录 / 自选目录
+							32 button 使用当前项目
+							33 text field (settable) 工作目录, Value: /tmp/supercode-p13, Placeholder: 选择已存在的项目目录
+							34 button 选择目录
+							35 text 使用已存在的绝对目录；选择项目仅用于本次规划。
+						36 container 参与规划的 Agent
+							37 text 参与规划的 Agent
+							38 container
+								39 checkbox OpenCode (opencode), Value: 1
+								40 text OpenCode opencode  · ACP 已接入
+							41 container
+								42 checkbox Claude Code (claude-code), Value: 0
+								43 text Claude Code claude-code  · ACP 已接入
+							44 container
+								45 checkbox Codex (codex), Value: 0
+								46 text Codex codex  · ACP 已接入
+							47 container
+								48 checkbox MiMo (mimo), Value: 0
+								49 text MiMo mimo  · ACP 已接入
+							50 container
+								51 checkbox (disabled) ZCode (zcode), Value: 0
+								52 text ZCode zcode  · 驱动尚未接入，暂不可选
+							53 text 已接入不代表已安装或已登录；执行前仍会检查。此处不会启动 Agent 或探测版本。
+						54 button (disabled) 生成计划
+						55 text 将调用指挥官模型；生成后先审阅，确认前不执行任务。
+				56 container
+					57 text 执行并发上限
+					58 number field (settable) 并发上限, Value: 2
+						59 stepper 0
+							60 unknown
+							61 unknown
+				62 heading 计划审阅与确认 · 合成验收, Value: 3
+					63 text 计划审阅与确认 · 合成验收
+				64 container
+					65 text /tmp/sc-p414/project  ·  已完成
+				66 heading 第 1 批 · design, Value: 4
+					67 text 第  1  批 ·  design
+				68 container 梳理中文待办交互
+					69 heading 梳理中文待办交互, Value: 5
+						70 text 梳理中文待办交互
+					71 text 已完成
+					72 container
+						73 text design  ·  opencode  · 依赖： 无
+					74 summary 查看完整任务提示词, Value: off
+						75 text 查看完整任务提示词
+					76 text 合成任务完成；没有写文件或访问网络。
+					77 container
+						78 text 本机会话： 92983a5e-7084-49e5-8127-28ec286e4a32
+				79 heading 第 2 批 · build, Value: 4
+					80 text 第  2  批 ·  build
+				81 container 实现确认流程
+					82 heading 实现确认流程, Value: 5
+						83 text 实现确认流程
+					84 text 已完成
+					85 container
+						86 text build  ·  opencode  · 依赖： design
+					87 summary 查看完整任务提示词, Value: off
+						88 text 查看完整任务提示词
+					89 text 合成任务完成；没有写文件或访问网络。
+					90 container
+						91 text 本机会话： a46fe5e8-2725-4a74-ace7-d325663e12c0
+	92 close button
+	93 full screen button Help: this button also has an action to zoom the window, Secondary Actions: zoom the window
+	94 minimize button
+	95 text SuperCode · 规划目标验收
+96 menu bar
+	97 SuperCode P411
+	98 File
+	99 Edit
+	100 View
+	101 Window
+	102 Help
+
+The focused UI element is 2 HTML content Description: SuperCode, URL: 127.0.0.1:1453/

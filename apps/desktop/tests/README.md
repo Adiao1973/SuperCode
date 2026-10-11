@@ -82,3 +82,7 @@ env -u SUPERCODE_LLM_API_KEY SUPERCODE_DB="$scratch/fixture.db" \
 ## P4-13 指挥官目标输入
 
 `commander-input.test.tsx` 核对严格模式首次默认 Agent、项目跟随/手改保留/显式恢复、多选与禁选、配置/密钥/查询失败状态、目录取消/选择/失败/过期结果、注册表刷新及同步防重提交。`commander-view.test.tsx` 使用真实工作区宿主验证生成 draft 的参数和确认入口，禁止任何执行/Agent 启动 IPC。Rust 目录契约测试覆盖绝对存在目录、相对/文件/缺失/删除及 Agent allowlist 限制。系统目录选择器与深浅/减少动态/窄窗、生成前后进程调用对照见 [原生验收](../../../docs/acceptance/p4-13.md)。
+
+## P4-14 计划审阅与确认
+
+`plan-review.test.tsx` 检查完整长提示词、任务切换、依赖/批次/Agent 与计划切换重置；`commander-view.test.tsx` 检查非法并发禁用、弹层实际并发、Esc 无执行、显式确认双击只调用一次 IPC。`app-shell.test.tsx` 检查弹层焦点约束/返回与同步防重。原生窄窗口、键盘循环及双任务各一次 ACP prompt 见 [P4-14](../../../docs/acceptance/p4-14.md)。
