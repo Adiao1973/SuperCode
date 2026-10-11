@@ -1,11 +1,11 @@
 /**
  * 会话详情视图：绑定单个会话条目，表单草稿与事件流都来自 sessions store。
  * 消息流用 react-virtuoso 虚拟列表（P1-4：200+ 条目滚动流畅）；
- * edit 类工具的 diff 用 @git-diff-view/react 渲染。
+ * 工具详情与文件变更由 ToolDetails 按需展示。
  */
 import { Dialog } from "radix-ui";
 import { MessageMarkdown } from "./MessageMarkdown";
-import { useAppearance } from "@/lib/appearance";
+import { ToolDetails } from "./ToolDetails";
 import {
   memo,
   useCallback,
@@ -14,14 +14,12 @@ import {
   useState,
   type Dispatch,
 } from "react";
-import { MultiFileDiff } from "@pierre/diffs/react";
 import {
   MessageTimeline,
   TimelineDisclosure,
   TimelineCopy,
 } from "./MessageTimeline";
 import { createReadingMemory, type ReadingMemory } from "@/lib/reading";
-import { Badge } from "@/components/ui/badge";
 import { TerminalPanels } from "@/components/WorkspacePanels";
 import { useLayoutPreferences } from "@/lib/layout";
 import { Button } from "@/components/ui/button";
@@ -38,7 +36,6 @@ import {
   type AgentRow,
   type NodeEnvReport,
   listSessionMessages,
-  readTextFile,
   runPrompt,
   setPermissionMode,
 } from "@/lib/agent";
@@ -52,47 +49,16 @@ import {
 } from "@/lib/opencode-env";
 import type { StreamItem } from "@/lib/stream";
 import type { SessionEntry, SessionsAction } from "@/lib/sessions";
-import type { DiffPayload } from "@/lib/events";
-import type { ToolKind, ToolStatus } from "@/lib/events";
 import {
   AlertTriangle,
   ChevronDown,
   ChevronRight,
   CircleStop,
-  FileText,
-  FilePen,
-  FolderInput,
-  Globe,
   Loader2,
   Play,
   RefreshCw,
-  Search,
-  SquareTerminal,
-  Trash2,
-  Wrench,
   SlidersHorizontal,
 } from "lucide-react";
-
-const TOOL_ICONS: Record<ToolKind, typeof Wrench> = {
-  read: FileText,
-  edit: FilePen,
-  delete: Trash2,
-  move: FolderInput,
-  search: Search,
-  execute: SquareTerminal,
-  fetch: Globe,
-  other: Wrench,
-};
-
-const TOOL_STATUS: Record<ToolStatus, { label: string; className: string }> = {
-  pending: { label: "等待", className: "" },
-  in_progress: { label: "运行中", className: "animate-pulse" },
-  completed: { label: "完成", className: "" },
-  failed: {
-    label: "失败",
-    className: "border-destructive/50 text-destructive",
-  },
-};
 
 const STOP_LABELS: Record<string, string> = {
   end_turn: "本轮完成",
@@ -951,7 +917,7 @@ const StreamItemView = memo(function StreamItemView({
         </div>
       );
     case "tool":
-      return <ToolView item={item} />;
+      return <ToolDetails item={item} />;
     case "plan":
       return (
         <div className="text-muted-foreground rounded-md border px-3 py-2 text-xs">
@@ -980,177 +946,4 @@ const StreamItemView = memo(function StreamItemView({
         </div>
       );
   }
-});
-
-const ToolView = memo(function ToolView({
-  item,
-}: {
-  item: Extract<StreamItem, { kind: "tool" }>;
-}) {
-  const Icon = TOOL_ICONS[item.toolKind];
-  const status = TOOL_STATUS[item.status];
-  return (
-    <div className="rounded-md border px-3 py-2">
-      <TimelineDisclosure
-        itemKey={item.key}
-        summary={
-          <span className="flex min-w-0 flex-1 items-center gap-2">
-            <Icon className="text-muted-foreground size-3.5" />
-            <span className="text-sm font-medium">
-              {item.title || item.name || "工具调用"}
-            </span>
-            {item.name && item.title && (
-              <code className="text-muted-foreground text-[11px]">
-                {item.name}
-              </code>
-            )}
-            <Badge
-              variant="outline"
-              className={`ml-auto text-[10px] ${status.className}`}
-            >
-              {status.label}
-            </Badge>
-          </span>
-        }
-      >
-        {item.locations.length > 0 && (
-          <div className="text-muted-foreground mt-1 truncate font-mono text-[11px]">
-            {item.locations.map((loc, i) => (
-              <span key={i}>
-                {loc.path}
-                {loc.line != null ? `:${loc.line}` : ""}
-                {i < item.locations.length - 1 ? " · " : ""}
-              </span>
-            ))}
-          </div>
-        )}
-        {item.content.length > 0 && (
-          <pre className="text-muted-foreground mt-1 max-h-40 overflow-y-auto font-mono text-[11px] whitespace-pre-wrap break-all">
-            {item.content.join("\n")}
-          </pre>
-        )}
-        {(item.diff || writeLazyPath(item)) && (
-          <DiffBlock diff={item.diff} lazyPath={writeLazyPath(item)} />
-        )}
-        {item.content.length > 0 && (
-          <TimelineCopy text={item.content.join("\n")} label="复制工具输出" />
-        )}
-      </TimelineDisclosure>
-    </div>
-  );
-});
-
-/** write 类工具（无结构化 diff）的磁盘懒读路径：opencode 的 ACP 事件不含新文件内容 */
-function writeLazyPath(
-  item: Extract<StreamItem, { kind: "tool" }>,
-): string | null {
-  if (item.diff || item.locations.length === 0) {
-    return null;
-  }
-  const label = `${item.name ?? ""} ${item.title ?? ""}`.toLowerCase();
-  return /write|create|save/.test(label) ? item.locations[0].path : null;
-}
-
-/**
- * 工具 diff 展示（默认折叠，展开渲染 @pierre/diffs——ZCode 同款渲染方案）。
- * 数据来源分两种：结构化 diff（opencode edit 完成事件携带）；
- * write（新建文件）ACP 事件不含内容，展开时从磁盘读（read_text_file）。
- */
-const DiffBlock = memo(function DiffBlock({
-  diff,
-  lazyPath,
-}: {
-  diff: DiffPayload | null;
-  lazyPath?: string | null;
-}) {
-  const { resolved } = useAppearance();
-  const [open, setOpen] = useState(false);
-  const [lazyDiff, setLazyDiff] = useState<DiffPayload | null>(null);
-  const [loadError, setLoadError] = useState<string | null>(null);
-  const payload = diff ?? lazyDiff;
-
-  useEffect(() => {
-    if (!open || diff || !lazyPath || lazyDiff || loadError) {
-      return;
-    }
-    let cancelled = false;
-    void readTextFile(lazyPath)
-      .then((content) => {
-        if (!cancelled) {
-          setLazyDiff({ path: lazyPath, old_text: null, new_text: content });
-        }
-      })
-      .catch((e) => {
-        if (!cancelled) {
-          setLoadError(String(e));
-        }
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [open, diff, lazyPath, lazyDiff, loadError]);
-
-  return (
-    <div className="mt-2">
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        className="text-muted-foreground hover:text-foreground flex items-center gap-1 font-mono text-[11px] transition-colors"
-      >
-        {open ? (
-          <ChevronDown className="size-3" />
-        ) : (
-          <ChevronRight className="size-3" />
-        )}
-        <span className="truncate">{(diff ?? { path: lazyPath })?.path}</span>
-        {payload ? (
-          <>
-            <span className="text-success">
-              +{payload.new_text.replace(/\n$/, "").split("\n").length}
-            </span>
-            {payload.old_text != null && (
-              <span className="text-destructive">
-                -{payload.old_text.replace(/\n$/, "").split("\n").length}
-              </span>
-            )}
-          </>
-        ) : lazyPath ? (
-          <span className="text-muted-foreground/60">从磁盘读取…</span>
-        ) : null}
-      </button>
-      {open && payload && (
-        <div
-          className="mt-1 max-h-72 overflow-auto rounded border"
-          style={
-            {
-              "--diffs-font-family": "var(--font-mono)",
-              "--diffs-font-size": "11px",
-            } as React.CSSProperties
-          }
-        >
-          <MultiFileDiff
-            oldFile={
-              payload.old_text == null
-                ? null
-                : { name: payload.path, contents: payload.old_text }
-            }
-            newFile={{ name: payload.path, contents: payload.new_text }}
-            options={{
-              diffStyle: "unified",
-              overflow: "scroll",
-              disableFileHeader: true,
-              hunkSeparators: "simple",
-              themeType: resolved,
-            }}
-          />
-        </div>
-      )}
-      {open && !payload && !lazyPath && (
-        <p className="text-muted-foreground mt-1 text-[11px]">无 diff 数据</p>
-      )}
-      {loadError && (
-        <p className="text-destructive mt-1 text-[11px]">{loadError}</p>
-      )}
-    </div>
-  );
 });
