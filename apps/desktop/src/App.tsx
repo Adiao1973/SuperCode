@@ -123,6 +123,9 @@ function App() {
       >
         <CommanderView
           active={nav === "commander"}
+          currentCwd={activeSession?.draft.cwd ?? workspace?.path ?? ""}
+          currentAgent={activeSession?.draft.agentId ?? ""}
+          workspaces={workspaces}
           onSettings={() => setNav("settings")}
         />
       </div>

@@ -925,6 +925,7 @@ pub fn run() {
     supercode_core::envcheck::augment_gui_path();
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
             // Native macOS Quit terminates directly; route Cmd+Q through ExitRequested.
             #[cfg(target_os = "macos")]
@@ -968,6 +969,8 @@ pub fn run() {
             appearance::save_motion_preferences,
             appearance::save_appearance_preferences,
             appearance::appearance_ready,
+            commander_workspace::validate_commander_directory,
+            commander_workspace::pick_commander_directory,
             commander_workspace::generate_commander_run,
             commander_workspace::list_commander_run_views,
             commander_workspace::get_commander_run_view,
