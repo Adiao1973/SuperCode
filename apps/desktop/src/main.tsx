@@ -1,6 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
+import { LayoutProvider, loadLayout } from "./lib/layout";
 import {
   AppearanceProvider,
   applyTheme,
@@ -18,7 +19,11 @@ import {
 import "./index.css";
 
 async function start() {
-  const [initial, motion] = await Promise.all([loadAppearance(), loadMotion()]);
+  const [initial, motion, layout] = await Promise.all([
+    loadAppearance(),
+    loadMotion(),
+    loadLayout(),
+  ]);
   applyMotion(
     resolveMotion(motion.preferences.motion, matchMedia(SYSTEM_REDUCE).matches),
   );
@@ -29,7 +34,9 @@ async function start() {
     <React.StrictMode>
       <MotionProvider initial={motion}>
         <AppearanceProvider initial={initial}>
-          <App />
+          <LayoutProvider initial={layout}>
+            <App />
+          </LayoutProvider>
         </AppearanceProvider>
       </MotionProvider>
     </React.StrictMode>,

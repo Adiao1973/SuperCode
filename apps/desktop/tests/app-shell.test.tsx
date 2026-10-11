@@ -13,6 +13,7 @@ import { AppShell, type NavId } from "../src/components/AppShell";
 import { ConfirmPlanDialog } from "../src/components/ConfirmPlanDialog";
 import { VirtuosoMockContext } from "react-virtuoso";
 import App from "../src/App";
+import { LayoutProvider, DEFAULT_LAYOUT } from "../src/lib/layout";
 import { AppearanceProvider } from "../src/lib/appearance";
 import { MotionProvider } from "../src/lib/motion";
 import type { AgentEvent } from "../src/lib/events";
@@ -172,18 +173,30 @@ it("preserves the real session host, draft, running Channel and PTY across modul
         <VirtuosoMockContext.Provider
           value={{ viewportHeight: 1000, itemHeight: 100 }}
         >
-          <App />
+          <LayoutProvider
+            initial={{ preferences: DEFAULT_LAYOUT, error: null }}
+          >
+            <App />
+          </LayoutProvider>
         </VirtuosoMockContext.Provider>
       </AppearanceProvider>
     </MotionProvider>,
   );
   const user = userEvent.setup();
   const prompt = screen.getByPlaceholderText("任务提示词");
-  await user.type(prompt, "合成草稿，不连接真实模型");
+  fireEvent.change(prompt, { target: { value: "合成草稿，不连接真实模型" } });
   await user.click(screen.getByRole("button", { name: "打开终端" }));
   await waitFor(() =>
     expect(calls.filter((c) => c.command === "open_terminal")).toHaveLength(1),
   );
+  handle("save_layout_preferences", () => undefined);
+  fireEvent.keyDown(screen.getByRole("separator", { name: "调整终端高度" }), {
+    key: "Enter",
+  });
+  expect(screen.getByRole("button", { name: "展开终端" })).toBeVisible();
+  expect(calls.filter((c) => c.command === "close_terminal")).toHaveLength(0);
+  await user.click(screen.getByRole("button", { name: "展开终端" }));
+  expect(calls.filter((c) => c.command === "open_terminal")).toHaveLength(1);
   const nav = screen.getByRole("navigation", { name: "模块" });
   await user.click(within(nav).getByRole("button", { name: "审批中心" }));
   fireEvent.keyDown(window, { key: "r", metaKey: true });

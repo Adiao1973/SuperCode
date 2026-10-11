@@ -961,6 +961,8 @@ pub fn run() {
             store: tokio::sync::OnceCell::new(),
         })
         .invoke_handler(tauri::generate_handler![
+            appearance::get_layout_preferences,
+            appearance::save_layout_preferences,
             appearance::get_appearance_preferences,
             appearance::get_motion_preferences,
             appearance::save_motion_preferences,

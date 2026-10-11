@@ -8,6 +8,8 @@ import { memo, useCallback, useEffect, useRef, useState, type Dispatch } from "r
 import { MultiFileDiff } from "@pierre/diffs/react";
 import { Virtuoso } from "react-virtuoso";
 import { Badge } from "@/components/ui/badge";
+import { TerminalPanels } from "@/components/WorkspacePanels";
+import { useLayoutPreferences } from "@/lib/layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
@@ -90,6 +92,7 @@ interface RunConsoleProps {
 
 export function RunConsole({ session, dispatch, visible = true }: RunConsoleProps) {
   const { draft, stream } = session;
+  const { preferences: layout, update: updateLayout } = useLayoutPreferences();
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const [terminalOpen, setTerminalOpen] = useState(false);
@@ -251,7 +254,8 @@ export function RunConsole({ session, dispatch, visible = true }: RunConsoleProp
   }, [start, stop, visible]);
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-full min-h-0 flex-col">
+      <TerminalPanels open={terminalOpen} terminal={terminalOpen ? <SessionTerminal key={draft.cwd} cwd={draft.cwd} onClose={() => setTerminalOpen(false)} /> : null}>
       {/* 运行控制 */}
       <div className="shrink-0 space-y-2.5 border-b px-5 py-3">
         <Textarea
@@ -547,11 +551,11 @@ export function RunConsole({ session, dispatch, visible = true }: RunConsoleProp
         </p>
       )}
 
-      {terminalOpen && <SessionTerminal key={draft.cwd} cwd={draft.cwd} onClose={() => setTerminalOpen(false)} />}
+      </TerminalPanels>
 
       {/* 状态条 */}
       <div className="text-muted-foreground flex h-8 shrink-0 items-center gap-3 border-t px-5 text-[11px]">
-        <button type="button" className="hover:text-primary" disabled={terminalOpen || !draft.cwd.trim()} onClick={() => setTerminalOpen(true)}>打开终端</button>
+        <button type="button" className="hover:text-primary" disabled={!draft.cwd.trim()} onClick={() => terminalOpen ? updateLayout({terminal_collapsed:!layout.terminal_collapsed}) : setTerminalOpen(true)}>{terminalOpen ? (layout.terminal_collapsed ? "展开终端" : "收起终端") : "打开终端"}</button>
         {stream.running ? (
           <>
             <Loader2 className="text-primary size-3 animate-spin" />
