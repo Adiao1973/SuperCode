@@ -45,3 +45,7 @@ env -u SUPERCODE_LLM_API_KEY SUPERCODE_DB="$scratch/fixture.db" \
 ## P4-4 产品外观测试
 
 `appearance.test.tsx` 验真实 Provider/设置组件的保存、系统变化、失败/超时和显示顺序；`terminal-theme.test.tsx` 验 xterm options 颜色更新但 PTY 生命周期不重启；`design-tokens.test.ts` 对 CSS token 的 18 对文字/表面计算 WCAG 对比度。jsdom 的颜色测试不替代原生计算样式，WebKit 深浅/重启及三尺寸证据见 [P4-4](../../../docs/acceptance/p4-4.md)。
+
+## P4-5 产品动效测试
+
+`motion.test.tsx` 验真实偏好 Provider、系统变化、写失败/读取超时、减少模式即时移除及复制立即执行；`motion-fallback.test.tsx` 模拟可选特性 chunk 加载失败，内容与设置保持可用。终端主题测试同时验证 cursorBlink 更新且 PTY 不重建，审批测试在完整 MotionProvider 中验证裁决 RPC 立即发出、pending 期间不重复响应。原生 CSS/Motion 对照与重启见 [P4-5](../../../docs/acceptance/p4-5.md)，jsdom 不冒充帧率验证。

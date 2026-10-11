@@ -1,5 +1,5 @@
 use super::AppState;
-use supercode_core::db::{AppearancePreferences, ThemePreference};
+use supercode_core::db::{AppearancePreferences, MotionPreferences, ThemePreference};
 
 #[tauri::command]
 pub async fn get_appearance_preferences(
@@ -46,4 +46,28 @@ pub fn appearance_ready(
         .set_background_color(Some(color))
         .map_err(|e| e.to_string())?;
     window.show().map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub async fn get_motion_preferences(
+    state: tauri::State<'_, AppState>,
+) -> Result<MotionPreferences, String> {
+    state
+        .store()
+        .await
+        .get_motion_preferences()
+        .await
+        .map_err(|e| e.to_string())
+}
+#[tauri::command]
+pub async fn save_motion_preferences(
+    state: tauri::State<'_, AppState>,
+    preferences: MotionPreferences,
+) -> Result<(), String> {
+    state
+        .store()
+        .await
+        .save_motion_preferences(preferences)
+        .await
+        .map_err(|e| e.to_string())
 }
