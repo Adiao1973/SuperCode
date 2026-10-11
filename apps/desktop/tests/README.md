@@ -53,3 +53,7 @@ env -u SUPERCODE_LLM_API_KEY SUPERCODE_DB="$scratch/fixture.db" \
 ## P4-6 Shell 与生命周期测试
 
 `app-shell.test.tsx` 验真实 App/RunConsole 的跨模块草稿、挂起 Channel、隐藏页快捷键、审批徽标与终端 open/close 次数；真实 Radix Popover/Dialog 验焦点圈定、Esc 回焦和显式确认。VirtuosoMockContext 只补 jsdom 布局尺寸，不替换消息组件。xterm 渲染被替换，实际 shell 的切页保留与关闭在 [原生验收](../../../docs/acceptance/p4-6.md) 单独核对。
+
+## P4-7 分栏与本机布局
+
+`layout.test.tsx` 覆盖超时、读取失败防误写、串行保存/最新值与重试；`workspace-panels.test.tsx` 用受控几何和 ResizeObserver 验真实分栏库的键盘调整及自动收拢不写库。AppShell 测试核对终端收起/展开不增加 open 次数，terminal-theme 测试过滤零尺寸并在重新可见时 resize。jsdom 无真实排版和 PTY；鼠标、960×640、stty/中文/ANSI/Ctrl-C/重启/退出见 [原生记录](../../../docs/acceptance/p4-7.md)。
