@@ -888,3 +888,10 @@ DispatchOptions 增 interactive_approvals（默认 false，CLI 行为不变）�
 模型状态在每次激活时重新查询：加载、未配置、缺少密钥、配置可用、查询失败各有文字及设置入口；“配置可用”不声称真实推理验证。异步结果在切页/下一次查询后失效。目标/目录/Agent/模型/忙状态均满足才允许生成；提交同步锁防双击，生成只调用原 generate_commander_run，成功仍是 draft，不触发 execute/run_prompt。
 
 新增本机 IPC：validate_commander_directory(path) → void，要求已存在的绝对目录；pick_commander_directory(defaultPath?) → string|null，仅系统原生单目录选择、取消不改草稿、禁止在选择器创建目录。使用 Rust 侧 tauri-plugin-dialog =2.4.2（MIT/Apache-2.0，MSRV1.77.2 兼容项目1.88），无 JS 通用 dialog 权限扩张。选择结果及手填目录都由后端校验；generate_commander_run 再次复用目录检查与 AgentRegistry.restricted，防止目录消失或前端绕过。界面不读取项目文件、不扫描子目录，不更改 SQLite schema。计划审阅/执行监控的重构留到 P4-14/15。
+
+
+### P4-14 — 计划审阅与确认（已验收）
+
+草稿沿用纸白/石墨、单一强调色与细分隔线，先展示目标/目录，再展示任务导航和完整详情，最后显式确认执行。宽区域左右排列列表与详情，窄区域上下排列；提示词保持原始完整文本、自动换行，不执行 HTML/Markdown。任务选择按 run id 重置，显示任务 id、Agent、依赖及调度批次。已有运行/结果/审批展示不在本任务重构。
+
+并发只接受 1～16 的整数；非法输入禁用确认并原处说明。Radix 标准确认弹层展示任务数、目录、默认空间、变更前确认权限及实际并发，初始焦点位于返回审阅，Tab 困在弹层，Esc/返回只关闭弹层并回到触发按钮，不执行、不取消、不裁决审批。确认期间不能切换历史或修改并发；切模块关闭弹层。弹层与执行宿主均使用同步 ref 锁防止同一事件周期重复派单，宿主还检查 active/draft/并发与全局忙状态。继续复用后端 confirmed 和运行互斥契约，不新增 IPC/数据库字段/依赖。

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Channel, invoke } from "@tauri-apps/api/core";
 import { ConfirmPlanDialog } from "@/components/ConfirmPlanDialog";
 import { Button } from "@/components/ui/button";
+import { PlanReview } from "./PlanReview";
 import { CommanderInput } from "./CommanderInput";
 import type { Workspace } from "@/lib/agent";
 import { Input } from "@/components/ui/input";
@@ -77,7 +78,12 @@ export function CommanderView({
     }
   };
   const execute = async () => {
-    if (!selected) return;
+    if (
+      !active || !confirm || request.current || !selected ||
+      selected.run.status !== "draft" || selected.active ||
+      history.some((v) => v.active) || !Number.isInteger(jobs) ||
+      jobs < 1 || jobs > 16
+    ) return;
     const id = selected.run.id;
     request.current = id;
     setConfirm(false);
@@ -159,7 +165,7 @@ export function CommanderView({
           {history.map((view) => (
             <button
               key={view.run.id}
-              disabled={busy}
+              disabled={busy || confirm}
               onClick={() => {
                 setSelected(view);
                 setError("");
@@ -213,10 +219,12 @@ export function CommanderView({
                     max={16}
                     value={jobs}
                     onChange={(e) => setJobs(Number(e.target.value))}
-                    disabled={busy}
+                    disabled={busy || confirm}
+                    aria-invalid={!Number.isInteger(jobs) || jobs < 1 || jobs > 16}
                   />
                 </label>
-                <div className="mb-4 flex items-start justify-between gap-4">
+                {(!Number.isInteger(jobs) || jobs < 1 || jobs > 16) && <p role="alert" className="text-destructive mb-4 text-sm">并发上限必须是 1～16 的整数。</p>}
+                <div className="mb-4 flex flex-wrap items-start justify-between gap-4">
                   <div>
                     <h3 className="font-semibold">
                       {selected.run.plan.objective}
@@ -230,7 +238,7 @@ export function CommanderView({
                       open={confirm}
                       onOpenChange={setConfirm}
                       onConfirm={() => void execute()}
-                      disabled={busy || history.some((v) => v.active)}
+                      disabled={busy || selected.active || !Number.isInteger(jobs) || jobs < 1 || jobs > 16 || history.some((v) => v.active)}
                       count={selected.run.plan.tasks.length}
                       cwd={selected.run.cwd}
                       jobs={jobs}
@@ -244,7 +252,7 @@ export function CommanderView({
                       此记录可能来自其他进程或已中断的执行。当前应用不会自动恢复或取消它。
                     </p>
                   )}
-                {selected.batches.map((batch, index) => (
+                {selected.run.status === "draft" ? <PlanReview key={selected.run.id} view={selected} /> : selected.batches.map((batch, index) => (
                   <div key={index} className="mb-5">
                     <h4 className="text-muted-foreground mb-2 text-xs">
                       第 {index + 1} 批 · {batch.join("、")}

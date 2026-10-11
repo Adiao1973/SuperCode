@@ -125,6 +125,7 @@ it("requires explicit confirmation; Esc and back restore focus without executing
   expect(confirm).not.toHaveBeenCalled();
   await user.click(trigger);
   await user.click(screen.getByRole("button", { name: "确认执行" }));
+  fireEvent.click(screen.getByRole("button", { name: "确认执行" }));
   expect(confirm).toHaveBeenCalledTimes(1);
 });
 
