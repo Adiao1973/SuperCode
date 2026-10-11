@@ -35,8 +35,10 @@ function fallbackDiff(
   if (!path) {
     return null;
   }
-  const oldString = typeof input.oldString === "string" ? input.oldString : null;
-  const newString = typeof input.newString === "string" ? input.newString : null;
+  const oldString =
+    typeof input.oldString === "string" ? input.oldString : null;
+  const newString =
+    typeof input.newString === "string" ? input.newString : null;
   if (oldString != null && newString != null) {
     return { path, old_text: oldString, new_text: newString };
   }
@@ -62,6 +64,9 @@ export type StreamItem =
       content: string[];
       locations: FileLocation[];
       diff: DiffPayload | null;
+      rawInput?: unknown;
+      startedAt?: number | null;
+      endedAt?: number | null;
     }
   | { key: string; kind: "plan"; entries: PlanEntry[] }
   | { key: string; kind: "turn_end"; stopReason: StopReason }
@@ -92,7 +97,7 @@ export function beginRun(): StreamState {
 
 export type StreamAction =
   | { type: "begin" }
-  | { type: "batch"; batch: AgentEvent[] };
+  | { type: "batch"; batch: AgentEvent[]; receivedAt?: number };
 
 export function streamReducer(
   state: StreamState,
@@ -101,10 +106,14 @@ export function streamReducer(
   if (action.type === "begin") {
     return beginRun();
   }
-  return applyBatch(state, action.batch);
+  return applyBatch(state, action.batch, action.receivedAt ?? Date.now());
 }
 
-function applyBatch(state: StreamState, batch: AgentEvent[]): StreamState {
+function applyBatch(
+  state: StreamState,
+  batch: AgentEvent[],
+  receivedAt: number,
+): StreamState {
   let items = state.items;
   let usage = state.usage;
   let running = state.running;
@@ -133,6 +142,9 @@ function applyBatch(state: StreamState, batch: AgentEvent[]): StreamState {
             content: [],
             locations: [],
             diff: ev.diff ?? fallbackDiff(ev.kind, ev.raw_input),
+            rawInput: ev.raw_input,
+            startedAt: receivedAt,
+            endedAt: null,
           },
         ];
         break;
@@ -144,10 +156,18 @@ function applyBatch(state: StreamState, batch: AgentEvent[]): StreamState {
             items[i] = {
               ...it,
               status: ev.status ?? it.status,
+              endedAt:
+                it.endedAt ??
+                (ev.status === "completed" || ev.status === "failed"
+                  ? receivedAt
+                  : null),
               content: [
                 ...it.content,
                 ...ev.content
-                  .filter((b): b is { type: "text"; text: string } => b.type === "text")
+                  .filter(
+                    (b): b is { type: "text"; text: string } =>
+                      b.type === "text",
+                  )
                   .map((b) => b.text),
               ],
               locations: ev.locations.length > 0 ? ev.locations : it.locations,
@@ -165,12 +185,20 @@ function applyBatch(state: StreamState, batch: AgentEvent[]): StreamState {
         ];
         break;
       case "usage_update":
-        usage = { used: ev.used ?? null, size: ev.size ?? null, cost: ev.cost ?? null };
+        usage = {
+          used: ev.used ?? null,
+          size: ev.size ?? null,
+          cost: ev.cost ?? null,
+        };
         break;
       case "turn_completed":
         items = [
           ...closeActive(items),
-          { key: nextKey("turn"), kind: "turn_end", stopReason: ev.stop_reason },
+          {
+            key: nextKey("turn"),
+            kind: "turn_end",
+            stopReason: ev.stop_reason,
+          },
         ];
         running = false;
         break;
@@ -200,10 +228,7 @@ function appendChunk(
     next[next.length - 1] = { ...last, text: last.text + text };
     return next;
   }
-  return [
-    ...items,
-    { key: nextKey(kind), kind, id, text, active: true },
-  ];
+  return [...items, { key: nextKey(kind), kind, id, text, active: true }];
 }
 
 /** 结束流：只拷贝仍在活动的条目，已完成条目引用不变 */

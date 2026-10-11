@@ -1,0 +1,95 @@
+Window: "SuperCode · 工具与变更验收", App: SuperCode P411.
+0 standard window SuperCode · 工具与变更验收, Secondary Actions: Raise
+	1 scroll area
+		2 HTML content Description: SuperCode, URL: 127.0.0.1:1452/
+			3 container 应用导航
+				4 text SuperCode v1.0.0
+				5 container 模块
+					6 button 指挥官
+					7 button 会话
+					8 button 任务看板
+					9 button 审批中心
+					10 button 设置
+				11 button (expanded) 折叠导航, Secondary Actions: Collapse
+			12 container
+				13 heading 会话, Value: 1
+					14 text 会话
+				15 pop up button 当前项目：project
+				16 button (expanded) 隐藏会话列表, Secondary Actions: Collapse
+				17 text 会话（ 2 ）
+				18 button 压测, Help: 向当前会话注入 320 条合成事件（虚拟列表滚动压测，仅开发模式）
+				19 button 新建项目空间（绑定一个项目目录）
+				20 button 新建会话（⌘N，默认空间）
+				21 text field (settable) 按标题过滤会话, Placeholder: 过滤标题…
+				22 text project 1
+				23 button 在「project」中新建会话（cwd 预填空间路径）
+				24 button 删除该空间（会话移入默认空间，不删除）
+				25 container /tmp/sc-p412/project
+					26 text /tmp/sc-p412/project
+				27 button 选择会话 P412 工具详情验收
+				28 button (disabled) 删除会话 P412 工具详情验收, Help: 运行中不可删除
+				29 text 默认空间 1
+				30 button 在默认空间新建会话
+				31 button 选择会话 新会话
+				32 button 删除会话 新会话, Help: 删除会话
+				33 splitter 调整会话列表宽度, Value: 25.856
+				34 container 当前会话上下文
+					35 heading P412 工具详情验收, Value: 2
+						36 text P412 工具详情验收
+					37 text project opencode /tmp/sc-p412/project
+				38 toggle button 查看原文, Value: off
+				39 button 复制全文
+				40 heading P4-12 工具详情, Value: 2
+					41 text P4-12 工具详情
+				42 text 下列工具均为合成事件，不执行命令。
+				43 container 正在生成
+					44 text ▍
+				45 button (expanded) 执行中文命令 执行 完成 接收间隔 658ms, Secondary Actions: Collapse
+				46 button (expanded) 参数, Secondary Actions: Collapse
+				47 text {
+  "command": "printf '完整中文\\n'\n# 完整命令尾行\n",
+  "cwd": "/tmp/sc-p412/project",
+  "flags": [
+    true,
+    null,
+    "中文"
+  ]
+}
+				48 button 复制完整参数
+				49 button 复制命令
+				50 text 已复制
+				51 button (collapsed) 输出 · 1 段, Secondary Actions: Expand
+				52 button (collapsed) 编辑中文文件 编辑 完成 接收间隔 0ms, Secondary Actions: Expand
+				53 button (collapsed) 长文件完整对照 编辑 完成 接收间隔 0ms, Secondary Actions: Expand
+				54 button (collapsed) write 当前磁盘文件 编辑 完成 接收间隔 0ms, Secondary Actions: Expand
+				55 button (collapsed) 合成失败工具 删除 失败 接收间隔 0ms, Secondary Actions: Expand
+				56 toggle button 查看原文, Value: off
+				57 button 复制全文
+				58 heading 连续正文, Value: 2
+					59 text 连续正文
+				60 container 正在生成
+					61 text ▍
+				62 splitter (disabled) 调整终端高度, Help: 上下键调整；Enter 收起或展开终端
+				63 container 会话输入区
+					64 text entry area (settable) 任务提示词, Value: [text entry area: 任务提示词]
+						65 text (settable) printf '完整中文\n'
+# 完整命令尾行
+
+					66 pop up button 配置会话
+					67 button 停止
+					68 text Enter 运行 · Shift-Enter 换行 · ⌘R 运行 · ⌘. 停止
+				69 button 打开终端
+				70 text 运行中
+	71 close button
+	72 full screen button Help: this button also has an action to zoom the window, Secondary Actions: zoom the window
+	73 minimize button
+	74 text SuperCode · 工具与变更验收
+75 menu bar
+	76 SuperCode P411
+	77 File
+	78 Edit
+	79 View
+	80 Window
+	81 Help
+
+The focused UI element is 64 text entry area (settable) 任务提示词, Value: [text entry area: 任务提示词]
