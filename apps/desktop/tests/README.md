@@ -65,3 +65,8 @@ env -u SUPERCODE_LLM_API_KEY SUPERCODE_DB="$scratch/fixture.db" \
 ## P4-9 底部输入与配置
 
 `composer.test.tsx` 用真实 RunConsole 验 Enter/组合输入/229/结束保护、长多行文本、防重入、停止、Radix 焦点与回焦、规则传参、运行/托管目录锁定及模式热切换；AppShell 用终端 DOM 目标核对全局快捷键免疫。合成 composition 事件不等于真实中文输入法，原生已核对布局/粘贴/切页/运行取消，实际中文 IME 已由用户补验确认正常，见 [记录](../../../docs/acceptance/p4-9.md)。
+
+
+## P4-10 流式 Markdown 与代码阅读
+
+`markdown.test.tsx` 使用真实 renderer + streamReducer 核对中文半闭合增量、完成/历史一致、持续流合并解析、完成条目 DOM 保持、精确代码/全文复制（含 CRLF、引用、列表与尾部空行）、原文/超限回退、按需高亮长度/语言边界、危险 URL/HTML/图片、外链确认与失败、剪贴板失败反馈和焦点恢复。无网络/真实凭据；原生深浅/窄窗/复制/重开/20Hz 证据见 [P4-10](../../../docs/acceptance/p4-10.md)。该采样不替代 P4-11 阅读锚点或最终 release 性能回归。
