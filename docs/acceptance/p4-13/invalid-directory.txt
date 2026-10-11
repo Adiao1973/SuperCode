@@ -1,2 +1,9 @@
+说明：下方为原生工具状态变化的人工摘录，不是完整 AX 导出。随后保存时工具仅返回“无变化”；该原始返回保留在末尾。
+
+状态变化工具返回摘录（手填不存在目录并点击生成）：
+工作目录：/tmp/sc-p413/missing
+text 请选择已存在的绝对工作目录
+
+随后原始返回：
 There has been no change in the accessibility tree for Window: "SuperCode · 规划目标验收".
 The focused UI element is 73 HTML content Description: SuperCode, URL: 127.0.0.1:1453/
