@@ -57,3 +57,7 @@ env -u SUPERCODE_LLM_API_KEY SUPERCODE_DB="$scratch/fixture.db" \
 ## P4-7 分栏与本机布局
 
 `layout.test.tsx` 覆盖超时、读取失败防误写、串行保存/最新值与重试；`workspace-panels.test.tsx` 用受控几何和 ResizeObserver 验真实分栏库的键盘调整及自动收拢不写库。AppShell 测试核对终端收起/展开不增加 open 次数，terminal-theme 测试过滤零尺寸并在重新可见时 resize。jsdom 无真实排版和 PTY；鼠标、960×640、stty/中文/ANSI/Ctrl-C/重启/退出见 [原生记录](../../../docs/acceptance/p4-7.md)。
+
+## P4-8 会话列表与归属
+
+`session-list.test.tsx` 验本地标题过滤、空结果清除、历史状态与错误，真实 SessionsWorkspace/RunConsole 在两个独立 Channel 下切换、过滤、新建时保留草稿/目录/Agent/空间且不串流；过滤本身不产生 IPC。jsdom 不验证像素布局、原生焦点或真实进程，960×640、深浅/减少动态、键盘和产品 ACP 合成对端落库/重启见 [原生验收](../../../docs/acceptance/p4-8.md)。

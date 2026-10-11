@@ -1,0 +1,39 @@
+{
+  "date": "2026-10-11",
+  "platform": "macOS arm64",
+  "peer": "synthetic ACP, no model/network/key",
+  "sessions": [
+    {
+      "id": "00000000-0000-4000-8000-000000000002",
+      "agent_id": "mimo",
+      "agent_session_id": "p48-history-2",
+      "cwd": "/tmp/sc-p48/project-b",
+      "title": "Beta API 独立协议检查",
+      "status": "cancelled",
+      "workspace_id": "p48-b",
+      "own_output_present": true,
+      "other_output_present": false
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000001",
+      "agent_id": "opencode",
+      "agent_session_id": "p48-history-1",
+      "cwd": "/tmp/sc-p48/project-a",
+      "title": "Alpha 中文界面与很长的标题定位检查",
+      "status": "cancelled",
+      "workspace_id": "p48-a",
+      "own_output_present": true,
+      "other_output_present": false
+    }
+  ],
+  "native_checks": [
+    "title filter api matches API",
+    "Chinese title filter",
+    "empty result preserves active running session",
+    "Tab/Return selects filtered session",
+    "Escape clears filter",
+    "Command-N clears filter",
+    "960x640 light/dark/reduce",
+    "restart preserves historical cwd/agent/workspace and messages"
+  ]
+}
