@@ -40,9 +40,11 @@ vi.mock("@xterm/addon-fit", () => ({
   },
 }));
 it("updates terminal appearance without recreating its PTY and closes once on unmount", async () => {
+  let resize = () => {};
   vi.stubGlobal(
     "ResizeObserver",
     class {
+      constructor(callback: () => void) { resize = callback; }
       observe() {}
       disconnect() {}
     },
@@ -87,6 +89,12 @@ it("updates terminal appearance without recreating its PTY and closes once on un
     .setup()
     .selectOptions(screen.getByLabelText("动效"), "reduce");
   expect(terminal.options.cursorBlink).toBe(false);
+  const before = calls.filter(c => c.command === "resize_terminal").length;
+  act(() => resize()); // jsdom host has zero geometry, as when collapsed/hidden.
+  expect(calls.filter(c => c.command === "resize_terminal")).toHaveLength(before);
+  vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue({ width: 600, height: 300 } as DOMRect);
+  await act(async () => resize());
+  expect(calls.filter(c => c.command === "resize_terminal")).toHaveLength(before + 1);
   expect(terminal.created).toBe(1);
   expect(terminal.disposed).toBe(0);
   expect(calls.filter((c) => c.command === "open_terminal")).toHaveLength(1);

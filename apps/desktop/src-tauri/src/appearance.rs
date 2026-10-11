@@ -71,3 +71,27 @@ pub async fn save_motion_preferences(
         .await
         .map_err(|e| e.to_string())
 }
+
+#[tauri::command]
+pub async fn get_layout_preferences(
+    state: tauri::State<'_, AppState>,
+) -> Result<supercode_core::db::LayoutPreferences, String> {
+    state
+        .store()
+        .await
+        .get_layout_preferences()
+        .await
+        .map_err(|e| e.to_string())
+}
+#[tauri::command]
+pub async fn save_layout_preferences(
+    state: tauri::State<'_, AppState>,
+    preferences: supercode_core::db::LayoutPreferences,
+) -> Result<(), String> {
+    state
+        .store()
+        .await
+        .save_layout_preferences(preferences)
+        .await
+        .map_err(|e| e.to_string())
+}
