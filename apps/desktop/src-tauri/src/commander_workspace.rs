@@ -232,6 +232,11 @@ pub async fn execute_commander_run(
             RuleEffect::Ask => rules.ask.push(entry.pattern),
         }
     }
+    let run_context = store
+        .get_commander_run(run_id)
+        .await
+        .map_err(|e| e.to_string())?
+        .ok_or("计划不存在")?;
     let finished = CancellationToken::new();
     let relays = Arc::new(Mutex::new(Vec::new()));
     let factory: BrokerFactory = {
@@ -246,20 +251,22 @@ pub async fn execute_commander_run(
             let finished = finished.clone();
             let run_id = ctx.run_id;
             let task_id = ctx.task_id.clone();
+            let context = serde_json::json!({
+                "commander_run_id": run_id.to_string(), "commander_task_id": task_id,
+                "local_session_id": ctx.session_id.to_string(), "agent_id": ctx.agent_id,
+                "cwd": run_context.cwd, "plan_objective": run_context.plan.objective,
+                "task_title": run_context.plan.tasks.iter().find(|task| task.id == ctx.task_id).map(|task| &task.title),
+            });
             let handle = tokio::spawn(async move {
                 let mut owned = Vec::new();
                 loop {
                     tokio::select! { biased;
+                        Ok(p)=pending.recv()=>{ app.state::<AppState>().pending.lock().await.insert(p.id,relay_broker.clone());owned.push(p.id); let mut payload=context.clone();payload["id"]=serde_json::json!(p.id.to_string());payload["request"]=serde_json::to_value(&p.request).unwrap_or_default();let _=app.emit("permission-request",payload); },
                         Ok(record)=decisions.recv()=>{ let _=app.emit("decision-record",record); },
-                        Ok(p)=pending.recv()=>{ app.state::<AppState>().pending.lock().await.insert(p.id,relay_broker.clone());owned.push(p.id); let _=app.emit("permission-request",serde_json::json!({"id":p.id,"request":p.request,"commander_run_id":run_id,"commander_task_id":task_id})); },
                         _=finished.cancelled()=>break,
                     }
                 }
-                let state = app.state::<AppState>();
-                let mut routes = state.pending.lock().await;
-                for id in owned {
-                    routes.remove(&id);
-                }
+                super::clear_permission_routes(&app, &owned).await;
             });
             relays.lock().unwrap().push(handle);
             broker

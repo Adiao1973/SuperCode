@@ -8,7 +8,7 @@ import { KanbanView } from "@/components/KanbanView";
 import { SessionsWorkspace } from "@/components/SessionsWorkspace";
 import { SettingsView } from "@/components/SettingsView";
 import { listHistorySessions } from "@/lib/agent";
-import { permissionCenter } from "@/lib/permissions";
+import { permissionCenter, type PendingPermission } from "@/lib/permissions";
 import { initialSessionsState, sessionsReducer } from "@/lib/sessions";
 
 function App() {
@@ -22,10 +22,11 @@ function App() {
   const [sessions, dispatch] = useReducer(sessionsReducer, undefined, () =>
     initialSessionsState(),
   );
-  const [pendingCount, setPendingCount] = useState(0);
+  const [pendingPermissions, setPendingPermissions] = useState<PendingPermission[]>([]);
+  const pendingCount = pendingPermissions.length;
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   useEffect(
-    () => permissionCenter.onPending((items) => setPendingCount(items.length)),
+    () => permissionCenter.onPending(setPendingPermissions),
     [],
   );
   const activeSession = sessions.items.find(
@@ -43,28 +44,11 @@ function App() {
       .catch(() => {}); // 历史加载失败不阻塞新会话
   }, [nav]);
 
-  // 审批事件订阅（应用级一次）：待决请求按 ACP session id 路由进对应会话（内联卡片）
+  // One global collection drives all inline views, even if approval arrives before SessionStarted.
+  useEffect(() => { void permissionCenter.setup(); }, []);
   useEffect(() => {
-    void permissionCenter.setup();
-    const offAdd = permissionCenter.onPendingAdded((pending) =>
-      dispatch({
-        type: "approvalAdd",
-        acpSessionId: pending.request.session_id,
-        pending,
-      }),
-    );
-    const offArrived = permissionCenter.onDecisionArrived((record) =>
-      dispatch({
-        type: "approvalRemoveByTool",
-        acpSessionId: record.request.session_id,
-        toolCallId: record.request.tool_call_id,
-      }),
-    );
-    return () => {
-      offAdd();
-      offArrived();
-    };
-  }, []);
+    dispatch({ type: "approvalSync", pending: pendingPermissions });
+  }, [pendingPermissions, sessions.items]);
 
   // 全局快捷键：⌘N 新建会话、⌘1..8 切换会话（配合详情页 ⌘R 运行 / ⌘. 停止）
   useEffect(() => {

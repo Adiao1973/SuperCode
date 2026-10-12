@@ -158,11 +158,15 @@ async fn run_prompt(
     let app_for_relay = app.clone();
     let store_for_relay = store.clone();
     let broker_for_relay = broker.clone();
+    let relay_finished = CancellationToken::new();
+    let relay_stop = relay_finished.clone();
+    let context = serde_json::json!({"local_session_id": supercode_session.to_string(), "agent_id": def.id, "cwd": cwd, "session_title": prompt.chars().take(24).collect::<String>()});
     let mut pending_rx = broker_for_relay.subscribe();
     let mut decisions_rx = broker_for_relay.subscribe_decisions();
     tauri::async_runtime::spawn(async move {
+        let mut owned = Vec::new();
         loop {
-            tokio::select! {
+            tokio::select! { biased;
                 pending = pending_rx.recv() => {
                     match pending {
                         Ok(pending) => {
@@ -172,7 +176,11 @@ async fn run_prompt(
                                 .lock()
                                 .await
                                 .insert(pending.id, broker_for_relay.clone());
-                            let _ = app_for_relay.emit("permission-request", &pending);
+                            owned.push(pending.id);
+                            let mut payload = context.clone();
+                            payload["id"] = serde_json::json!(pending.id.to_string());
+                            payload["request"] = serde_json::to_value(&pending.request).unwrap_or_default();
+                            let _ = app_for_relay.emit("permission-request", payload);
                         }
                         Err(tokio::sync::broadcast::error::RecvError::Lagged(_)) => continue,
                         Err(_) => break,
@@ -190,8 +198,10 @@ async fn run_prompt(
                         Err(_) => break,
                     }
                 }
+                _ = relay_stop.cancelled() => break,
             }
         }
+        clear_permission_routes(&app_for_relay, &owned).await;
     });
 
     // driver 原始事件 → tap（捕获 session_id）→ 合帧器 → Channel 批量推送
@@ -285,6 +295,7 @@ async fn run_prompt(
     let driver = AcpDriver::new(def.launch_command()).with_process_cwd(def.acp_process_cwd);
     let cleanup_session = session_of_run.clone();
     let app_for_cleanup = app.clone();
+    let broker_for_cleanup = broker.clone();
     tauri::async_runtime::spawn(async move {
         let result = driver
             .run(
@@ -296,6 +307,8 @@ async fn run_prompt(
                 cancel_for_run,
             )
             .await;
+        broker_for_cleanup.reject_all_pending().await;
+        relay_finished.cancel();
         // 运行结束：移出 active map（cancel_run 随即报"不在运行中"）
         let finished = cleanup_session.lock().unwrap().clone();
         if let Some(session_id) = finished {
@@ -643,6 +656,19 @@ async fn check_opencode_env(
     Ok(supercode_core::envcheck::check(cwd.as_deref()).await)
 }
 
+pub(crate) async fn clear_permission_routes(app: &tauri::AppHandle, ids: &[Uuid]) {
+    let state = app.state::<AppState>();
+    let mut pending = state.pending.lock().await;
+    for id in ids {
+        pending.remove(id);
+    }
+    drop(pending);
+    let _ = app.emit(
+        "permission-removed",
+        serde_json::json!({"ids": ids.iter().map(Uuid::to_string).collect::<Vec<_>>() }),
+    );
+}
+
 /// 审批中心应答待决请求（应答成功即从待决映射移除）
 #[tauri::command]
 async fn respond_permission(
@@ -652,18 +678,22 @@ async fn respond_permission(
 ) -> Result<(), String> {
     let id = Uuid::parse_str(&request_id).map_err(|e| format!("非法请求 id: {e}"))?;
     let state = app.state::<AppState>();
-    let broker = state.pending.lock().await.remove(&id);
+    let broker = state.pending.lock().await.get(&id).cloned();
     match broker {
-        Some(broker) => broker
-            .respond(
-                id,
-                supercode_core::driver::PermissionDecision {
-                    option_id,
-                    updated_input: None,
-                },
-            )
-            .await
-            .map_err(|e| e.to_string()),
+        Some(broker) => {
+            broker
+                .respond(
+                    id,
+                    supercode_core::driver::PermissionDecision {
+                        option_id,
+                        updated_input: None,
+                    },
+                )
+                .await
+                .map_err(|e| e.to_string())?;
+            state.pending.lock().await.remove(&id);
+            Ok(())
+        }
         None => Err(format!("待决请求 {request_id} 不存在或已裁决")),
     }
 }
