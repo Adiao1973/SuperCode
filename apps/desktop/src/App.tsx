@@ -127,6 +127,10 @@ function App() {
           currentAgent={activeSession?.draft.agentId ?? ""}
           workspaces={workspaces}
           onSettings={() => setNav("settings")}
+          onOpenSession={(session) => {
+            dispatch({ type: "openHistory", session });
+            setNav("sessions");
+          }}
         />
       </div>
       <div

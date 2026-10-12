@@ -67,6 +67,7 @@ export type SessionsAction =
       prompt?: string;
     }
   | { type: "activate"; key: string }
+  | { type: "openHistory"; session: HistorySession }
   | { type: "patchDraft"; key: string; patch: Partial<SessionDraft> }
   | { type: "batch"; key: string; batch: AgentEvent[] }
   | { type: "invokeError"; key: string; message: string | null }
@@ -142,6 +143,11 @@ export function sessionsReducer(
       }
       return { items: [...state.items, entry], activeKey: entry.key };
     }
+    case "openHistory": {
+      const hydrated = sessionsReducer(state, { type: "hydrate", sessions: [action.session] });
+      const target = hydrated.items.find((entry) => entry.acpSessionId === action.session.agent_session_id);
+      return target ? { ...hydrated, activeKey: target.key } : state;
+    }
     case "activate":
       return { ...state, activeKey: action.key };
     case "patchDraft":
@@ -193,7 +199,7 @@ export function sessionsReducer(
         .filter((session) => !existing.has(session.agent_session_id))
         .map(
           (session): SessionEntry => ({
-            key: `h-${session.agent_session_id.slice(-12)}`,
+            key: `h-${session.local_id}`,
             acpSessionId: session.agent_session_id,
             title: session.title || "历史会话",
             historyStatus: session.status,
@@ -211,7 +217,12 @@ export function sessionsReducer(
             resumable: true,
           }),
         );
-      return { ...state, items: [...hydrated, ...state.items] };
+      const rows = new Map(action.sessions.map((session) => [session.agent_session_id, session]));
+      const existingItems = state.items.map((entry) => {
+        const row = entry.acpSessionId ? rows.get(entry.acpSessionId) : undefined;
+        return row && !entry.stream.running ? { ...entry, historyStatus: row.status } : entry;
+      });
+      return { ...state, items: [...hydrated, ...existingItems] };
     }
     case "reassignWorkspace":
       // 删除空间（P1-8）：该空间会话移入默认空间分组（落库已由 Rust 侧迁移）

@@ -86,3 +86,7 @@ env -u SUPERCODE_LLM_API_KEY SUPERCODE_DB="$scratch/fixture.db" \
 ## P4-14 计划审阅与确认
 
 `plan-review.test.tsx` 检查完整长提示词、任务切换、依赖/批次/Agent 与计划切换重置；`commander-view.test.tsx` 检查非法并发禁用、弹层实际并发、Esc 无执行、显式确认双击只调用一次 IPC。`app-shell.test.tsx` 检查弹层焦点约束/返回与同步防重。原生窄窗口、键盘循环及双任务各一次 ACP prompt 见 [P4-14](../../../docs/acceptance/p4-14.md)。
+
+## P4-15 执行监控与会话定位
+
+`execution-monitor.test.tsx` 核对七种持久化状态、截断/无结果、失活说明、会话定位失败与切模块后的过期回复；`commander-session.test.ts` 覆盖本地 UUID → ACP id 精确映射、目录/Agent/远端 id 不一致及重复记录拒绝。`commander-progress.test.tsx` 验证读取期间通知再次读取、隐藏期间不取消、旧刷新不覆盖执行终态。`sessions.test.ts` 核对历史 key 使用完整 UUID、相同 ACP 尾部不串台及刷新持久化状态。Rust 既有 `commander_scheduler` / `commander_summary` 集成测试覆盖全部前置成功、失败跳过、取消、会话归属；原生证据见 [P4-15](../../../docs/acceptance/p4-15.md)。

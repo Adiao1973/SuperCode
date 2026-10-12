@@ -97,6 +97,7 @@ export function deleteTask(id: string): Promise<void> {
 }
 
 export interface HistorySession {
+  local_id: string;
   agent_id: string;
   agent_session_id: string;
   cwd: string;

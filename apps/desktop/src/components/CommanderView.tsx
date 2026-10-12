@@ -4,7 +4,8 @@ import { ConfirmPlanDialog } from "@/components/ConfirmPlanDialog";
 import { Button } from "@/components/ui/button";
 import { PlanReview } from "./PlanReview";
 import { CommanderInput } from "./CommanderInput";
-import type { Workspace } from "@/lib/agent";
+import { ExecutionMonitor } from "./ExecutionMonitor";
+import type { HistorySession, Workspace } from "@/lib/agent";
 import { Input } from "@/components/ui/input";
 import { PendingCard } from "@/components/PendingCard";
 import { permissionCenter, type PendingPermission } from "@/lib/permissions";
@@ -31,14 +32,17 @@ export function CommanderView({
   currentCwd = "",
   currentAgent = "",
   workspaces = [],
+  onOpenSession,
 }: {
   active: boolean;
   onSettings: () => void;
   currentCwd?: string;
   currentAgent?: string;
   workspaces?: Workspace[];
+  onOpenSession?: (session: HistorySession) => void;
 }) {
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [planningOpen, setPlanningOpen] = useState(false);
   const [jobs, setJobs] = useState(2);
   const [history, setHistory] = useState<RunView[]>([]);
   const [selected, setSelected] = useState<RunView | null>(null);
@@ -50,10 +54,16 @@ export function CommanderView({
   }, [active]);
   const [pending, setPending] = useState<PendingPermission[]>([]);
   const request = useRef<string | null>(null);
+  const refreshVersion = useRef(0);
   const refresh = async (id?: string) => {
+    const version = ++refreshVersion.current;
     const runs = await listCommanderRuns();
+    if (version !== refreshVersion.current) return;
     setHistory(runs);
-    if (id) setSelected(await getCommanderRun(id));
+    if (id) {
+      const view = await getCommanderRun(id);
+      if (version === refreshVersion.current) setSelected(view);
+    }
   };
   useEffect(() => permissionCenter.onPending(setPending), []);
   useEffect(() => {
@@ -69,6 +79,7 @@ export function CommanderView({
     try {
       const view = await generateCommanderRun(id, objective, cwd, agents);
       setSelected(view);
+      setPlanningOpen(false);
       await refresh(view.run.id);
     } catch (e) {
       setError(String(e));
@@ -92,33 +103,40 @@ export function CommanderView({
     const progress = new Channel<string>();
     // SQLite owns task state. Channel messages are only refresh signals.
     let refreshing = false;
+    let dirty = false;
+    let finished = false;
     progress.onmessage = () => {
-      if (refreshing) return;
+      dirty = true;
+      if (refreshing || finished) return;
       refreshing = true;
-      void getCommanderRun(id)
-        .then((view) => {
-          if (request.current === id) setSelected(view);
-        })
-        .catch((e) => setError(String(e)))
-        .finally(() => {
-          refreshing = false;
-        });
+      void (async () => {
+        try {
+          while (dirty && !finished && request.current === id) {
+            dirty = false;
+            const view = await getCommanderRun(id);
+            if (!finished && request.current === id) setSelected(view);
+          }
+        } catch (e) {
+          if (!finished) setError(String(e));
+        } finally { refreshing = false; }
+      })();
     };
     try {
-      setSelected(
-        await invoke<RunView>("execute_commander_run", {
+      const completed = await invoke<RunView>("execute_commander_run", {
           runId: id,
           confirmed: true,
           jobs,
           onProgress: progress,
-        }),
-      );
+        });
+      finished = true;
+      setSelected(completed);
     } catch (e) {
       setError(String(e));
     } finally {
+      finished = true;
       request.current = null;
-      setBusy(false);
       await refresh(id).catch((e) => setError(String(e)));
+      setBusy(false);
     }
   };
   const cancel = async () => {
@@ -167,6 +185,7 @@ export function CommanderView({
               key={view.run.id}
               disabled={busy || confirm}
               onClick={() => {
+                refreshVersion.current += 1;
                 setSelected(view);
                 setError("");
               }}
@@ -181,6 +200,12 @@ export function CommanderView({
         </aside>
         <main className="min-w-0 flex-1 overflow-y-auto p-6">
           <div className="mx-auto max-w-4xl space-y-6">
+            {selected && selected.run.status !== "draft" && (
+              <Button type="button" variant="ghost" aria-expanded={planningOpen} onClick={() => setPlanningOpen((value) => !value)}>
+                {planningOpen ? "收起规划输入" : "规划新目标"}
+              </Button>
+            )}
+            <div hidden={!!selected && selected.run.status !== "draft" && !planningOpen}>
             <CommanderInput
               active={active}
               currentCwd={currentCwd}
@@ -190,6 +215,7 @@ export function CommanderView({
               onSettings={onSettings}
               onGenerate={generate}
             />
+            </div>
             {(busy || selected?.active) && (
               <Button
                 type="button"
@@ -209,7 +235,7 @@ export function CommanderView({
             )}
             {selected && (
               <section className="border-t pt-5">
-                <label className="mb-4 block max-w-40 text-sm">
+                {selected.run.status === "draft" && <label className="mb-4 block max-w-40 text-sm">
                   执行并发上限
                   <Input
                     aria-label="并发上限"
@@ -222,11 +248,11 @@ export function CommanderView({
                     disabled={busy || confirm}
                     aria-invalid={!Number.isInteger(jobs) || jobs < 1 || jobs > 16}
                   />
-                </label>
-                {(!Number.isInteger(jobs) || jobs < 1 || jobs > 16) && <p role="alert" className="text-destructive mb-4 text-sm">并发上限必须是 1～16 的整数。</p>}
+                </label>}
+                {selected.run.status === "draft" && (!Number.isInteger(jobs) || jobs < 1 || jobs > 16) && <p role="alert" className="text-destructive mb-4 text-sm">并发上限必须是 1～16 的整数。</p>}
                 <div className="mb-4 flex flex-wrap items-start justify-between gap-4">
-                  <div>
-                    <h3 className="font-semibold">
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-semibold break-words">
                       {selected.run.plan.objective}
                     </h3>
                     <p className="text-muted-foreground mt-1 break-all text-sm">
@@ -245,72 +271,12 @@ export function CommanderView({
                     />
                   )}
                 </div>
-                {selected.run.status === "running" &&
-                  !selected.active &&
-                  !busy && (
-                    <p className="text-muted-foreground mb-4 text-sm">
-                      此记录可能来自其他进程或已中断的执行。当前应用不会自动恢复或取消它。
-                    </p>
-                  )}
-                {selected.run.status === "draft" ? <PlanReview key={selected.run.id} view={selected} /> : selected.batches.map((batch, index) => (
-                  <div key={index} className="mb-5">
-                    <h4 className="text-muted-foreground mb-2 text-xs">
-                      第 {index + 1} 批 · {batch.join("、")}
-                    </h4>
-                    {batch.map((id) => {
-                      const task = selected.summary.tasks.find(
-                        (t) => t.id === id,
-                      )!;
-                      const plan = selected.run.plan.tasks.find(
-                        (t) => t.id === id,
-                      )!;
-                      return (
-                        <article key={id} className="border-t py-4">
-                          <div className="flex justify-between gap-3">
-                            <h5 className="font-medium">{task.title}</h5>
-                            <span className="shrink-0 text-sm">
-                              {labels[task.status]}
-                            </span>
-                          </div>
-                          <p className="text-muted-foreground mt-1 text-xs">
-                            {task.id} · {task.agent_id} · 依赖：
-                            {task.depends_on.join("、") || "无"}
-                          </p>
-                          <details className="mt-3 text-sm">
-                            <summary className="cursor-pointer">
-                              查看完整任务提示词
-                            </summary>
-                            <pre className="bg-muted/40 mt-2 whitespace-pre-wrap break-words p-3">
-                              {plan.prompt}
-                            </pre>
-                          </details>
-                          {task.result && (
-                            <pre className="bg-muted/40 mt-3 whitespace-pre-wrap break-words p-3 text-sm">
-                              {task.result}
-                              {task.truncated ? "\n（结果过长，已截断）" : ""}
-                            </pre>
-                          )}
-                          {task.session_id && (
-                            <p className="text-muted-foreground mt-2 break-all text-xs">
-                              本机会话：{task.session_id}
-                            </p>
-                          )}
-                          {pending
-                            .filter(
-                              (p) =>
-                                p.commander_run_id === selected.run.id &&
-                                p.commander_task_id === id,
-                            )
-                            .map((p) => (
-                              <div key={p.id} className="mt-3">
-                                <PendingCard pending={p} />
-                              </div>
-                            ))}
-                        </article>
-                      );
-                    })}
-                  </div>
-                ))}
+                {selected.run.status === "draft" ? (
+                  <PlanReview key={selected.run.id} view={selected} />
+                ) : (
+                  <ExecutionMonitor key={selected.run.id} active={active} view={selected} onOpenSession={onOpenSession}
+                    renderPending={(id) => pending.filter((p) => p.commander_run_id === selected.run.id && p.commander_task_id === id).map((p) => <div key={p.id} className="mt-3"><PendingCard pending={p} /></div>)} />
+                )}
               </section>
             )}
           </div>

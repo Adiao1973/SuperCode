@@ -38,6 +38,7 @@ it("filters only titles with trimmed case-insensitive Chinese substrings and pre
       sessions: [
         {
           agent_id: "mimo",
+          local_id: `local-${status}`,
           agent_session_id: status,
           title: "历史",
           cwd: "/fixture",
