@@ -123,3 +123,16 @@ it("opens exact commander history despite colliding remote suffixes and refreshe
   state = sessionsReducer(state, { type: "hydrate", sessions: [{ ...row, status: "completed" }] });
   expect(state.items.find((item) => item.acpSessionId === row.agent_session_id)?.historyStatus).toBe("completed");
 });
+it("syncs exact approval UUIDs after SessionStarted and removes cancelled requests", () => {
+  let state = initialSessionsState();
+  const key = state.activeKey!;
+  const request = pending();
+  state = sessionsReducer(state, { type: "approvalSync", pending: [request] });
+  expect(state.items[0].pendingApprovals).toHaveLength(0);
+  state = sessionsReducer(state, { type: "batch", key, batch: [{ type: "session_started", session_id: request.request.session_id }] });
+  state = sessionsReducer(state, { type: "approvalSync", pending: [request, { ...request, id: "second-uuid" }] });
+  state = sessionsReducer(state, { type: "approvalSync", pending: [{ ...request, id: "second-uuid" }] });
+  expect(state.items[0].pendingApprovals.map((item) => item.id)).toEqual(["second-uuid"]);
+  state = sessionsReducer(state, { type: "approvalSync", pending: [] });
+  expect(state.items[0].pendingApprovals).toHaveLength(0);
+});

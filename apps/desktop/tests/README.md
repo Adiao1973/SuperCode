@@ -90,3 +90,7 @@ env -u SUPERCODE_LLM_API_KEY SUPERCODE_DB="$scratch/fixture.db" \
 ## P4-15 执行监控与会话定位
 
 `execution-monitor.test.tsx` 核对七种持久化状态、截断/无结果、失活说明、会话定位失败与切模块后的过期回复；`commander-session.test.ts` 覆盖本地 UUID → ACP id 精确映射、目录/Agent/远端 id 不一致及重复记录拒绝。`commander-progress.test.tsx` 验证读取期间通知再次读取、隐藏期间不取消、旧刷新不覆盖执行终态。`sessions.test.ts` 核对历史 key 使用完整 UUID、相同 ACP 尾部不串台及刷新持久化状态。Rust 既有 `commander_scheduler` / `commander_summary` 集成测试覆盖全部前置成功、失败跳过、取消、会话归属；原生证据见 [P4-15](../../../docs/acceptance/p4-15.md)。
+
+## P4-16 审批上下文与裁决反馈
+
+`approval-center.test.ts` 覆盖 UUID 防重、失败重试、重复 tool id 精确移除和自动裁决不误清其他待决；`pending-card.test.tsx` 核对多处卡片共享提交状态、原文/变更/命令精确复制与持续选项隐藏；`approval-decisions.test.tsx` 验证不透明 option_id 依据 kind 显示拒绝与取消来源。`sessions.test.ts` 验证审批先到、SessionStarted 后到的集合同步及取消移除。Rust ApprovalBroker 测试保证非法选项不消费请求、取消来源和 request_id 序列化正确。原生三处一致、复制、并发及退出证据见 [P4-16](../../../docs/acceptance/p4-16.md)。

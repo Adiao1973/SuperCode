@@ -898,6 +898,7 @@ mod tests {
             .unwrap();
 
         let record = DecisionRecord {
+            request_id: None,
             request: PermissionRequest {
                 session_id: "ses_x".into(),
                 tool_call_id: "call_1".into(),

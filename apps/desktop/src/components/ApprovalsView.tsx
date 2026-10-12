@@ -10,6 +10,7 @@ import {
   type DecisionRecord,
   type PendingPermission,
 } from "@/lib/permissions";
+import { ApprovalDetails } from "./ApprovalDetails";
 import { ShieldQuestion } from "lucide-react";
 
 export function ApprovalsView() {
@@ -59,14 +60,14 @@ export function ApprovalsView() {
 
 function sourceLabel(record: DecisionRecord): string {
   if (record.source.type === "rule") {
-    return `规则 ${record.source.pattern}`;
+    return record.source.pattern === "<cancelled>" ? "取消收尾" : `规则 ${record.source.pattern}`;
   }
   if (record.source.type === "mode") {
     const modeLabel: Record<string, string> = {
       plan: "计划",
       ask: "确认",
-      autoedit: "自动编辑",
-      full: "完全访问",
+      autoedit: "自动编辑", auto_edit: "自动编辑",
+      full: "完全访问", full_access: "完全访问",
     };
     return `模式·${modeLabel[record.source.mode] ?? record.source.mode}`;
   }
@@ -74,16 +75,19 @@ function sourceLabel(record: DecisionRecord): string {
 }
 
 function DecisionRow({ record }: { record: DecisionRecord }) {
-  const allowed = !record.decision.option_id.startsWith("reject");
+  const option = record.request.options.find((item) => item.option_id === record.decision.option_id);
+  const outcome = !option ? "未识别的裁决" : option.kind.startsWith("allow") ? "放行" : "拒绝";
   return (
-    <div className="text-muted-foreground flex items-center gap-2 rounded-md border px-3 py-2 text-xs">
-      <Badge variant="outline" className="text-[10px]">
-        {sourceLabel(record)}
-      </Badge>
-      <span className="truncate font-medium">{record.request.tool_name}</span>
-      <span className={allowed ? "text-success" : "text-destructive"}>
-        {allowed ? "放行" : "拒绝"}
-      </span>
-    </div>
+    <section className="min-w-0 border-t py-3 text-sm">
+      <div className="flex flex-wrap items-center gap-2">
+        <Badge variant="outline" className="text-[10px]">{sourceLabel(record)}</Badge>
+        <span className="font-medium [overflow-wrap:anywhere]">{record.request.tool_name}</span>
+        <span className={outcome === "放行" ? "text-success" : "text-destructive"}>{outcome}</span>
+        {option && <span className="text-muted-foreground text-xs">{option.name}</span>}
+      </div>
+      <details className="mt-2"><summary className="text-muted-foreground cursor-pointer text-xs">查看裁决上下文</summary>
+        <div className="mt-3"><ApprovalDetails pending={record.context ?? { id: record.request_id ?? "自动裁决", request: record.request }} /></div>
+      </details>
+    </section>
   );
 }

@@ -1,0 +1,68 @@
+Window: "SuperCode · 审批反馈验收", App: SuperCode P411.
+0 standard window SuperCode · 审批反馈验收, Secondary Actions: Raise
+	1 scroll area
+		2 HTML content Description: SuperCode, URL: 127.0.0.1:1453/
+			3 container 应用导航
+				4 text SuperCode v1.0.0
+				5 container 模块
+					6 button 指挥官
+					7 button 会话
+					8 button 任务看板
+					9 button 审批中心，1 项待审批
+					10 button 设置
+				11 button (expanded) 折叠导航, Secondary Actions: Collapse
+			12 container
+				13 heading 审批中心, Value: 1
+					14 text 审批中心
+				15 pop up button 当前项目：默认空间
+				16 text 待决请求也会内联显示在对应会话中；此处为跨会话聚合视图。
+				17 container 待审批：command · 同名工具
+					18 heading 同名工具, Value: 3
+						19 text 同名工具
+					20 text execute
+					21 container
+						22 text 会话： command  · opencode
+					23 container
+						24 text 目录： /tmp/supercode-p13
+					25 container (expanded) Secondary Actions: Collapse
+						26 summary 会话与请求标识, Value: on
+							27 text 会话与请求标识
+						28 description list
+							29 container
+								30 text 请求 UUID： e749cca0-00b5-44b0-9137-6e6fbd2421a1
+							31 container
+								32 text ACP 会话： p416-session-50872
+							33 container
+								34 text 本机会话： 687bee53-c6e3-4895-91d2-63576d03330e
+							35 container
+								36 text 工具调用： same-tool
+					37 text 请求命令
+					38 container 请求命令
+						39 text printf '中文审批'
+# 完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。
+COMMAND_END
+					40 button 复制完整命令
+					41 button (collapsed) 查看完整输入与变更, Secondary Actions: Expand
+					42 button 允许一次
+					43 button 拒绝
+				44 heading 近期裁决, Value: 2
+					45 text 近期裁决
+				46 text 用户 同名工具 拒绝 拒绝
+				47 summary 查看裁决上下文, Value: off
+					48 text 查看裁决上下文
+				49 text 用户 同名工具 放行 允许一次
+				50 summary 查看裁决上下文, Value: off
+					51 text 查看裁决上下文
+	52 close button
+	53 full screen button Help: this button also has an action to zoom the window, Secondary Actions: zoom the window
+	54 minimize button
+	55 text SuperCode · 审批反馈验收
+56 menu bar
+	57 SuperCode P411
+	58 File
+	59 Edit
+	60 View
+	61 Window
+	62 Help
+
+The focused UI element is 26 summary 会话与请求标识, Value: on

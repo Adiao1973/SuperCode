@@ -1,0 +1,31 @@
+Window: "SuperCode · 审批反馈验收", App: SuperCode P411.
+0 standard window SuperCode · 审批反馈验收, Secondary Actions: Raise
+	1 scroll area
+		2 HTML content Description: SuperCode, URL: 127.0.0.1:1453/
+			3 container 应用导航
+				4 text SuperCode v1.0.0
+				5 container 模块
+					6 button 指挥官
+					7 button 会话
+					8 button 任务看板
+					9 button 审批中心
+					10 button 设置
+				11 button (expanded) 折叠导航, Secondary Actions: Collapse
+			12 container
+				13 heading 审批中心, Value: 1
+					14 text 审批中心
+				15 pop up button 当前项目：默认空间
+				16 text 待决请求也会内联显示在对应会话中；此处为跨会话聚合视图。 暂无待决权限请求
+	17 close button
+	18 full screen button Help: this button also has an action to zoom the window, Secondary Actions: zoom the window
+	19 minimize button
+	20 text SuperCode · 审批反馈验收
+21 menu bar
+	22 SuperCode P411
+	23 File
+	24 Edit
+	25 View
+	26 Window
+	27 Help
+
+The focused UI element is 13 heading 审批中心, Value: 1

@@ -1,104 +1,31 @@
-/**
- * 待决权限卡片（P1-5）：审批中心与会话内联共用。
- * 展示工具名/kind/会话短 id/raw_input 预览 + allow/reject 选项按钮组。
- */
-import { useState } from "react";
+/** One UUID and response state across session, commander and approvals. */
+import { useSyncExternalStore } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { respondPermission } from "@/lib/agent";
-import type { PermissionOption, PendingPermission } from "@/lib/permissions";
-import { Check, Loader2, ShieldQuestion, X } from "lucide-react";
+import { permissionCenter, type PendingPermission } from "@/lib/permissions";
+import { ShieldQuestion } from "lucide-react";
+import { ApprovalDetails } from "./ApprovalDetails";
 
-export function PendingCard({
-  pending,
-}: {
-  pending: PendingPermission;
-}) {
-  const [busy, setBusy] = useState(false);
+export function PendingCard({ pending }: { pending: PendingPermission }) {
+  const response = useSyncExternalStore(permissionCenter.subscribeResponses, () => permissionCenter.response(pending.id));
   const { request } = pending;
-  const allows = request.options.filter((o) => o.kind.startsWith("allow"));
-  const rejects = request.options.filter((o) => o.kind.startsWith("reject"));
-
-  const respond = async (optionId: string) => {
-    setBusy(true);
-    try {
-      await respondPermission(pending.id, optionId);
-    } finally {
-      setBusy(false);
-    }
-  };
-
+  const busy = response.status === "submitting" || response.status === "accepted";
+  const options = request.options.filter((option) => option.kind === "allow_once" || option.kind === "reject_once");
   return (
-    <div className="rounded-md border border-amber-500/40 bg-amber-500/5 px-4 py-3">
-      <div className="flex items-center gap-2">
-        <ShieldQuestion className="size-4 text-warning" />
-        <span className="text-sm font-medium">{request.tool_name}</span>
-        {request.kind && (
-          <Badge variant="outline" className="text-[10px]">
-            {request.kind}
-          </Badge>
-        )}
-        <code className="text-muted-foreground truncate text-[11px]">
-          {request.session_id.slice(-6)}
-        </code>
-        {busy && <Loader2 className="text-muted-foreground size-3 animate-spin" />}
+    <section aria-label={`待审批：${pending.task_title ?? pending.session_title ?? request.session_id} · ${request.tool_name}`} className="min-w-0 rounded-md border border-warning/40 bg-warning/5 px-4 py-3">
+      <div className="mb-3 flex flex-wrap items-center gap-2">
+        <ShieldQuestion className="text-warning size-4 shrink-0" />
+        <h3 className="min-w-0 text-sm font-medium [overflow-wrap:anywhere]">{request.tool_name}</h3>
+        {request.kind && <Badge variant="outline" className="text-[10px]">{request.kind}</Badge>}
       </div>
-      {request.raw_input != null && Object.keys(request.raw_input).length > 0 && (
-        <pre className="text-muted-foreground mt-2 max-h-24 overflow-y-auto rounded bg-muted/30 p-2 font-mono text-[11px] whitespace-pre-wrap break-all">
-          {JSON.stringify(request.raw_input, null, 2)}
-        </pre>
-      )}
+      <ApprovalDetails pending={pending} />
       <div className="mt-3 flex flex-wrap gap-2">
-        {allows.map((option) => (
-          <OptionButton
-            key={option.option_id}
-            option={option}
-            disabled={busy}
-            tone="allow"
-            onRespond={() => respond(option.option_id)}
-          />
-        ))}
-        {rejects.map((option) => (
-          <OptionButton
-            key={option.option_id}
-            option={option}
-            disabled={busy}
-            tone="reject"
-            onRespond={() => respond(option.option_id)}
-          />
-        ))}
+        {options.map((option) => <Button key={option.option_id} type="button" size="sm" variant={option.kind === "allow_once" ? "default" : "outline"} disabled={busy} className="h-auto max-w-full whitespace-normal py-2 text-left" onClick={() => void permissionCenter.respond(pending, option.option_id)}>{option.name}</Button>)}
       </div>
-    </div>
-  );
-}
-
-function OptionButton({
-  option,
-  disabled,
-  tone,
-  onRespond,
-}: {
-  option: PermissionOption;
-  disabled: boolean;
-  tone: "allow" | "reject";
-  onRespond: () => Promise<void>;
-}) {
-  const persistent = option.kind.endsWith("_always");
-  return (
-    <Button
-      size="sm"
-      variant={tone === "allow" ? "default" : "outline"}
-      disabled={disabled}
-      onClick={() => void onRespond()}
-      className={
-        tone === "allow"
-          ? ""
-          : "border-destructive/50 text-destructive hover:bg-destructive/10"
-      }
-    >
-      {tone === "allow" ? <Check className="size-4" /> : <X className="size-4" />}
-      {option.name}
-      {persistent && "（持续）"}
-    </Button>
+      {options.length === 0 && <p className="text-muted-foreground mt-3 text-xs">未提供一次性裁决选项，请停止所属任务；此处不提供持续授权。</p>}
+      {response.status === "submitting" && <p role="status" className="text-muted-foreground mt-2 text-xs">正在提交裁决…</p>}
+      {response.status === "accepted" && <p role="status" className="text-muted-foreground mt-2 text-xs">裁决已提交，等待任务确认。</p>}
+      {response.status === "error" && <p role="alert" className="text-destructive mt-2 text-xs [overflow-wrap:anywhere]">提交失败：{response.error}。可重试原选项；不会替你选择其他裁决。</p>}
+    </section>
   );
 }

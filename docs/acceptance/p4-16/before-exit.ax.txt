@@ -1,0 +1,84 @@
+Window: "SuperCode · 审批反馈验收", App: SuperCode P411.
+0 standard window SuperCode · 审批反馈验收, Secondary Actions: Raise
+	1 scroll area
+		2 HTML content Description: SuperCode, URL: 127.0.0.1:1453/
+			3 container 应用导航
+				4 text SuperCode v1.0.0
+				5 container 模块
+					6 button 指挥官
+					7 button 会话
+					8 button 任务看板
+					9 button 审批中心，2 项待审批
+					10 button 设置
+				11 button (expanded) 折叠导航, Secondary Actions: Collapse
+			12 container
+				13 heading 审批中心, Value: 1
+					14 text 审批中心
+				15 pop up button 当前项目：默认空间
+				16 text 待决请求也会内联显示在对应会话中；此处为跨会话聚合视图。
+				17 container 待审批：退出审批验收 命令任务 · 同名工具
+					18 heading 同名工具, Value: 3
+						19 text 同名工具
+					20 text execute
+					21 container
+						22 text 计划： 退出审批验收  · 任务： 退出审批验收 命令任务
+					23 container
+						24 text 会话： p416-session-51094  · opencode
+					25 container
+						26 text 目录： /tmp/sc-p416/project
+					27 summary 会话与请求标识, Value: off
+						28 text 会话与请求标识
+					29 text 请求命令
+					30 container 请求命令
+						31 text printf '中文审批'
+# 完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。
+COMMAND_END
+					32 button 复制完整命令
+					33 button (collapsed) 查看完整输入与变更, Secondary Actions: Expand
+					34 button 允许一次
+					35 button 拒绝
+				36 container 待审批：退出审批验收 编辑任务 · 同名工具
+					37 heading 同名工具, Value: 3
+						38 text 同名工具
+					39 text edit
+					40 container
+						41 text 计划： 退出审批验收  · 任务： 退出审批验收 编辑任务
+					42 container
+						43 text 会话： p416-session-51095  · opencode
+					44 container
+						45 text 目录： /tmp/sc-p416/project
+					46 summary 会话与请求标识, Value: off
+						47 text 会话与请求标识
+					48 button (collapsed) 查看完整输入与变更, Secondary Actions: Expand
+					49 button 允许一次
+					50 button 拒绝
+				51 heading 近期裁决, Value: 2
+					52 text 近期裁决
+				53 text 取消收尾 同名工具 拒绝 拒绝
+				54 summary 查看裁决上下文, Value: off
+					55 text 查看裁决上下文
+				56 text 取消收尾 同名工具 拒绝 拒绝
+				57 summary 查看裁决上下文, Value: off
+					58 text 查看裁决上下文
+				59 text 取消收尾 同名工具 拒绝 拒绝
+				60 summary 查看裁决上下文, Value: off
+					61 text 查看裁决上下文
+				62 text 用户 同名工具 拒绝 拒绝
+				63 summary 查看裁决上下文, Value: off
+					64 text 查看裁决上下文
+				65 text 用户 同名工具 放行 允许一次
+				66 summary 查看裁决上下文, Value: off
+					67 text 查看裁决上下文
+	68 close button
+	69 full screen button Help: this button also has an action to zoom the window, Secondary Actions: zoom the window
+	70 minimize button
+	71 text SuperCode · 审批反馈验收
+72 menu bar
+	73 SuperCode P411
+	74 File
+	75 Edit
+	76 View
+	77 Window
+	78 Help
+
+The focused UI element is 13 heading 审批中心, Value: 1

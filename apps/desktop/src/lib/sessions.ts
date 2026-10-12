@@ -74,6 +74,7 @@ export type SessionsAction =
   /** DEV 专用：注入合成事件（虚拟列表滚动压测，P1-4） */
   | { type: "seed"; key: string }
   /** 内联审批（P1-5）：待决请求按 ACP session id 路由；裁决后按 tool_call_id 移除 */
+  | { type: "approvalSync"; pending: PendingPermission[] }
   | { type: "approvalAdd"; acpSessionId: string; pending: PendingPermission }
   | { type: "approvalRemoveByTool"; acpSessionId: string; toolCallId: string }
   /** 从列表移除会话（P1-6 删除功能；活跃会话自动切换） */
@@ -262,6 +263,16 @@ export function sessionsReducer(
           !stream.running && acpSessionId != null ? true : it.resumable,
         invokeError: stream.running ? null : it.invokeError,
       }));
+    }
+    case "approvalSync": {
+      let changed = false;
+      const items = state.items.map((entry) => {
+        const pending = action.pending.filter((item) => item.request.session_id === entry.acpSessionId);
+        if (pending.length === entry.pendingApprovals.length && pending.every((item, index) => item.id === entry.pendingApprovals[index].id)) return entry;
+        changed = true;
+        return { ...entry, pendingApprovals: pending };
+      });
+      return changed ? { ...state, items } : state;
     }
     case "approvalAdd":
       // 注意按 ACP session id 匹配（事件携带的是 ACP id，非客户端 key）

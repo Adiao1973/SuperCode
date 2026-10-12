@@ -197,7 +197,7 @@ pub type PermissionHandler =
     Arc<dyn Fn(PermissionRequest) -> BoxFuture<'static, Result<PermissionDecision>> + Send + Sync>;
 
 pub struct PermissionDecision {
-    pub option_id: PermissionOptionId, // AllowOnce | AllowAlways | RejectOnce | RejectAlways
+    pub option_id: String, // Agent 提供的不透明 option_id；裁决类型从 options.kind 查询
     pub updated_input: Option<serde_json::Value>,
 }
 ```
@@ -572,12 +572,12 @@ supercode-desktop 对渲染层暴露的命令（invoke）；事件经 `tauri::ip
 - **权限事件（Tauri 全局事件，非 Channel）**：每个运行的 broker 经转发任务把
   `PendingPermission` / `DecisionRecord` 以 `permission-request` / `decision-record`
   事件广播给前端（审批中心消费）；request_id → broker 的映射由宿主登记，
-  供 respond_permission 路由。
+  供 respond_permission 路由。应答成功才移除路由；运行结束/取消清理时广播 permission-removed { ids }，前端三处视图按 UUID 同步清队列。
 - **fail-closed 权限约定**：`resolve_fail_closed` 保留给无审批 UI 宿主；桌面宿主
   P1-5 起接审批中心，兜底走待决队列。**不可**用追加通配 deny（`"*"`）实现兜底：
   规则求值 deny 优先，通配 deny 会连 allow 规则一并压掉。
 - **多会话并行（P1-3）**：`run_prompt` 可并发调用——每次运行独立 spawn agent 进程与合帧管道（互不共享状态）；Rust 侧 active run map 按 ACP session_id 管理取消与清理；前端以客户端会话键路由事件批到对应会话视图（列表 / 切换 / 取消）。
-- 运行结束（`run` 返回 StopReason 或出错）后宿主将 handle 移出 active map；结束本身不再发额外事件，以流内 `turn_completed` / `driver_error` 为准。
+- 运行结束（`run` 返回 StopReason 或出错）后宿主将 handle 移出 active map；执行终态仍以流内 `turn_completed` / `driver_error` 为准；审批队列清理另发 `permission-removed`，该事件不代表任务成功。
 
 ## 6. 数据模型（SQLite，sqlx）
 
@@ -824,7 +824,7 @@ CLI `plan run <objective> --cwd <dir> [--agents opencode,codex]` 使用本机 SQ
 
 IPC generate_commander_run(request_id,objective,cwd,agents) 读取本机配置/密钥，限制注册表并校验目录，保存 P3-3 draft；list_commander_run_views/get_commander_run_view 返回计划、批次、P3-5 summary 与 active 标志。execute_commander_run(run_id,confirmed,jobs,on_progress) 要求 confirmed=true 且 draft，复用 P3-4；同 App 最多一个生成或执行，guard 在全部清理后移除；cancel_commander_work(request_id) 只取消本 App 的请求，不改其他 CLI 正在执行记录。Channel 只传 task_id 刷新信号，不传模型输出或凭据，SQLite 是状态与结果事实源；切换导航不取消执行，页面重新进入按库读取，不重发 execute。
 
-DispatchOptions 增 interactive_approvals（默认 false，CLI 行为不变），desktop=true 使用原 broker.resolve 而非 fail-closed。独立 broker 载入全局规则、固定 Ask；待决/裁决转发既有 permission-request/decision-record 并按 AppState.pending 路由 respond_permission。裁决只由调度器写一次 SQLite，转发任务不重复写；前端待决移除同时匹配 ACP session_id/tool_call_id，避免不同 agent 同名工具串台。指挥官任务内联显示其审批卡，审批中心仍可应答；取消联动拒绝挂起请求与裁决留痕。
+DispatchOptions 增 interactive_approvals（默认 false，CLI 行为不变），desktop=true 使用原 broker.resolve 而非 fail-closed。独立 broker 载入全局规则、固定 Ask；待决/裁决转发既有 permission-request/decision-record 并按 AppState.pending 路由 respond_permission。裁决只由调度器写一次 SQLite，转发任务不重复写；前端待决优先按 request_id 精确移除；仅兼容旧用户裁决事件时回退 ACP session_id/tool_call_id（无 UUID 的自动裁决不移除待决）。指挥官任务内联显示其审批卡，审批中心仍可应答；取消联动拒绝挂起请求与裁决留痕。
 
 退出请求有活跃指挥官工作时先阻止退出、取消 token 并等待 guard 清除/driver 回收，再退出。重启从 SQLite 恢复 draft/终态/任务结果与引用，不自动执行或重跑终态。非本 App 活跃的 running 记录显示“其他宿主或遗留运行”，禁止再执行/跨宿主取消；不会自动 recover 全库以免中断 CLI。崩溃遗留记录可由独占宿主显式执行核心恢复接口，桌面不会猜测其它进程已停止。恢复指恢复历史与草稿审阅，不承诺续跑已中断任务。
 
@@ -904,3 +904,14 @@ DispatchOptions 增 interactive_approvals（默认 false，CLI 行为不变）�
 Channel 仅作为重新读取信号：合并繁密通知，但读取期间新通知需再读，最终执行返回及收尾刷新不能被旧读取覆盖。切模块不卸载执行宿主，不取消执行；重进读取持久化记录，不重跑。调度依赖/并发/取消仍由既有 Rust Scheduler 决定。
 
 历史列表 DTO 新增 local_id（sessions.id），不迁移 schema。历史前端 key 使用完整本地 UUID，避免 ACP id 末尾碰撞；刷新非本机实时运行条目的持久化状态，保留草稿/流/运行连接。点击任务会话先重新查询列表，以 summary.session_id 本地 UUID 唯一匹配，校验 agent_id/cwd/agent_session_id；缺失/不一致/重复远端 ID 时原处报错，不猜测跳转。验证后 App hydrate 并激活对应前端会话，沿用历史消息加载，绝不调用 run_prompt/session-load。执行中的任务暂不提供会话跳转，提示结束后查看；指挥官拥有执行状态，不冒充普通会话实时 Channel。结果为既有 8192 字节摘要，明确说明截断及完整会话入口，无结果/无会话也说明原因。
+
+
+### P4-16 — 审批上下文与裁决反馈（已验收）
+
+视觉：沿用纸白/石墨、单一警示色与轻边界，只对待决裁决使用卡片。内容依次为所属任务/会话、工具类型与完整标识、命令/变更/完整输入、一次性裁决及状态。上下文/原文按需展开，按钮沿用颜色反馈与统一复制反馈；提交使用文字提示，不增加旋转或高度动画，减少动态同样可操作。命令仅复制不执行，变更以请求中明确提供的路径/旧文/新文原文对照，不读磁盘、不补造 diff。
+
+PendingPermission 桌面事件增可选上下文 local_session_id、agent_id、cwd、session_title；指挥官增 task_title、plan_objective（保留 commander_run_id/task_id）。三处使用同一 PendingCard 和 PermissionCenter 按请求 UUID 共享 submitting/accepted/error 状态：连点/切页仅发送一次，成功等待后端裁决通知且不重新启用；失败留卡、显示原因并允许原动作重试。只展示原有 once 选项，不新增 always/批量放行/规则写入。复制失败原处可见。
+
+DecisionRecord 增可选 request_id：排队请求为 Some(UUID)，自动裁决为 None；DecisionSource 序列化改为现有 TS 契约的 {type: user|rule|mode,...}，无数据库 schema 变更。近期裁决保留当前进程最多 50 条，不声称重启恢复。裁决反馈按 options 中的 option_id → kind 判断允许/拒绝，禁止用 option_id 字符串前缀猜测；未知选项显示未识别。取消拒绝来源标记 rule:<cancelled>，不伪记用户点击。Broker.respond 先验证 option_id 属于该请求，再消费通道；失败保留路由以便重试。
+
+运行 relay 有明确结束信号，退出时清理该运行登记的 UUID 并广播 permission-removed，包含尚未转发的缓冲待决请求；取消/异常/退出均沿用既有拒绝/进程收尾。前端 App 将全局待决集合按 ACP session id 同步到会话，避免消息与审批到达顺序造成残卡或漏卡；指挥官和审批中心直接订阅同一集合。后端 request_id 和前端 UUID 防重是两层约束。
