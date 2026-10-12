@@ -1,0 +1,100 @@
+{
+  "before_restart_prompt_count": 5,
+  "after_restart_and_history_navigation_prompt_count": 5,
+  "runs": [
+    {
+      "objective": "并行与依赖",
+      "status": "succeeded",
+      "tasks": [
+        {
+          "id": "a",
+          "status": "succeeded",
+          "session_id": "c05e93f5-1da9-4ab4-991b-ab90ad25d968",
+          "mapping": {
+            "local_id": "c05e93f5-1da9-4ab4-991b-ab90ad25d968",
+            "agent_session_id": "fixture-38952",
+            "agent_id": "opencode",
+            "cwd": "/tmp/sc-p415/project"
+          }
+        },
+        {
+          "id": "b",
+          "status": "succeeded",
+          "session_id": "869fc63a-4349-4316-9717-509ea6895f27",
+          "mapping": {
+            "local_id": "869fc63a-4349-4316-9717-509ea6895f27",
+            "agent_session_id": "fixture-38953",
+            "agent_id": "opencode",
+            "cwd": "/tmp/sc-p415/project"
+          }
+        },
+        {
+          "id": "c",
+          "status": "succeeded",
+          "session_id": "cd502e7a-50da-4f9a-af07-e369847afe64",
+          "mapping": {
+            "local_id": "cd502e7a-50da-4f9a-af07-e369847afe64",
+            "agent_session_id": "fixture-40408",
+            "agent_id": "opencode",
+            "cwd": "/tmp/sc-p415/project"
+          }
+        }
+      ]
+    },
+    {
+      "objective": "失败与跳过",
+      "status": "failed",
+      "tasks": [
+        {
+          "id": "a",
+          "status": "failed",
+          "session_id": "b0bb86a0-708a-46f2-a88c-a42fcc9cb219",
+          "mapping": {
+            "local_id": "b0bb86a0-708a-46f2-a88c-a42fcc9cb219",
+            "agent_session_id": "fixture-40497",
+            "agent_id": "opencode",
+            "cwd": "/tmp/sc-p415/project"
+          }
+        },
+        {
+          "id": "b",
+          "status": "skipped",
+          "session_id": null
+        }
+      ]
+    },
+    {
+      "objective": "取消验收",
+      "status": "cancelled",
+      "tasks": [
+        {
+          "id": "a",
+          "status": "cancelled",
+          "session_id": "fb548252-1f75-4f5f-8566-c85a29ca3c3f",
+          "mapping": {
+            "local_id": "fb548252-1f75-4f5f-8566-c85a29ca3c3f",
+            "agent_session_id": "fixture-40525",
+            "agent_id": "opencode",
+            "cwd": "/tmp/sc-p415/project"
+          }
+        },
+        {
+          "id": "b",
+          "status": "cancelled",
+          "session_id": null
+        }
+      ]
+    },
+    {
+      "objective": "失活记录",
+      "status": "running",
+      "tasks": [
+        {
+          "id": "a",
+          "status": "running",
+          "session_id": null
+        }
+      ]
+    }
+  ]
+}
