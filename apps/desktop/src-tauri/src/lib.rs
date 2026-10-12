@@ -405,6 +405,7 @@ async fn list_history_sessions(app: tauri::AppHandle) -> Result<Vec<HistorySessi
     Ok(rows
         .into_iter()
         .map(|row| HistorySession {
+            local_id: row.id,
             agent_id: row.agent_id,
             agent_session_id: row.agent_session_id,
             cwd: row.cwd,
@@ -437,6 +438,7 @@ async fn delete_session(app: tauri::AppHandle, agent_session_id: String) -> Resu
 /// 历史会话 DTO（Tauri IPC 返回类型需本地 Serialize）
 #[derive(serde::Serialize)]
 struct HistorySession {
+    local_id: String,
     agent_id: String,
     agent_session_id: String,
     cwd: String,

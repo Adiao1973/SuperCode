@@ -81,6 +81,7 @@ it("hydrates history idempotently and replaces preview on resume replay", () => 
   const sessions = [
     {
       agent_id: "codex",
+      local_id: "fixture-local-uuid",
       agent_session_id: "fixture-history-123456789012",
       cwd: "/fixture/history",
       title: "历史",
@@ -110,4 +111,15 @@ it("hydrates history idempotently and replaces preview on resume replay", () => 
     agentId: "codex",
     cwd: "/fixture/history",
   });
+});
+it("opens exact commander history despite colliding remote suffixes and refreshes persisted status", () => {
+  let state = initialSessionsState();
+  const row = { local_id: "uuid-one", agent_id: "opencode", agent_session_id: "first-123456789012", cwd: "/fixture", title: "一", status: "running", updated_at: "fixture", workspace_id: "default" };
+  state = sessionsReducer(state, { type: "hydrate", sessions: [row] });
+  const target = { ...row, local_id: "uuid-two", agent_session_id: "second-123456789012", title: "二", status: "completed" };
+  state = sessionsReducer(state, { type: "openHistory", session: target });
+  expect(state.items.find((item) => item.key === state.activeKey)?.title).toBe("二");
+  expect(new Set(state.items.map((item) => item.key)).size).toBe(3);
+  state = sessionsReducer(state, { type: "hydrate", sessions: [{ ...row, status: "completed" }] });
+  expect(state.items.find((item) => item.acpSessionId === row.agent_session_id)?.historyStatus).toBe("completed");
 });
