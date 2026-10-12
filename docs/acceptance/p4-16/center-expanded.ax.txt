@@ -1,0 +1,92 @@
+Window: "SuperCode · 审批反馈验收", App: SuperCode P411.
+0 standard window SuperCode · 审批反馈验收, Secondary Actions: Raise
+	1 scroll area
+		2 HTML content Description: SuperCode, URL: 127.0.0.1:1453/
+			3 container 应用导航
+				4 text SuperCode v1.0.0
+				5 container 模块
+					6 button 指挥官
+					7 button 会话
+					8 button 任务看板
+					9 button 审批中心，2 项待审批
+					10 button 设置
+				11 button (expanded) 折叠导航, Secondary Actions: Collapse
+			12 container
+				13 heading 审批中心, Value: 1
+					14 text 审批中心
+				15 pop up button 当前项目：默认空间
+				16 text 待决请求也会内联显示在对应会话中；此处为跨会话聚合视图。
+				17 container 待审批：同名审批并发 编辑任务 · 同名工具
+					18 heading 同名工具, Value: 3
+						19 text 同名工具
+					20 text edit
+					21 container
+						22 text 计划： 同名审批并发  · 任务： 同名审批并发 编辑任务
+					23 container
+						24 text 会话： p416-session-50796  · opencode
+					25 container
+						26 text 目录： /tmp/sc-p416/project
+					27 summary 会话与请求标识, Value: off
+						28 text 会话与请求标识
+					29 button (expanded) 收起请求详情, Secondary Actions: Collapse
+					30 container 请求中的文件变更
+						31 heading 请求中的文件变更：/tmp/sc-p416/project/中文.ts, Value: 4
+							32 text 请求中的文件变更： /tmp/sc-p416/project/中文.ts
+						33 text 来自请求原文，不代表磁盘当前内容。
+						34 text 修改前
+						35 container 修改前
+							36 text const title = "旧中文";
+
+						37 button 复制修改前
+						38 text 请求内容 / 修改后
+						39 container 修改后
+							40 text const title = "新中文";
+const checked = true;
+
+						41 button 复制修改后
+					42 container 完整请求输入
+						43 heading 完整请求输入, Value: 4
+							44 text 完整请求输入
+						45 container 完整请求输入
+							46 text {
+  "filePath": "/tmp/sc-p416/project/中文.ts",
+  "oldString": "const title = \"旧中文\";\n",
+  "newString": "const title = \"新中文\";\nconst checked = true;\n"
+}
+						47 button 复制完整输入
+					48 button 允许一次
+					49 button 拒绝
+				50 container 待审批：同名审批并发 命令任务 · 同名工具
+					51 heading 同名工具, Value: 3
+						52 text 同名工具
+					53 text execute
+					54 container
+						55 text 计划： 同名审批并发  · 任务： 同名审批并发 命令任务
+					56 container
+						57 text 会话： p416-session-50795  · opencode
+					58 container
+						59 text 目录： /tmp/sc-p416/project
+					60 summary 会话与请求标识, Value: off
+						61 text 会话与请求标识
+					62 text 请求命令
+					63 container 请求命令
+						64 text printf '中文审批'
+# 完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。
+COMMAND_END
+					65 button 复制完整命令
+					66 button (collapsed) 查看完整输入与变更, Secondary Actions: Expand
+					67 button 允许一次
+					68 button 拒绝
+	69 close button
+	70 full screen button Help: this button also has an action to zoom the window, Secondary Actions: zoom the window
+	71 minimize button
+	72 text SuperCode · 审批反馈验收
+73 menu bar
+	74 SuperCode P411
+	75 File
+	76 Edit
+	77 View
+	78 Window
+	79 Help
+
+The focused UI element is 2 HTML content Description: SuperCode, URL: 127.0.0.1:1453/
