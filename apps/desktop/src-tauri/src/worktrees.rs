@@ -44,6 +44,51 @@ async fn find_existing(store: &Store, task_id: &str) -> Result<Option<TaskWorktr
     Ok(found)
 }
 
+#[derive(serde::Serialize)]
+pub struct TaskContext {
+    task: supercode_core::db::TaskEntry,
+    stored_cwd: String,
+    worktree: Option<TaskWorktree>,
+    session: Option<supercode_core::db::SessionRow>,
+}
+async fn task_context(store: &Store, task_id: &str) -> Result<TaskContext, String> {
+    let task = store
+        .get_task(task_id)
+        .await
+        .map_err(|e| e.to_string())?
+        .ok_or("任务不存在")?;
+    let stored_cwd = store
+        .task_stored_cwd(task_id)
+        .await
+        .map_err(|e| e.to_string())?;
+    let worktree = find_existing(store, task_id).await?;
+    let mut sessions = store
+        .list_sessions()
+        .await
+        .map_err(|e| e.to_string())?
+        .into_iter()
+        .filter(|row| Some(row.agent_session_id.as_str()) == task.session_id.as_deref());
+    let session = sessions.next();
+    if sessions.next().is_some() {
+        return Err("绑定会话存在多个匹配，请先核对历史记录".into());
+    }
+    Ok(TaskContext {
+        task,
+        stored_cwd,
+        worktree,
+        session,
+    })
+}
+#[tauri::command]
+pub async fn get_task_context(
+    app: tauri::AppHandle,
+    task_id: String,
+) -> Result<TaskContext, String> {
+    let _gate = GATE.lock().await;
+    let state = app.state::<AppState>();
+    task_context(state.store().await, &task_id).await
+}
+
 #[tauri::command]
 pub async fn create_task_worktree(
     app: tauri::AppHandle,
@@ -142,6 +187,54 @@ pub async fn validate_task(
 mod tests {
     use super::*;
     #[tokio::test]
+    async fn task_inspector_is_readonly_and_preserves_bound_session_owner() {
+        let root = std::env::temp_dir().join(format!("sc-p417-context-{}", uuid::Uuid::new_v4()));
+        let store = Store::open(&root.join("fixture.sqlite")).await.unwrap();
+        let workspace = store
+            .create_workspace(&root.to_string_lossy())
+            .await
+            .unwrap();
+        let task = store
+            .create_task(&workspace.id, "inspect only")
+            .await
+            .unwrap();
+        let context = task_context(&store, &task.id).await.unwrap();
+        assert!(context.worktree.is_none());
+        assert!(!root.join(".git").exists());
+        assert!(task_context(&store, "missing").await.is_err());
+        store
+            .upsert_agent("opencode", "fixture", "acp", None)
+            .await
+            .unwrap();
+        store
+            .insert_session(
+                uuid::Uuid::new_v4(),
+                "opencode",
+                "p417-bound",
+                &root.to_string_lossy(),
+                "bound",
+                &workspace.id,
+            )
+            .await
+            .unwrap();
+        store
+            .update_task(&task.id, None, Some("p417-bound"))
+            .await
+            .unwrap();
+        store
+            .move_task(&task.id, "default", "review")
+            .await
+            .unwrap();
+        let context = task_context(&store, &task.id).await.unwrap();
+        assert_eq!(context.task.workspace_id, "default");
+        assert_eq!(context.stored_cwd, root.to_string_lossy());
+        let session = context.session.unwrap();
+        assert_eq!(session.workspace_id, workspace.id);
+        assert_eq!(session.agent_session_id, "p417-bound");
+        assert_eq!(session.cwd, root.to_string_lossy());
+        tokio::fs::remove_dir_all(root).await.unwrap();
+    }
+    #[tokio::test]
     async fn moved_isolated_task_keeps_original_execution_owner() {
         let root = std::env::temp_dir().join(format!("sc-p28-host-{}", uuid::Uuid::new_v4()));
         tokio::fs::create_dir_all(&root).await.unwrap();
@@ -199,6 +292,11 @@ mod tests {
         let found = find_existing(&store, &task.id).await.unwrap().unwrap();
         assert_eq!(found.path, entry.path);
         assert_eq!(found.workspace_id, workspace.id);
+        let detail = task_context(&store, &task.id).await.unwrap();
+        assert_eq!(detail.task.workspace_id, "default");
+        assert_eq!(detail.stored_cwd, root.to_string_lossy());
+        assert_eq!(detail.worktree.unwrap().path, entry.path);
+        assert!(detail.session.is_none());
         assert!(validate_task(
             &store,
             &task.id,

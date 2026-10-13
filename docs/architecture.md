@@ -915,3 +915,16 @@ PendingPermission 桌面事件增可选上下文 local_session_id、agent_id、c
 DecisionRecord 增可选 request_id：排队请求为 Some(UUID)，自动裁决为 None；DecisionSource 序列化改为现有 TS 契约的 {type: user|rule|mode,...}，无数据库 schema 变更。近期裁决保留当前进程最多 50 条，不声称重启恢复。裁决反馈按 options 中的 option_id → kind 判断允许/拒绝，禁止用 option_id 字符串前缀猜测；未知选项显示未识别。取消拒绝来源标记 rule:<cancelled>，不伪记用户点击。Broker.respond 先验证 option_id 属于该请求，再消费通道；失败保留路由以便重试。
 
 运行 relay 有明确结束信号，退出时清理该运行登记的 UUID 并广播 permission-removed，包含尚未转发的缓冲待决请求；取消/异常/退出均沿用既有拒绝/进程收尾。前端 App 将全局待决集合按 ACP session id 同步到会话，避免消息与审批到达顺序造成残卡或漏卡；指挥官和审批中心直接订阅同一集合。后端 request_id 和前端 UUID 防重是两层约束。
+
+
+### P4-17 — 看板层次、拖拽反馈与任务详情（已验收）
+
+视觉沿用克制工作台：空间标题/目录/数量构成分组，四列标题与计数清晰，卡片标题为详情入口，把手独立。窄窗口保持四列最小阅读宽度并在空间内横向滚动，不压缩成难读小卡。内容依次为保存反馈、空间/列、任务及只读详情；不新增列内排序。
+
+沿用既有 dnd-kit 三种传感器、键盘坐标与 WebKit 最终松手坐标。源卡保留原尺寸占位，目标列显示不参与布局的虚线落点提示；DragOverlay 继续 dropAnimation=null。成功后短暂边界/底色落位反馈，只过渡颜色和透明度，不给 draggable/overlay 添加 Motion transform/layout。减少动态下 CSS 关闭过渡，状态/动作完全等价。Space/方向键/Space 可移动，Esc/区域外/同列不写库；推进/回退也复用 move_task 与同一保存/回滚路径。保存期间禁止新拖拽、刷新和任务修改，失败恢复原卡并保留明确错误与刷新入口，不以动画代替 SQLite 结果。
+
+新增只读 IPC get_task_context(task_id) → {task, stored_cwd, worktree?, session?}，仅在显式打开详情/重试时读取。stored_cwd 来自 tasks.cwd，worktree 复用原项目托管记录查找（只读 Git/元数据、不创建、不清扫），session 为匹配绑定 ACP id 的现存 SessionRow；找不到会话返回 null、多个匹配报错。无 schema 迁移。详情显示完整标题/UUID、看板空间/状态、创建时目录、原 worktree 路径/分支/空间、实际会话目录/空间，明确组织移动不迁移执行归属；不把 stored_cwd 伪作当前执行 cwd。查询失败可重试，关闭/换任务忽略旧响应。
+
+详情使用标准 Radix Dialog，初始焦点关闭按钮，Esc/关闭回到卡片详情入口；跳转会话不把焦点拉回看板。只读历史跳转重新查询列表并唯一匹配绑定 ACP id，hydrate 后激活，找不到/歧义原处报错，不启动 Agent。绑定/隔离/删除保留原明确动作，详情查看本身不执行任务或修改任何文件。
+
+原生快速松手可能发生在 dnd-kit 测量 active 矩形之前，内部重置却不发送结束事件。mouseup/touchend 下一帧仅清理遗留拖拽显示并提示重试，不猜测落点、不发写库。正常结束先清理 ref；键盘移动成功或回滚后，定位新挂载的同任务把手恢复焦点。

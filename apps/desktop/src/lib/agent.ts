@@ -245,3 +245,14 @@ export function cleanupTaskWorktrees(workspaceId: string): Promise<{ removed: st
 export function moveTask(id: string, workspaceId: string, status: TaskEntry["status"]): Promise<TaskEntry> {
   return invoke("move_task", { id, workspaceId, status });
 }
+
+/** Explicit, read-only inspector. Does not create or validate a worktree by mutation. */
+export interface TaskContext {
+  task: TaskEntry;
+  stored_cwd: string;
+  worktree: TaskWorktree | null;
+  session: { id: string; agent_id: string; agent_session_id: string; cwd: string; title: string; status: string; workspace_id: string } | null;
+}
+export function getTaskContext(taskId: string): Promise<TaskContext> {
+  return invoke("get_task_context", { taskId });
+}
