@@ -2,6 +2,7 @@
  * 审批中心（P1-5）：全部会话的待决权限请求聚合视图 + 近期裁决留痕。
  * 会话内联的待决卡片见 RunConsole（同一数据源 permissionCenter）。
  */
+import { EmptyState, InlineError, LoadingState } from "./FeedbackState";
 import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { PendingCard } from "@/components/PendingCard";
@@ -11,21 +12,26 @@ import {
   type PendingPermission,
 } from "@/lib/permissions";
 import { ApprovalDetails } from "./ApprovalDetails";
-import { ShieldQuestion } from "lucide-react";
+
 
 export function ApprovalsView() {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [retry, setRetry] = useState(0);
   const [pending, setPending] = useState<PendingPermission[]>([]);
   const [decisions, setDecisions] = useState<DecisionRecord[]>([]);
 
   useEffect(() => {
-    void permissionCenter.setup();
+    let alive = true; setLoading(true); setError("");
+    void permissionCenter.setup().catch((e) => { if (alive) setError(String(e)); }).finally(() => { if (alive) setLoading(false); });
     const offPending = permissionCenter.onPending(setPending);
     const offDecisions = permissionCenter.onDecisions(setDecisions);
     return () => {
+      alive = false;
       offPending();
       offDecisions();
     };
-  }, []);
+  }, [retry]);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -34,12 +40,9 @@ export function ApprovalsView() {
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
         <div className="mx-auto flex max-w-3xl flex-col gap-3">
-          {pending.length === 0 && (
-            <p className="text-muted-foreground py-10 text-center text-sm">
-              <ShieldQuestion className="mx-auto mb-2 size-8 opacity-40" />
-              暂无待决权限请求
-            </p>
-          )}
+          {loading && <LoadingState label="正在连接审批通知…" />}
+          {error && <InlineError title="审批通知连接失败" message={error} onRetry={() => setRetry((value) => value + 1)} retrying={loading} />}
+          {!loading && !error && pending.length === 0 && <EmptyState title="暂无待决权限请求" description="收到 Agent 的权限询问后会显示在这里；此处不会自动放行。" />}
           {pending.map((pendingItem) => (
             <PendingCard key={pendingItem.id} pending={pendingItem} />
           ))}

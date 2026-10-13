@@ -31,3 +31,20 @@ it("shares UUID submission state, permits retry and clears exact requests", asyn
   emit("permission-removed", { ids: [b.id] });
   expect(center.pending).toHaveLength(0);
 });
+
+it("cleans partial listener setup and retries subscriptions without responding", async () => {
+  const { vi } = await import("vitest");
+  const events = await import("@tauri-apps/api/event");
+  const { listenerCount } = await import("./fixtures/tauri");
+  const spy = vi.spyOn(events, "listen").mockRejectedValueOnce(new Error("合成监听失败"));
+  const center = new PermissionCenter();
+  try {
+    await expect(center.setup()).rejects.toThrow("合成监听失败");
+    expect(listenerCount("permission-removed")).toBe(0);
+    expect(listenerCount("decision-record")).toBe(0);
+    await center.setup();
+    emit("permission-request", pending());
+    expect(center.pending).toHaveLength(1);
+    expect(calls.some((c) => c.command === "respond_permission")).toBe(false);
+  } finally { spy.mockRestore(); }
+});

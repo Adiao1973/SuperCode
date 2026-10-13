@@ -202,3 +202,23 @@ it("keeps active context/drafts and routes two real RunConsole Channels while fi
     "/fixture/actual-a",
   );
 });
+
+it("retries failed historical message reads without resuming or running the Agent", async () => {
+  vi.stubGlobal("ResizeObserver", class { observe() {} unobserve() {} disconnect() {} });
+  handle("list_workspaces", () => []); handle("list_agent_definitions", () => []);
+  handle("check_opencode_env", () => null); handle("check_node_env", () => null);
+  handle("list_session_messages", () => { throw new Error("合成消息读取失败"); });
+  let initial = sessionsReducer(initialSessionsState(), { type: "hydrate", sessions: [{ local_id: "p419-history", agent_session_id: "p419-acp", agent_id: "opencode", title: "历史读取", cwd: "/fixture", workspace_id: "default", status: "completed", updated_at: "" }] });
+  initial = { ...initial, activeKey: initial.items.find((item) => item.acpSessionId === "p419-acp")!.key };
+  function Host() {
+    const [value, dispatch] = useReducer(sessionsReducer, initial);
+    return <MotionProvider initial={{ preferences: { motion: "reduce" }, error: null }}><AppearanceProvider initial={{ preferences: { theme: "light" }, error: null }}><LayoutProvider initial={{ preferences: DEFAULT_LAYOUT, error: null }}><SessionsWorkspace state={value} dispatch={dispatch} /></LayoutProvider></AppearanceProvider></MotionProvider>;
+  }
+  render(<Host />);
+  expect(await screen.findByRole("alert")).toHaveTextContent("合成消息读取失败");
+  handle("list_session_messages", () => []);
+  fireEvent.click(screen.getByRole("button", { name: "重新读取" }));
+  await waitFor(() => expect(screen.queryByRole("alert")).toBeNull());
+  expect(calls.filter((c) => c.command === "list_session_messages")).toHaveLength(2);
+  expect(calls.some((c) => /run_prompt|session_load|execute/.test(c.command))).toBe(false);
+});

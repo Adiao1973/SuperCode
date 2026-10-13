@@ -7,6 +7,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { notifySuccess } from "./feedback";
 import { invoke } from "@tauri-apps/api/core";
 import {
   LazyMotion,
@@ -109,6 +110,7 @@ export function MotionProvider({
     try {
       const preferences = { motion };
       await invoke("save_motion_preferences", { preferences });
+      notifySuccess("动效偏好已保存");
       setValue({ preferences, error: null });
     } catch (e) {
       setValue((old) => ({ ...old, error: String(e) }));

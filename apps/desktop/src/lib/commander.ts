@@ -1,3 +1,4 @@
+import { notifySuccess } from "./feedback";
 import { invoke } from "@tauri-apps/api/core";
 
 // Nested IPC config deliberately matches the core JSON contract (snake_case).
@@ -11,7 +12,7 @@ export function getCommanderConfig(): Promise<CommanderConfig | null> {
   return invoke("get_commander_config");
 }
 export function saveCommanderConfig(config: CommanderConfig): Promise<void> {
-  return invoke("save_commander_config", { config });
+  return invoke<void>("save_commander_config", { config }).then(() => { notifySuccess("连接配置已保存"); });
 }
 
 export function listCommanderModels(
@@ -25,7 +26,7 @@ export function saveCommanderKey(
   config: CommanderConfig,
   key: string,
 ): Promise<void> {
-  return invoke("save_commander_key", { config, key });
+  return invoke<void>("save_commander_key", { config, key }).then(() => { notifySuccess("密钥已保存到本机"); });
 }
 export function commanderCredentialSource(
   config: CommanderConfig,

@@ -2,6 +2,7 @@
  * 设置页「Agent 管理」区块（P2-2）：注册表合并视图 + 安装徽标 + 自定义 CRUD + 安装引导。
  * 用户自定义写入 ~/.supercode/agents.json（覆盖内置同 id = 用户覆盖语义，删除即恢复出厂）。
  */
+import { EmptyState, InlineError, LoadingState } from "./FeedbackState";
 import { useCallback, useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -64,7 +65,7 @@ export function AgentsSection() {
   const [showForm, setShowForm] = useState(false);
 
   const refresh = useCallback(async () => {
-    setLoading(true);
+    setLoading(true); setError(null);
     try {
       setAgents(await listAgents());
     } catch (e) {
@@ -151,6 +152,10 @@ export function AgentsSection() {
       </div>
 
       <p className="mb-4 text-xs text-muted-foreground">先检查命令，再在会话中完成登录与模型验证。版本已检测到不代表已认证或拥有模型权限；此处不会运行任务。</p>
+
+      {loading && <LoadingState label="正在检测 Agent 命令…" />}
+      {error && <InlineError title="Agent 操作未完成" message={error} onRetry={() => void refresh()} retrying={loading || submitting} />}
+      {!loading && !error && agents.length === 0 && <EmptyState title="暂无 Agent 条目" description="新增已安装的 Agent 命令后，在会话中完成认证与运行验证。" />}
 
       {showForm && (
         <div className="mb-3 flex flex-col gap-2 rounded-md border p-3">
@@ -297,7 +302,7 @@ export function AgentsSection() {
 
       <p className="text-muted-foreground mt-2 text-[11px]">
         内置条目只读；自定义写入 ~/.supercode/agents.json（重启保留）。同 id 覆盖内置，删除后恢复出厂。
-        {error && <span className="text-destructive"> · {error}</span>}
+
       </p>
     </section>
   );

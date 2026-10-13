@@ -3,6 +3,7 @@
  * 规则三形：`*`、`tool`、`tool(args)`（glob）；效果 allow / deny / ask。
  */
 import { useCallback, useEffect, useState, useRef } from "react";
+import { EmptyState, InlineError, LoadingState } from "./FeedbackState";
 import { ProjectSettings } from "@/components/ProjectSettings";
 import { MotionSettings } from "@/components/MotionSettings";
 import { AppearanceSettings } from "@/components/AppearanceSettings";
@@ -24,6 +25,7 @@ const EFFECT_LABEL: Record<RuleEntry["effect"], { label: string; className: stri
 export function SettingsView({ onWorkspacesChanged }: { onWorkspacesChanged?: (rows: Workspace[]) => void }) {
   const [group, setGroup] = useState("model");
   const content = useRef<HTMLDivElement>(null);
+  const [reading, setReading] = useState(true);
   const [rules, setRules] = useState<RuleEntry[]>([]);
   const [pattern, setPattern] = useState("");
   const [effect, setEffect] = useState<RuleEntry["effect"]>("allow");
@@ -31,11 +33,12 @@ export function SettingsView({ onWorkspacesChanged }: { onWorkspacesChanged?: (r
   const [loading, setLoading] = useState(false);
 
   const refresh = useCallback(async () => {
+    setReading(true); setError(null);
     try {
       setRules(await listRules());
     } catch (e) {
       setError(String(e));
-    }
+    } finally { setReading(false); }
   }, []);
 
   useEffect(() => {
@@ -111,16 +114,16 @@ export function SettingsView({ onWorkspacesChanged }: { onWorkspacesChanged?: (r
           </div>
           <p className="text-muted-foreground mt-2 text-[11px]">
             求值顺序 deny &gt; ask &gt; allow；规则对所有会话生效，随 SQLite 持久化（重启保留）。
-            {error && <span className="text-destructive"> · {error}</span>}
+
           </p>
         </section>
 
+        {error && <InlineError title="规则操作未完成" message={error} onRetry={() => void refresh()} retrying={reading || loading} />}
+        {reading && <LoadingState label="正在读取规则…" />}
         <section>
           <h2 className="mb-2 text-sm font-medium">规则库（{rules.length}）</h2>
           {rules.length === 0 ? (
-            <p className="text-muted-foreground rounded-md border border-dashed py-8 text-center text-sm">
-              规则库为空——所有未匹配请求按会话权限模式兜底
-            </p>
+            !reading && !error && <EmptyState title="尚无审批规则" description="所有未匹配请求按会话权限模式处理。添加规则会影响所有会话。" />
           ) : (
             <div className="flex flex-col gap-1.5">
               {rules.map((rule) => (

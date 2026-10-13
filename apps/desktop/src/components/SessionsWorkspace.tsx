@@ -3,6 +3,7 @@
  * 会话按工作空间分节——项目空间（绑定项目根路径）+ 默认空间（不绑项目的聊天/电脑操作）。
  * 项目空间内新建会话 cwd 预填空间路径；删除项目空间仅摘分组，会话移入默认空间。
  */
+import { EmptyState, InlineError, LoadingState } from "./FeedbackState";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,6 +38,7 @@ import {
 } from "lucide-react";
 
 interface SessionsWorkspaceProps {
+  historyState?: { loading: boolean; error: string; onRetry: () => void };
   visible?: boolean;
   onWorkspacesChange?: (workspaces: Workspace[]) => void;
   state: SessionsState;
@@ -55,6 +57,7 @@ export function SessionsWorkspace({
   dispatch,
   visible = true,
   onWorkspacesChange,
+  historyState,
 }: SessionsWorkspaceProps) {
   const active = state.items.find((it) => it.key === state.activeKey) ?? null;
   const [query, setQuery] = useState("");
@@ -82,19 +85,21 @@ export function SessionsWorkspace({
   const [confirmWs, setConfirmWs] = useState<string | null>(null);
 
   // 工作空间列表（IPC）；创建/删除后刷新
+  const [workspaceLoading, setWorkspaceLoading] = useState(true);
+  const [workspaceError, setWorkspaceError] = useState("");
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [creating, setCreating] = useState(false);
   const [newPath, setNewPath] = useState("");
   const [createError, setCreateError] = useState<string | null>(null);
 
   const refreshWorkspaces = useCallback(async () => {
+    setWorkspaceLoading(true); setWorkspaceError("");
     try {
       const values = await listWorkspaces();
       setWorkspaces(values);
       onWorkspacesChange?.(values);
-    } catch {
-      /* 空间列表加载失败不阻塞会话：按默认空间单组展示 */
-    }
+    } catch (e) { setWorkspaceError(String(e)); }
+    finally { setWorkspaceLoading(false); }
   }, [onWorkspacesChange]);
 
   useEffect(() => {
@@ -325,13 +330,11 @@ export function SessionsWorkspace({
           )}
 
           <div className="min-h-0 flex-1 overflow-y-auto px-2 pb-2">
+            {(workspaceLoading || historyState?.loading) && <LoadingState label="正在读取会话与项目…" />}
+            {workspaceError && <InlineError title="项目列表读取失败" message={workspaceError} onRetry={() => void refreshWorkspaces()} retrying={workspaceLoading} />}
+            {historyState?.error && <InlineError title="历史会话读取失败" message={historyState.error} onRetry={historyState.onRetry} retrying={historyState.loading} />}
             {matchCount === 0 && query.trim() && (
-              <div className="space-y-2 px-2 py-6 text-center">
-                <p className="text-sm">没有匹配的会话</p>
-                <p className="text-muted-foreground text-xs">
-                  试试其他标题，或清除过滤。
-                </p>
-              </div>
+              <EmptyState title="没有匹配的会话" description="试试其他标题，或清除过滤。" />
             )}
             {filteredGroups.map(({ workspace, sessions, visibleSessions }) => (
               <section key={workspace.id} className="mb-2">
@@ -420,9 +423,7 @@ export function SessionsWorkspace({
                     />
                   ))}
                   {sessions.length === 0 && (
-                    <p className="text-muted-foreground/50 px-2.5 py-1 text-[10px]">
-                      暂无会话
-                    </p>
+                    !workspaceLoading && !historyState?.loading && !historyState?.error && <EmptyState compact title="暂无会话" />
                   )}
                 </div>
               </section>

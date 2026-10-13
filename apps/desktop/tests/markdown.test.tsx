@@ -4,6 +4,7 @@ import {
   render,
   screen,
   waitFor,
+  within,
 } from "@testing-library/react";
 import { expect, it, vi } from "vitest";
 import { MessageMarkdown } from "../src/components/MessageMarkdown";
@@ -176,7 +177,7 @@ it("shows copy/open failures in place and keeps complete oversized history", asy
   expect(await screen.findByText("复制失败，请选择原文复制")).toBeVisible();
   fireEvent.click(await screen.findByRole("button", { name: "访问" }));
   fireEvent.click(screen.getByRole("button", { name: "在浏览器打开" }));
-  expect(await screen.findByRole("alert")).toHaveTextContent("打开失败");
+  expect(await within(screen.getByRole("dialog")).findByRole("alert")).toHaveTextContent("打开失败");
   fireEvent.click(screen.getByRole("button", { name: "取消" }));
   view.rerender(<MessageMarkdown text={"中".repeat(132000)} active={false} />);
   expect(view.container.querySelector("pre")!.textContent).toHaveLength(132000);

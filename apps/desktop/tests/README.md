@@ -102,3 +102,7 @@ env -u SUPERCODE_LLM_API_KEY SUPERCODE_DB="$scratch/fixture.db" \
 ## P4-18 分组设置与初次配置
 
 `commander-settings.test.tsx` 覆盖保存不等于验证、同步锁防重、修改/重挂载清除验证结论、失败重试、密钥输入清空与取消状态；`project-settings.test.tsx` 覆盖目录取消、显式添加与失败不回调；`settings-groups.test.tsx` 覆盖分组可见性与模型/规则草稿保留。原生目录选择、WebKit 辅助功能及重启使用 SQLite key 见 [P4-18](../../../docs/acceptance/p4-18.md)，fixture 不代表真实模型能力验收。
+
+## P4-19 统一状态与短反馈
+
+`feedback.test.tsx` 覆盖 Toast 合并/超时/暂停/关闭回焦和复制失败无假成功；`kanban.test.tsx`、`commander-view.test.tsx`、`session-list.test.tsx` 验证读取失败到只读重试，不启动 Agent 或计划派单。`approval-center.test.ts` 覆盖部分监听注册失败清理与重试，权限提交失败沿用 UUID 防重契约。原生五页、故障注入、剪贴板/焦点与多尺寸证据见 [P4-19](../../../docs/acceptance/p4-19.md)。

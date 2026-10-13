@@ -5,15 +5,18 @@ import { MotionNotice } from "@/lib/motion";
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { copyText } from "@/lib/clipboard";
+import { InlineError } from "./FeedbackState";
 import { Check, Copy } from "lucide-react";
 
 export function CopyableBlock({ text, label }: { text: string; label?: string }) {
+  const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   useEffect(() => () => clearTimeout(timer.current), []);
 
   const copy = async () => {
-    await copyText(text);
+    setError("");
+    try { await copyText(text); } catch { setCopied(false); setError("复制失败，请选择原文手动复制。"); return; }
     setCopied(true);
     clearTimeout(timer.current);
     timer.current = setTimeout(() => setCopied(false), 1500);
@@ -25,7 +28,8 @@ export function CopyableBlock({ text, label }: { text: string; label?: string })
       <pre className="overflow-x-auto px-3 py-2 pr-20 font-mono text-[11px] leading-relaxed whitespace-pre">
         {text}
       </pre>
-      <span role="status" className="absolute right-3 bottom-1 text-[11px] text-success"><MotionNotice visible={copied}>已复制</MotionNotice></span>
+      {error && <div className="px-3"><InlineError title="复制失败" message={error} /></div>}
+      <span role="status" aria-live="off" className="absolute right-3 bottom-1 text-[11px] text-success"><MotionNotice visible={copied}>已复制</MotionNotice></span>
       <Button
         size="sm"
         variant="outline"

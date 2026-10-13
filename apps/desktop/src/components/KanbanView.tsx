@@ -3,6 +3,7 @@
  * 任务 = 标题 + 空间 + 绑定会话 + 状态；绑定会话可跳转，状态按流转序推进/回退。
  * 拖拽改变状态与看板空间，执行目录和会话引用保持。
  */
+import { EmptyState, InlineError, LoadingState } from "./FeedbackState";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -73,6 +74,7 @@ export function KanbanView({ onOpenSession, onWorktreeSession, bindableSessions 
   useEffect(() => () => clearTimeout(landingTimer.current), []);
   const sensors = useSensors(useSensor(MouseSensor, { activationConstraint: { distance: 6 } }), useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 5 } }), useSensor(KeyboardSensor, { coordinateGetter: boardKeyboardCoordinates }));
   const [busy, setBusy] = useState(false);
+  const [reading, setReading] = useState(true);
   const [notice, setNotice] = useState<string | null>(null);
   const [tasks, setTasks] = useState<TaskEntry[]>([]);
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
@@ -83,6 +85,7 @@ export function KanbanView({ onOpenSession, onWorktreeSession, bindableSessions 
 
   const refresh = useCallback(async () => {
     const request = ++revision.current;
+    setReading(true); setError(null);
     try {
       const [t, w] = await Promise.all([listTasks(), listWorkspaces()]);
       if (request !== revision.current) return;
@@ -90,7 +93,7 @@ export function KanbanView({ onOpenSession, onWorktreeSession, bindableSessions 
       setWorkspaces(w);
     } catch (e) {
       if (request === revision.current) setError(String(e));
-    }
+    } finally { if (request === revision.current) setReading(false); }
   }, []);
 
   useEffect(() => {
@@ -102,7 +105,7 @@ export function KanbanView({ onOpenSession, onWorktreeSession, bindableSessions 
       if (saving.current || !newTitle.trim()) {
         return;
       }
-      saving.current = true; revision.current += 1; setBusy(true);
+      saving.current = true; setReading(false); revision.current += 1; setBusy(true);
       try {
         await createTask(newTitle.trim(), workspaceId);
         setNewTitle("");
@@ -119,7 +122,7 @@ export function KanbanView({ onOpenSession, onWorktreeSession, bindableSessions 
   const remove = useCallback(
     async (id: string) => {
       if (saving.current) return;
-      saving.current = true; revision.current += 1; setBusy(true);
+      saving.current = true; setReading(false); revision.current += 1; setBusy(true);
       try {
         await deleteTask(id);
         await refresh();
@@ -134,7 +137,7 @@ export function KanbanView({ onOpenSession, onWorktreeSession, bindableSessions 
     async (taskId: string, acpSessionId: string) => {
       setBindMenuFor(null);
       if (saving.current) return;
-      saving.current = true; revision.current += 1; setBusy(true);
+      saving.current = true; setReading(false); revision.current += 1; setBusy(true);
       try {
         await updateTask(taskId, { sessionId: acpSessionId });
         await refresh();
@@ -147,7 +150,7 @@ export function KanbanView({ onOpenSession, onWorktreeSession, bindableSessions 
 
   const isolated = async (task: TaskEntry) => {
     if (saving.current) return;
-    saving.current = true; revision.current += 1; setBusy(true);
+    saving.current = true; setReading(false); revision.current += 1; setBusy(true);
     try {
       const entry = await createTaskWorktree(task.id);
       const owner = workspaces.find((item) => item.id === entry.workspace_id);
@@ -159,7 +162,7 @@ export function KanbanView({ onOpenSession, onWorktreeSession, bindableSessions 
   };
   const cleanup = async (workspaceId: string) => {
     if (saving.current) return;
-    saving.current = true; revision.current += 1; setBusy(true);
+    saving.current = true; setReading(false); revision.current += 1; setBusy(true);
     try {
       const result = await cleanupTaskWorktrees(workspaceId);
       setNotice(`已清扫 ${result.removed.length} 个孤儿；保留 ${result.skipped.length} 个。${result.skipped.join("；")}`);
@@ -185,7 +188,7 @@ export function KanbanView({ onOpenSession, onWorktreeSession, bindableSessions 
   };
   const commitMove = async (original: TaskEntry, workspaceId: string, status: TaskEntry["status"], restoreKeyboardFocus = false) => {
     if (saving.current || (original.workspace_id === workspaceId && original.status === status)) return;
-    saving.current = true; revision.current += 1; setBusy(true); setError(null); setBindMenuFor(null); setNotice("正在保存任务位置…");
+    saving.current = true; setReading(false); revision.current += 1; setBusy(true); setError(null); setBindMenuFor(null); setNotice("正在保存任务位置…");
     setTasks((items) => items.map((task) => task.id === original.id ? { ...task, workspace_id: workspaceId, status } : task));
     try {
       const stored = await moveTask(original.id, workspaceId, status);
@@ -242,15 +245,13 @@ export function KanbanView({ onOpenSession, onWorktreeSession, bindableSessions 
     }, screenReaderInstructions: { draggable: "空格拾取任务，左右切换列，上下切换空间，空格放下，Escape 取消。" } }}>
     <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
       <div className="mx-auto flex w-full max-w-6xl min-w-0 flex-col gap-6">
-        <div className="flex items-center justify-between gap-4"><p className="text-muted-foreground text-sm">{tasks.length} 项任务 · {groups.length} 个空间</p><Button type="button" variant="outline" size="sm" disabled={busy || activeId !== null} onClick={() => { setError(null); void refresh(); }}>刷新看板</Button></div>
+        <div className="flex items-center justify-between gap-4"><p className="text-muted-foreground text-sm">{tasks.length} 项任务 · {groups.length} 个空间</p><Button type="button" variant="outline" size="sm" disabled={reading || busy || activeId !== null} onClick={() => { setError(null); void refresh(); }}>刷新看板</Button></div>
         {notice && <p role="status" aria-label="看板保存状态" className="text-muted-foreground text-xs">{notice}</p>}
-        {error && (
-          <p role="alert" className="text-destructive text-sm [overflow-wrap:anywhere]">
-            {error}
-          </p>
-        )}
+        {error && <InlineError title="看板操作未完成" message={error} onRetry={() => void refresh()} retrying={reading || busy} />}
+        {reading && <LoadingState label="正在读取看板…" />}
+        {!reading && !error && tasks.length === 0 && <EmptyState title="还没有任务" description="在项目空间中新建任务，或确认指挥官计划后开始工作。" />}
         <p className="text-muted-foreground text-xs">拖动把手跨列或跨空间；键盘：空格拾取，左右切列，上下切空间，Escape 取消。会话与执行目录保持原归属。</p>
-        {groups.map(({ workspace, tasks: wsTasks }, row) => (
+        {(!reading || tasks.length > 0) && groups.map(({ workspace, tasks: wsTasks }, row) => (
           <section key={workspace.id} className="min-w-0" aria-label={`看板空间：${workspace.name}`}>
             <div className="mb-3 flex flex-wrap items-center gap-2">
               <h2 className="text-base font-semibold">{workspace.name}</h2>
@@ -344,7 +345,7 @@ export function KanbanView({ onOpenSession, onWorktreeSession, bindableSessions 
                       </div>
                     )}
                     {cards.length === 0 && (
-                      <p className="text-muted-foreground px-1 py-5 text-center text-xs">暂无任务</p>
+                      <EmptyState compact title="暂无任务" />
                     )}
                   </KanbanColumn>
                 );

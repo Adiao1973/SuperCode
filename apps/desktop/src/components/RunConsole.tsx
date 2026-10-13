@@ -1,3 +1,4 @@
+import { EmptyState, InlineError, LoadingState } from "./FeedbackState";
 /**
  * 会话详情视图：绑定单个会话条目，表单草稿与事件流都来自 sessions store。
  * 消息流用 react-virtuoso 虚拟列表（P1-4：200+ 条目滚动流畅）；
@@ -179,34 +180,19 @@ export function RunConsole({
     dispatch,
   ]);
 
-  // P1-6：历史会话首次进入时加载落库消息
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyError, setHistoryError] = useState("");
+  const [historyRevision, setHistoryRevision] = useState(0);
+  // Historical reads never resume or execute an Agent.
   useEffect(() => {
-    if (
-      session.resumable &&
-      session.acpSessionId &&
-      session.stream.items.length === 0 &&
-      !session.stream.running
-    ) {
-      void listSessionMessages(session.acpSessionId)
-        .then((messages) =>
-          dispatch({ type: "historyLoaded", key: session.key, messages }),
-        )
-        .catch((e) =>
-          dispatch({
-            type: "invokeError",
-            key: session.key,
-            message: String(e),
-          }),
-        );
-    }
-  }, [
-    session.resumable,
-    session.acpSessionId,
-    session.stream.items.length,
-    session.stream.running,
-    session.key,
-    dispatch,
-  ]);
+    if (!session.resumable || !session.acpSessionId || session.stream.items.length > 0 || session.stream.running) { setHistoryLoading(false); setHistoryError(""); return; }
+    let alive = true; setHistoryLoading(true); setHistoryError("");
+    void listSessionMessages(session.acpSessionId).then((messages) => {
+      if (alive) dispatch({ type: "historyLoaded", key: session.key, messages });
+    }).catch((e) => { if (alive) setHistoryError(String(e)); })
+      .finally(() => { if (alive) setHistoryLoading(false); });
+    return () => { alive = false; };
+  }, [session.resumable, session.acpSessionId, session.key, session.stream.items.length, session.stream.running, historyRevision, dispatch]);
 
   const stop = useCallback(async () => {
     if (!session.acpSessionId) {
@@ -316,14 +302,10 @@ export function RunConsole({
         >
           {/* 事件流时间线：虚拟列表（合帧批 → 单次 dispatch → 仅活动 chunk 重渲染） */}
           <div className="min-h-0 flex-1">
+            {historyLoading && <div className="px-5"><LoadingState label="正在读取历史消息…" /></div>}
+            {historyError && <div className="px-5"><InlineError title="历史消息读取失败" message={historyError} onRetry={() => setHistoryRevision((value) => value + 1)} retrying={historyLoading || stream.running} /></div>}
             {stream.items.length === 0 ? (
-              <p className="text-muted-foreground py-8 text-center text-sm">
-                {stream.running
-                  ? "正在恢复上下文 / 等待 agent 响应…"
-                  : session.resumable
-                    ? "输入新提示词继续此会话（将恢复上下文），或查看下方历史。"
-                    : "选择 Agent 并输入任务，点击「运行」开始。"}
-              </p>
+              <div className="px-5">{historyLoading || historyError ? null : stream.running ? <LoadingState label="正在恢复上下文 / 等待 agent 响应…" /> : <EmptyState title={session.resumable ? "继续此会话" : "开始一个任务"} description={session.resumable ? "输入新提示词继续此会话（将恢复上下文），或查看下方历史。" : "选择 Agent 并输入任务，点击「运行」开始。"} />}</div>
             ) : (
               <MessageTimeline
                 items={stream.items}

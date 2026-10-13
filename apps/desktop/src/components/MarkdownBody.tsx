@@ -149,7 +149,8 @@ function CodeBlock({
       </pre>
       {feedback && (
         <p
-          role="status"
+          role={feedback.includes("失败") ? "alert" : "status"}
+          aria-live={feedback.includes("失败") ? "assertive" : "off"}
           className="px-3 pb-1 text-[11px] text-muted-foreground"
         >
           {feedback}
