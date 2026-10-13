@@ -7,6 +7,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { notifySuccess } from "./feedback";
 import { invoke } from "@tauri-apps/api/core";
 export type ThemePreference = "system" | "light" | "dark";
 export interface AppearancePreferences {
@@ -20,7 +21,7 @@ export const SYSTEM_DARK = "(prefers-color-scheme: dark)";
 export const getAppearance = () =>
   invoke<AppearancePreferences>("get_appearance_preferences");
 export const saveAppearance = (preferences: AppearancePreferences) =>
-  invoke<void>("save_appearance_preferences", { preferences });
+  invoke<void>("save_appearance_preferences", { preferences }).then(() => { notifySuccess("外观偏好已保存"); });
 export function resolveTheme(
   preference: ThemePreference,
   systemDark: boolean,

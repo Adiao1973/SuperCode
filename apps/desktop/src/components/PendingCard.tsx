@@ -1,4 +1,5 @@
 /** One UUID and response state across session, commander and approvals. */
+import { InlineError } from "./FeedbackState";
 import { useSyncExternalStore } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -25,7 +26,7 @@ export function PendingCard({ pending }: { pending: PendingPermission }) {
       {options.length === 0 && <p className="text-muted-foreground mt-3 text-xs">未提供一次性裁决选项，请停止所属任务；此处不提供持续授权。</p>}
       {response.status === "submitting" && <p role="status" className="text-muted-foreground mt-2 text-xs">正在提交裁决…</p>}
       {response.status === "accepted" && <p role="status" className="text-muted-foreground mt-2 text-xs">裁决已提交，等待任务确认。</p>}
-      {response.status === "error" && <p role="alert" className="text-destructive mt-2 text-xs [overflow-wrap:anywhere]">提交失败：{response.error}。可重试原选项；不会替你选择其他裁决。</p>}
+      {response.status === "error" && <InlineError title="提交失败" message={`${response.error}。请明确选择原选项重试；不会自动裁决或替你选择其他选项。`} />}
     </section>
   );
 }

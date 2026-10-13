@@ -1,6 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
+import { FeedbackToast } from "./components/FeedbackState";
 import { LayoutProvider, loadLayout } from "./lib/layout";
 import {
   AppearanceProvider,
@@ -36,6 +37,7 @@ async function start() {
         <AppearanceProvider initial={initial}>
           <LayoutProvider initial={layout}>
             <App />
+            <FeedbackToast />
           </LayoutProvider>
         </AppearanceProvider>
       </MotionProvider>

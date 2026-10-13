@@ -317,7 +317,7 @@ export function TimelineCopy({ text, label }: { text: string; label: string }) {
       >
         {label}
       </button>
-      <span role="status">{feedback}</span>
+      <span role={feedback.includes("失败") ? "alert" : "status"} aria-live={feedback.includes("失败") ? "assertive" : "off"}>{feedback}</span>
     </div>
   );
 }

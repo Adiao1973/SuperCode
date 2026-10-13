@@ -36,16 +36,23 @@ function App() {
     (item) => item.id === activeSession?.workspaceId,
   );
 
+  const [historyLoading, setHistoryLoading] = useState(true);
+  const [historyError, setHistoryError] = useState("");
+  const [historyRevision, setHistoryRevision] = useState(0);
+
   // Refresh persisted sessions on entry, including commander-created sessions.
   useEffect(() => {
     if (nav !== "sessions") return;
+    let alive = true; setHistoryLoading(true); setHistoryError("");
     void listHistorySessions()
-      .then((sessions) => dispatch({ type: "hydrate", sessions }))
-      .catch(() => {}); // 历史加载失败不阻塞新会话
-  }, [nav]);
+      .then((sessions) => { if (alive) dispatch({ type: "hydrate", sessions }); })
+      .catch((e) => { if (alive) setHistoryError(String(e)); })
+      .finally(() => { if (alive) setHistoryLoading(false); });
+    return () => { alive = false; };
+  }, [nav, historyRevision]);
 
   // One global collection drives all inline views, even if approval arrives before SessionStarted.
-  useEffect(() => { void permissionCenter.setup(); }, []);
+  useEffect(() => { void permissionCenter.setup().catch(() => {}); }, []);
   useEffect(() => {
     dispatch({ type: "approvalSync", pending: pendingPermissions });
   }, [pendingPermissions, sessions.items]);
@@ -126,6 +133,7 @@ function App() {
           state={sessions}
           dispatch={dispatch}
           visible={nav === "sessions"}
+          historyState={{ loading: historyLoading, error: historyError, onRetry: () => setHistoryRevision((value) => value + 1) }}
           onWorkspacesChange={setWorkspaces}
         />
       </div>

@@ -97,3 +97,14 @@ it("generates a draft through the real workspace host without dispatch or startu
   await waitFor(() => expect(screen.getByRole("button", { name: "审阅并执行" })).toBeEnabled());
 
 });
+
+it("recovers history read failures without generating, executing or retrying a plan", async () => {
+  handle("get_commander_config", () => null); handle("list_agent_definitions", () => []);
+  handle("list_commander_run_views", () => { throw new Error("合成历史不可读"); });
+  render(<CommanderView active onSettings={() => {}} />);
+  expect(await screen.findByRole("alert")).toHaveTextContent("合成历史不可读");
+  handle("list_commander_run_views", () => []);
+  fireEvent.click(screen.getByRole("button", { name: "重新读取" }));
+  await waitFor(() => expect(screen.queryByRole("alert")).toBeNull());
+  expect(calls.some((c) => /generate|execute|respond|run_prompt/.test(c.command))).toBe(false);
+});

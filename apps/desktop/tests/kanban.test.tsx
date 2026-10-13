@@ -47,3 +47,18 @@ it("reads task details explicitly, retries and returns focus without task mutati
   expect(trigger).toHaveFocus();
   expect(calls.filter((call) => /create_task|move_task|update_task|run_prompt/.test(call.command))).toHaveLength(0);
 });
+
+it("distinguishes initial loading from empty and retries failed reads without any task mutation", async () => {
+  let reject!: (reason: Error) => void;
+  handle("list_tasks", () => new Promise((_, fail) => { reject = fail; }));
+  handle("list_workspaces", () => [{ id: "default", name: "默认空间", kind: "default", path: null }]);
+  render(<KanbanView bindableSessions={[]} />);
+  expect(screen.getByRole("status", { name: "正在读取看板…" })).toBeVisible();
+  expect(screen.queryByText("还没有任务")).toBeNull();
+  await act(async () => reject(new Error("合成读取失败")));
+  expect(screen.getByRole("alert")).toHaveTextContent("合成读取失败");
+  handle("list_tasks", () => []);
+  fireEvent.click(screen.getByRole("button", { name: "重新读取" }));
+  expect(await screen.findByText("还没有任务")).toBeVisible();
+  expect(calls.every((c) => ["list_tasks", "list_workspaces"].includes(c.command))).toBe(true);
+});

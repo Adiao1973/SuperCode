@@ -84,11 +84,11 @@ export class PermissionCenter {
   private decisionArrivedListeners = new Set<Listener<DecisionRecord>>();
   private unlisteners: Array<Promise<UnlistenFn>> = [];
 
-  /** 在应用启动时调用一次；幂等 */
+  private setupPromise: Promise<void> | null = null;
+
+  /** 在应用启动时调用一次；幂等；失败清理部分监听，可显式重试 */
   async setup(): Promise<void> {
-    if (this.unlisteners.length > 0) {
-      return;
-    }
+    if (this.setupPromise) return this.setupPromise;
     this.unlisteners.push(
       listen<PendingPermission>("permission-request", (event) => {
         if (this.pending.some((item) => item.id === event.payload.id)) return;
@@ -119,7 +119,14 @@ export class PermissionCenter {
         }
       }),
     );
-    await Promise.all(this.unlisteners);
+    const pending = this.unlisteners;
+    this.setupPromise = Promise.all(pending).then(() => {}).catch(async (error: unknown) => {
+      const settled = await Promise.allSettled(pending);
+      for (const item of settled) if (item.status === "fulfilled") { try { item.value(); } catch { /* transport may already be closed */ } }
+      this.unlisteners = []; this.setupPromise = null;
+      throw error;
+    });
+    return this.setupPromise;
   }
 
   removePending(id: string): void {

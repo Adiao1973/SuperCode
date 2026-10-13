@@ -98,7 +98,7 @@ export const MessageMarkdown = memo(function MessageMarkdown({
           复制全文
         </button>
         {tooLong && <span>长消息以原文显示</span>}
-        <span role="status">{feedback}</span>
+        <span role={feedback.includes("失败") ? "alert" : "status"} aria-live={feedback.includes("失败") ? "assertive" : "off"}>{feedback}</span>
       </div>
       {raw || tooLong ? (
         <RawText text={text} />

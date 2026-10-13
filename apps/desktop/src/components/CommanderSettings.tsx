@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from "react";
+import { InlineError, LoadingState } from "./FeedbackState";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { getCommanderConfig, saveCommanderConfig, listCommanderModels, saveCommanderKey, commanderCredentialSource, verifyCommanderPlan, cancelCommanderPlan, type CommanderPlan, type CredentialSource, type CommanderConfig } from "@/lib/commander";
@@ -96,6 +97,7 @@ export function CommanderSettings() {
           {busy ? "正在读取或保存…" : saved ? "已保存到本机" : savedModel ? "有未保存的修改" : "等待配置"}
         </span>
       </div>
+      {busy && <LoadingState label="正在读取或保存模型配置…" />}
       <ol aria-label="模型配置步骤" className="grid gap-3 border-y py-3 text-xs sm:grid-cols-3">
         <li><span className="text-muted-foreground">1 · 连接</span><p className="mt-1">{saved ? "连接已保存" : "连接未保存"}</p></li>
         <li><span className="text-muted-foreground">2 · 密钥</span><p className="mt-1">{credential === "sqlite" ? "密钥已保存" : credential === "environment" ? "环境变量备用" : credential === "loading" ? "正在读取凭据状态" : credential === "error" ? "凭据状态读取失败" : "尚未保存密钥"}</p></li>
@@ -172,7 +174,7 @@ export function CommanderSettings() {
         </div>}
       </div>
       {credential === "error" && <Button size="sm" variant="outline" onClick={() => setLoadRevision((n) => n + 1)}>重新读取凭据状态</Button>}
-      {error && <p role="alert" className="text-destructive mt-2 text-xs">{error}</p>}
+      {error && <InlineError title="模型操作未完成" message={error} />}
     </section>
   );
 }

@@ -2,6 +2,8 @@
  * 剪贴板写入：优先 Clipboard API；WKWebView 下不可用时退回 execCommand 兜底。
  */
 
+import { notifySuccess } from "./feedback";
+
 export async function copyText(text: string): Promise<void> {
   try {
     await navigator.clipboard.writeText(text);
@@ -24,4 +26,5 @@ export async function copyText(text: string): Promise<void> {
       focused?.focus({ preventScroll: true });
     }
   }
+  notifySuccess("已复制");
 }

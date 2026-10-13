@@ -1,3 +1,4 @@
+import { copyText } from "@/lib/clipboard";
 import { useEffect, useRef, useState } from "react";
 import { useMotionPreference } from "@/lib/motion";
 import { useAppearance } from "@/lib/appearance";
@@ -151,7 +152,7 @@ export function SessionTerminal({
         event.key.toLowerCase() === "c" &&
         term.hasSelection()
       ) {
-        void navigator.clipboard.writeText(term.getSelection()).catch(fail);
+        void copyText(term.getSelection()).catch(fail);
         return false;
       }
       return true;

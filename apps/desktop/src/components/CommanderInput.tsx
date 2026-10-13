@@ -1,3 +1,4 @@
+import { InlineError, LoadingState } from "./FeedbackState";
 import { useEffect, useRef, useState } from "react";
 import { FolderOpen } from "lucide-react";
 import { Button } from "./ui/button";
@@ -220,6 +221,7 @@ export function CommanderInput({
           刷新配置与 Agent
         </button>
       </div>
+      {loading && <LoadingState label="正在读取模型与 Agent…" />}
       <form
         className="space-y-5"
         onSubmit={(e) => {
@@ -342,11 +344,7 @@ export function CommanderInput({
             或探测版本。
           </p>
         </fieldset>
-        {error && (
-          <p role="alert" className="break-words text-sm text-destructive">
-            {error}
-          </p>
-        )}
+        {error && <InlineError title="规划输入未就绪" message={error} onRetry={() => setRefresh((n) => n + 1)} retrying={loading || disabled} />}
         <div className="flex flex-wrap items-center gap-3 border-t pt-4">
           <Button type="submit" disabled={!canSubmit}>
             {submitting ? "正在生成…" : "生成计划"}

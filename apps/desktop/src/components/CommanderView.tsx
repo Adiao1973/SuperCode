@@ -1,3 +1,4 @@
+import { EmptyState, InlineError, LoadingState } from "./FeedbackState";
 import { useEffect, useRef, useState } from "react";
 import { Channel, invoke } from "@tauri-apps/api/core";
 import { ConfirmPlanDialog } from "@/components/ConfirmPlanDialog";
@@ -44,6 +45,7 @@ export function CommanderView({
   const [historyOpen, setHistoryOpen] = useState(false);
   const [planningOpen, setPlanningOpen] = useState(false);
   const [jobs, setJobs] = useState(2);
+  const [reading, setReading] = useState(true);
   const [history, setHistory] = useState<RunView[]>([]);
   const [selected, setSelected] = useState<RunView | null>(null);
   const [busy, setBusy] = useState(false);
@@ -57,14 +59,18 @@ export function CommanderView({
   const refreshVersion = useRef(0);
   const refresh = async (id?: string) => {
     const version = ++refreshVersion.current;
-    const runs = await listCommanderRuns();
-    if (version !== refreshVersion.current) return;
-    setHistory(runs);
-    if (id) {
-      const view = await getCommanderRun(id);
-      if (version === refreshVersion.current) setSelected(view);
-    }
+    setReading(true);
+    try {
+      const runs = await listCommanderRuns();
+      if (version !== refreshVersion.current) return;
+      setHistory(runs);
+      if (id) {
+        const view = await getCommanderRun(id);
+        if (version === refreshVersion.current) setSelected(view);
+      }
+    } finally { if (version === refreshVersion.current) setReading(false); }
   };
+  const reread = () => { setError(""); void refresh(selected?.run.id).catch((e) => setError(String(e))); };
   useEffect(() => permissionCenter.onPending(setPending), []);
   useEffect(() => {
     if (!active) return;
@@ -168,18 +174,14 @@ export function CommanderView({
             <Button
               variant="ghost"
               size="sm"
-              onClick={() =>
-                void refresh(selected?.run.id).catch((e) => setError(String(e)))
-              }
+              disabled={reading || busy || confirm}
+              onClick={reread}
             >
               刷新
             </Button>
           </div>
-          {history.length === 0 && (
-            <p className="text-muted-foreground text-sm">
-              生成的计划会保存在这里。重新打开应用不会自动执行。
-            </p>
-          )}
+          {reading && <LoadingState label="正在读取计划历史…" />}
+          {!reading && !error && history.length === 0 && <EmptyState title="还没有计划" description="生成的计划会保存在这里。重新打开应用不会自动执行。" />}
           {history.map((view) => (
             <button
               key={view.run.id}
@@ -225,14 +227,7 @@ export function CommanderView({
                 取消当前操作
               </Button>
             )}
-            {error && (
-              <p
-                role="alert"
-                className="text-destructive rounded border border-destructive/30 p-3 text-sm"
-              >
-                {error}
-              </p>
-            )}
+            {error && <InlineError title="指挥官操作未完成" message={error} onRetry={reread} retrying={reading || busy || confirm} />}
             {selected && (
               <section className="border-t pt-5">
                 {selected.run.status === "draft" && <label className="mb-4 block max-w-40 text-sm">

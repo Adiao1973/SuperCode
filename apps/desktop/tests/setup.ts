@@ -1,3 +1,4 @@
+import { clearFeedback } from "../src/lib/feedback";
 import "@testing-library/jest-dom/vitest";
 import { cleanup } from "@testing-library/react";
 import { afterEach, beforeEach, vi } from "vitest";
@@ -33,6 +34,7 @@ beforeEach(() => {
 });
 afterEach(() => {
   cleanup();
+  clearFeedback();
   resetIpc();
   vi.unstubAllGlobals();
   vi.useRealTimers();
