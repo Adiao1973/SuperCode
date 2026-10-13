@@ -2,7 +2,8 @@
  * 设置（P1-5）：规则库管理——全局持久的预授权规则（SQLite permission_rules 表）。
  * 规则三形：`*`、`tool`、`tool(args)`（glob）；效果 allow / deny / ask。
  */
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useRef } from "react";
+import { ProjectSettings } from "@/components/ProjectSettings";
 import { MotionSettings } from "@/components/MotionSettings";
 import { AppearanceSettings } from "@/components/AppearanceSettings";
 import { CommanderSettings } from "@/components/CommanderSettings";
@@ -11,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { OpencodeEnvSection } from "@/components/OpencodeEnvSection";
-import { addRule, deleteRule, listRules, type RuleEntry } from "@/lib/agent";
+import { addRule, deleteRule, listRules, type RuleEntry, type Workspace } from "@/lib/agent";
 import { Plus, Trash2 } from "lucide-react";
 
 const EFFECT_LABEL: Record<RuleEntry["effect"], { label: string; className: string }> = {
@@ -20,7 +21,9 @@ const EFFECT_LABEL: Record<RuleEntry["effect"], { label: string; className: stri
   ask: { label: "询问", className: "border-amber-500/50 text-warning" },
 };
 
-export function SettingsView() {
+export function SettingsView({ onWorkspacesChanged }: { onWorkspacesChanged?: (rows: Workspace[]) => void }) {
+  const [group, setGroup] = useState("model");
+  const content = useRef<HTMLDivElement>(null);
   const [rules, setRules] = useState<RuleEntry[]>([]);
   const [pattern, setPattern] = useState("");
   const [effect, setEffect] = useState<RuleEntry["effect"]>("allow");
@@ -69,13 +72,16 @@ export function SettingsView() {
   );
 
   return (
-    <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
-      <div className="mx-auto flex max-w-3xl flex-col gap-4">
-        <AppearanceSettings />
-        <MotionSettings />
-        <CommanderSettings />
-        <AgentsSection />
-        <OpencodeEnvSection />
+    <div className="min-h-0 flex flex-1 flex-col">
+      <div className="shrink-0 border-b px-5 py-3"><nav aria-label="设置分组" className="mx-auto flex max-w-3xl flex-wrap gap-1">
+          {[["model", "模型"], ["agents", "Agent 与项目"], ["rules", "规则"], ["appearance", "外观"]].map(([id, label]) => <Button key={id} variant={group === id ? "secondary" : "ghost"} aria-current={group === id ? "page" : undefined} onClick={() => { setGroup(id); if (content.current) content.current.scrollTop = 0; }}>{label}</Button>)}
+        </nav></div>
+      <div ref={content} className="min-h-0 flex-1 overflow-y-auto px-5 py-5"><div className="mx-auto flex max-w-3xl flex-col gap-6">
+        <div role="region" aria-label="模型设置" hidden={group !== "model"}><CommanderSettings /></div>
+        <div role="region" aria-label="Agent 与项目设置" hidden={group !== "agents"} className="space-y-6"><ProjectSettings onSaved={onWorkspacesChanged} /><AgentsSection /><OpencodeEnvSection /></div>
+        <div role="region" aria-label="外观设置" hidden={group !== "appearance"} className="space-y-6"><AppearanceSettings /><MotionSettings /></div>
+        {group === "rules" && <div role="region" aria-label="规则设置" className="space-y-6">
+        <div><h2 className="text-base font-semibold">审批规则</h2><p className="mt-1 text-xs text-muted-foreground">规则影响所有会话，仅裁决 Agent 主动询问的操作。</p></div>
 
         <section>
           <h2 className="mb-2 text-sm font-medium">新增规则</h2>
@@ -84,10 +90,12 @@ export function SettingsView() {
               value={pattern}
               onChange={(e) => setPattern(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && void submit()}
+              aria-label="规则匹配式"
               placeholder="规则：* / write / bash(git *)（三形，通配 * 与 ?）"
               className="min-w-0 flex-1 font-mono text-xs"
             />
             <select
+              aria-label="规则效果"
               value={effect}
               onChange={(e) => setEffect(e.target.value as RuleEntry["effect"])}
               className="h-9 shrink-0 rounded-md border px-2 font-mono text-xs"
@@ -141,7 +149,8 @@ export function SettingsView() {
             </div>
           )}
         </section>
-      </div>
+        </div>}
+      </div></div>
     </div>
   );
 }

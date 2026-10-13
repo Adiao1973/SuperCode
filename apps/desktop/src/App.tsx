@@ -130,7 +130,7 @@ function App() {
         />
       </div>
       {nav === "approvals" && <ApprovalsView />}
-      {nav === "settings" && <SettingsView />}
+      {nav === "settings" && <SettingsView onWorkspacesChanged={setWorkspaces} />}
       {nav === "kanban" && (
         <KanbanView
           onWorktreeSession={(workspace, task, worktree) => {

@@ -1,0 +1,28 @@
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { expect, it } from "vitest";
+import { SettingsView } from "../src/components/SettingsView";
+import { AppearanceProvider } from "../src/lib/appearance";
+import { MotionProvider } from "../src/lib/motion";
+import { calls, handle } from "./fixtures/tauri";
+it("groups settings with keyboard buttons while retaining unfinished model input", async () => {
+  handle("get_commander_config", () => null); handle("list_workspaces", () => []);
+  handle("list_rules", () => []); handle("list_agents", () => []);
+  handle("check_opencode_env", () => null); handle("appearance_ready", () => undefined);
+  render(<AppearanceProvider initial={{ preferences: { theme: "light" }, error: null }}><MotionProvider initial={{ preferences: { motion: "reduce" }, error: null }}><SettingsView /></MotionProvider></AppearanceProvider>);
+  await waitFor(() => expect(screen.getByLabelText("指挥官模型名")).toBeEnabled());
+  fireEvent.change(screen.getByLabelText("指挥官模型名"), { target: { value: "unfinished" } });
+  fireEvent.click(screen.getByRole("button", { name: "Agent 与项目" }));
+  expect(screen.getByRole("region", { name: "Agent 与项目设置" })).toBeVisible();
+  expect(screen.queryByRole("region", { name: "模型设置" })).toBeNull();
+  expect(screen.getByText(/版本已检测到不代表已认证/)).toBeVisible();
+  fireEvent.click(screen.getByRole("button", { name: "规则" }));
+  expect(screen.getByRole("region", { name: "规则设置" })).toBeVisible();
+  fireEvent.change(screen.getByLabelText("规则匹配式"), { target: { value: "unsaved-rule" } });
+  fireEvent.click(screen.getByRole("button", { name: "外观" }));
+  expect(screen.getByRole("region", { name: "外观设置" })).toBeVisible();
+  fireEvent.click(screen.getByRole("button", { name: "模型" }));
+  expect(screen.getByLabelText("指挥官模型名")).toHaveValue("unfinished");
+  fireEvent.click(screen.getByRole("button", { name: "规则" }));
+  expect(screen.getByLabelText("规则匹配式")).toHaveValue("unsaved-rule");
+  expect(calls.some((c) => /verify_commander_plan|run_prompt|create_workspace/.test(c.command))).toBe(false);
+});
