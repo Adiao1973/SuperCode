@@ -1,0 +1,7 @@
+2026-10-13 macOS arm64
+just verify: PASS (exit 0)
+Frontend: 32 files, 93 tests passed
+Rust: 162 passed, 1 existing smoke ignored
+Test typecheck, build, fmt --check, clippy --all-targets -- -D warnings: PASS
+Initial commander-settings contracts: 2 failures before implementation; then passed.
+Initial sandbox run: loopback listener EPERM; rerun with local-listener permission passed.

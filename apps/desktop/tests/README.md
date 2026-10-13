@@ -98,3 +98,7 @@ env -u SUPERCODE_LLM_API_KEY SUPERCODE_DB="$scratch/fixture.db" \
 ## P4-17 看板与任务详情
 
 `kanban.test.tsx` 验证乐观移动、防重锁、失败回滚、重试和只读详情焦点；`task-detail.test.tsx` 验证换任务/关闭后的过期响应不会污染详情。Rust worktrees 测试保证非 Git 详情不创建目录，跨空间保留创建时 cwd、绑定会话与已有隔离目录。jsdom 不替代实际鼠标拖拽，原生证据和剩余出口见 [P4-17](../../../docs/acceptance/p4-17.md)。
+
+## P4-18 分组设置与初次配置
+
+`commander-settings.test.tsx` 覆盖保存不等于验证、同步锁防重、修改/重挂载清除验证结论、失败重试、密钥输入清空与取消状态；`project-settings.test.tsx` 覆盖目录取消、显式添加与失败不回调；`settings-groups.test.tsx` 覆盖分组可见性与模型/规则草稿保留。原生目录选择、WebKit 辅助功能及重启使用 SQLite key 见 [P4-18](../../../docs/acceptance/p4-18.md)，fixture 不代表真实模型能力验收。
