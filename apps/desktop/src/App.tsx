@@ -153,14 +153,11 @@ function App() {
             title: it.title,
             acpSessionId: it.acpSessionId,
           }))}
-          onOpenSession={(agentSessionId) => {
-            const target = sessions.items.find(
-              (it) => it.acpSessionId === agentSessionId,
-            );
-            if (target) {
-              setNav("sessions");
-              dispatch({ type: "activate", key: target.key });
-            }
+          onOpenSession={async (agentSessionId) => {
+            const rows = (await listHistorySessions()).filter((row) => row.agent_session_id === agentSessionId);
+            if (rows.length !== 1) throw new Error("绑定会话不存在或关联不唯一，请刷新历史后重试。");
+            dispatch({ type: "openHistory", session: rows[0] });
+            setNav("sessions");
           }}
         />
       )}

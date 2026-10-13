@@ -1038,6 +1038,7 @@ pub fn run() {
             delete_workspace,
             list_tasks,
             create_task,
+            worktrees::get_task_context,
             worktrees::create_task_worktree,
             worktrees::cleanup_task_worktrees,
             update_task,

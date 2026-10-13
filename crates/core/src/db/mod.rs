@@ -43,8 +43,7 @@ pub struct MessageRow {
 }
 
 /// 会话列表行。
-#[derive(Debug, Clone)]
-
+#[derive(Debug, Clone, serde::Serialize)]
 pub struct SessionRow {
     pub id: String,
     pub agent_id: String,
