@@ -1,0 +1,5 @@
+2026-10-13 macOS arm64
+just verify: PASS
+Frontend: 29 files, 88 tests passed
+Rust: 162 passed, 1 ignored (existing opencode smoke)
+Typecheck, build, fmt --check, clippy --all-targets -- -D warnings: PASS

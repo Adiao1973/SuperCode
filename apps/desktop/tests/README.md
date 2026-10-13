@@ -94,3 +94,7 @@ env -u SUPERCODE_LLM_API_KEY SUPERCODE_DB="$scratch/fixture.db" \
 ## P4-16 审批上下文与裁决反馈
 
 `approval-center.test.ts` 覆盖 UUID 防重、失败重试、重复 tool id 精确移除和自动裁决不误清其他待决；`pending-card.test.tsx` 核对多处卡片共享提交状态、原文/变更/命令精确复制与持续选项隐藏；`approval-decisions.test.tsx` 验证不透明 option_id 依据 kind 显示拒绝与取消来源。`sessions.test.ts` 验证审批先到、SessionStarted 后到的集合同步及取消移除。Rust ApprovalBroker 测试保证非法选项不消费请求、取消来源和 request_id 序列化正确。原生三处一致、复制、并发及退出证据见 [P4-16](../../../docs/acceptance/p4-16.md)。
+
+## P4-17 看板与任务详情
+
+`kanban.test.tsx` 验证乐观移动、防重锁、失败回滚、重试和只读详情焦点；`task-detail.test.tsx` 验证换任务/关闭后的过期响应不会污染详情。Rust worktrees 测试保证非 Git 详情不创建目录，跨空间保留创建时 cwd、绑定会话与已有隔离目录。jsdom 不替代实际鼠标拖拽，原生证据和剩余出口见 [P4-17](../../../docs/acceptance/p4-17.md)。
