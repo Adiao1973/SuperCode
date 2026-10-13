@@ -1,0 +1,24 @@
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { expect, it, vi } from "vitest";
+import { ProjectSettings } from "../src/components/ProjectSettings";
+import { calls, handle } from "./fixtures/tauri";
+it("does not add on directory cancellation, requires explicit save and reports failures", async () => {
+  handle("list_workspaces", () => []);
+  handle("pick_commander_directory", () => null);
+  const saved = vi.fn(); render(<ProjectSettings onSaved={saved} />);
+  fireEvent.click(screen.getByRole("button", { name: "选择项目目录" }));
+  await waitFor(() => expect(screen.getByRole("button", { name: "选择项目目录" })).toBeEnabled());
+  expect(calls.some((c) => c.command === "create_workspace")).toBe(false);
+  handle("pick_commander_directory", () => "/fixture/project");
+  fireEvent.click(screen.getByRole("button", { name: "选择项目目录" }));
+  await waitFor(() => expect(screen.getByLabelText("项目目录")).toHaveValue("/fixture/project"));
+  expect(saved).not.toHaveBeenCalled();
+  handle("create_workspace", () => { throw new Error("目录不存在"); });
+  fireEvent.click(screen.getByRole("button", { name: "添加项目空间" }));
+  await screen.findByRole("alert"); expect(saved).not.toHaveBeenCalled();
+  const workspace = { id: "new", name: "project", kind: "project", path: "/fixture/project" };
+  handle("create_workspace", () => workspace); handle("list_workspaces", () => [workspace]);
+  fireEvent.click(screen.getByRole("button", { name: "添加项目空间" }));
+  await waitFor(() => expect(saved).toHaveBeenCalledWith([workspace]));
+  expect(screen.getByRole("status")).toHaveTextContent("已保存");
+});

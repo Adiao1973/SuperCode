@@ -150,6 +150,8 @@ export function AgentsSection() {
         </Button>
       </div>
 
+      <p className="mb-4 text-xs text-muted-foreground">先检查命令，再在会话中完成登录与模型验证。版本已检测到不代表已认证或拥有模型权限；此处不会运行任务。</p>
+
       {showForm && (
         <div className="mb-3 flex flex-col gap-2 rounded-md border p-3">
           <div className="grid grid-cols-2 gap-2">
@@ -250,7 +252,7 @@ export function AgentsSection() {
               </Badge>
               {agent.installed_version ? (
                 <Badge variant="outline" className="border-emerald-500/50 text-success text-[10px]">
-                  ✓ {agent.installed_version}
+                  命令已检测 · {agent.installed_version}
                 </Badge>
               ) : (
                 <Badge variant="outline" className="border-amber-500/50 text-warning text-[10px]">
