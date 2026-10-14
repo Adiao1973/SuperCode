@@ -3,8 +3,9 @@ PASS: Cmd-K/sidebar, autofocus, Esc origin focus, ArrowUp wrap + Enter destinati
 PASS: exact historical session and task details; new session draft/new task empty form only
 PASS: no results, shortcut scope discovery, actual PTY and execution-confirmation modal guards
 PASS: 960x640 dark/light, reduced motion
-PENDING: real Chinese IME candidate Enter (user confirmation requested; pasted Chinese is not IME proof)
+PASS: real Chinese IME candidate Enter, explicitly confirmed by user
+PASS: reported duplicate focus outline fixed locally; native mouse click shows one wrapper ring
 Audit: sessions=1 (original completed), tasks=1 (original review/project/binding/cwd unchanged)
 commander_runs=1: draft, revision=0, pending task, no session
 Agent wrappers reject execution; log only version probes and rejected npx discovery
-No real credentials read, no remote model calls, no dev merge/release
+No real credentials read, no remote model calls, local dev merge after acceptance; no release
