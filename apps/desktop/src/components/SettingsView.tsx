@@ -113,7 +113,7 @@ export function SettingsView({ onWorkspacesChanged }: { onWorkspacesChanged?: (r
             </Button>
           </div>
           <p className="text-muted-foreground mt-2 text-[11px]">
-            求值顺序 deny &gt; ask &gt; allow；规则对所有会话生效，随 SQLite 持久化（重启保留）。
+            优先级：拒绝 &gt; 询问 &gt; 允许。
 
           </p>
         </section>
@@ -123,7 +123,7 @@ export function SettingsView({ onWorkspacesChanged }: { onWorkspacesChanged?: (r
         <section>
           <h2 className="mb-2 text-sm font-medium">规则库（{rules.length}）</h2>
           {rules.length === 0 ? (
-            !reading && !error && <EmptyState title="尚无审批规则" description="所有未匹配请求按会话权限模式处理。添加规则会影响所有会话。" />
+            !reading && !error && <EmptyState title="尚无审批规则" description="未匹配请求按会话权限处理。" />
           ) : (
             <div className="flex flex-col gap-1.5">
               {rules.map((rule) => (

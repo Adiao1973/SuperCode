@@ -35,14 +35,12 @@ export function ApprovalsView() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="text-muted-foreground shrink-0 border-b px-5 py-3 text-[11px]">
-        待决请求也会内联显示在对应会话中；此处为跨会话聚合视图。
-      </div>
+
       <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
         <div className="mx-auto flex max-w-3xl flex-col gap-3">
           {loading && <LoadingState label="正在连接审批通知…" />}
           {error && <InlineError title="审批通知连接失败" message={error} onRetry={() => setRetry((value) => value + 1)} retrying={loading} />}
-          {!loading && !error && pending.length === 0 && <EmptyState title="暂无待决权限请求" description="收到 Agent 的权限询问后会显示在这里；此处不会自动放行。" />}
+          {!loading && !error && pending.length === 0 && <EmptyState title="暂无待决权限请求" description="等待 Agent 请求授权。" />}
           {pending.map((pendingItem) => (
             <PendingCard key={pendingItem.id} pending={pendingItem} />
           ))}

@@ -197,7 +197,7 @@ export function CommanderInput({
         <div>
           <h2 className="text-lg font-semibold">规划目标</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            描述目标，选择项目和 Agent，再生成计划供审阅。
+            你想完成什么？
           </p>
         </div>
         <Button variant="outline" onClick={onSettings}>
@@ -211,7 +211,7 @@ export function CommanderInput({
         <span className={ready ? "text-foreground" : "text-muted-foreground"}>
           {model}
         </span>
-        <span className="text-muted-foreground">配置可用不代表推理已验证</span>
+
         <button
           type="button"
           className="text-primary hover:underline disabled:opacity-50"
@@ -297,7 +297,7 @@ export function CommanderInput({
             </Button>
           </div>
           <p className="text-xs text-muted-foreground">
-            使用已存在的绝对目录；选择项目仅用于本次规划。
+            仅用于本次计划。
           </p>
         </fieldset>
         <fieldset disabled={disabled || loading} className="space-y-2">
@@ -340,8 +340,7 @@ export function CommanderInput({
             </p>
           )}
           <p className="text-xs text-muted-foreground">
-            已接入不代表已安装或已登录；执行前仍会检查。此处不会启动 Agent
-            或探测版本。
+            执行前检查安装与登录状态。
           </p>
         </fieldset>
         {error && <InlineError title="规划输入未就绪" message={error} onRetry={() => setRefresh((n) => n + 1)} retrying={loading || disabled} />}
@@ -350,7 +349,7 @@ export function CommanderInput({
             {submitting ? "正在生成…" : "生成计划"}
           </Button>
           <p className="text-xs text-muted-foreground">
-            将调用指挥官模型；生成后先审阅，确认前不执行任务。
+            调用模型生成计划，确认后才执行。
           </p>
         </div>
       </form>

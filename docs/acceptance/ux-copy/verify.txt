@@ -1,0 +1,7 @@
+2026-10-14 macOS arm64
+just verify PASS (exit 0)
+Frontend 106 tests / 34 files PASS
+Rust 162 PASS, 1 existing smoke ignored
+Typecheck/build/fmt/clippy PASS
+Native five pages, search, keyboard help toggle, 960x640 PASS
+No real credentials or model requests

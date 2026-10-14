@@ -282,7 +282,7 @@ export function KanbanView({ onOpenSession, onWorktreeSession, bindableSessions,
         {error && <InlineError title="看板操作未完成" message={error} onRetry={() => void refresh()} retrying={reading || busy} />}
         {reading && <LoadingState label="正在读取看板…" />}
         {!reading && !error && tasks.length === 0 && <EmptyState title="还没有任务" description="在项目空间中新建任务，或确认指挥官计划后开始工作。" />}
-        <p className="text-muted-foreground text-xs">拖动把手跨列或跨空间；键盘：空格拾取，左右切列，上下切空间，Escape 取消。会话与执行目录保持原归属。</p>
+        <details className="text-muted-foreground text-xs"><summary className="w-fit cursor-pointer">移动任务</summary><p className="mt-2">拖动把手调整列或分组，不改变执行目录和会话归属。</p><p className="mt-1">空格拾取 · ← → 切列 · ↑ ↓ 切空间 · Esc 取消</p></details>
         {(!reading || tasks.length > 0) && groups.map(({ workspace, tasks: wsTasks }, row) => (
           <section key={workspace.id} className="min-w-0" aria-label={`看板空间：${workspace.name}`}>
             <div className="mb-3 flex flex-wrap items-center gap-2">

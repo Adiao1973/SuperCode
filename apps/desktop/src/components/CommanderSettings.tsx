@@ -88,7 +88,7 @@ export function CommanderSettings() {
   }
   return (
     <section aria-label="指挥官模型设置" className="space-y-4">
-      <div><p className="text-xs font-medium text-primary">初次配置 · 先保存，再验证</p><p className="mt-1 text-xs text-muted-foreground">指挥官负责生成计划；执行任务的 Agent 在另一组单独配置。</p></div>
+      <div><p className="text-xs font-medium text-primary">连接与验证</p><p className="mt-1 text-xs text-muted-foreground">指挥官生成计划，Agent 执行任务。</p></div>
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div><h2 className="text-base font-semibold">指挥官模型</h2>
           <p className="mt-1 text-sm">当前保存的模型：<strong className="font-mono">{savedModel || "尚未配置"}</strong></p>
@@ -104,11 +104,9 @@ export function CommanderSettings() {
         <li><span className="text-muted-foreground">3 · 模型</span><p role="status" aria-label="模型验证状态" className="mt-1">{verifying ? "正在验证" : verification === "passed" ? "验证通过 · 本次设置期间" : verification === "failed" ? "验证失败 · 可重试" : verification === "cancelled" ? "已取消验证 · 可重试" : "未验证"}</p></li>
       </ol>
       {loadFailed && <Button variant="outline" size="sm" onClick={() => { setError(null); setLoadRevision((n) => n + 1); }}>重新读取模型配置</Button>}
-      <p className="text-muted-foreground mb-4 text-xs">
-        将目标拆解为任务计划，独立于执行任务的 Agent。支持兼容 Chat Completions 的接口。保存配置后可用于生成计划；保存成功尚不代表模型推理已验收。
-      </p>
+
       <div className="grid gap-3 sm:grid-cols-2">
-        <label className="text-xs sm:col-span-2">API 地址（Base URL 或完整对话补全地址）
+        <label className="text-xs sm:col-span-2">API 地址
           <Input aria-label="指挥官 API endpoint" className="mt-1 font-mono text-xs" value={config.endpoint} disabled={busy || listing || keySaving || verifying || loadFailed}
             placeholder="https://api.example.com/v1" onChange={(e) => change("endpoint", e.target.value)} />
         </label>
@@ -129,7 +127,7 @@ export function CommanderSettings() {
           </label>}
           {catalogMessage && <p role="status" className="text-muted-foreground">{catalogMessage}</p>}
         </div>
-        <p className="text-muted-foreground text-xs sm:col-span-2">列表由当前接口返回，可能包含语音等模型；用于指挥官时请选择支持文本对话的模型。列表不保证账号额度或推理权限，接口不支持查询时可手填。</p>
+        <p className="text-muted-foreground text-xs sm:col-span-2">选择文本对话模型；无法获取列表时可手填。</p>
         <div className="sm:col-span-2 rounded-md border p-3">
           <label className="text-xs">API key（只保存到本机）
             <Input aria-label="指挥官 API key" type="password" autoComplete="off" spellCheck={false} value={key} disabled={busy || listing || keySaving || verifying || loadFailed}
@@ -142,7 +140,7 @@ export function CommanderSettings() {
             <span role="status" aria-label="密钥保存状态" className="text-muted-foreground text-xs">{credential === "sqlite" ? "密钥已保存到本机 · 重启可直接使用" : credential === "environment" ? "使用当前进程的环境变量 · 尚未保存到本机" : credential === "loading" ? "正在读取凭据状态…" : credential === "error" ? "凭据状态读取失败，请重新读取" : "尚未保存密钥"}</span>
           </div>
         </div>
-        <label className="text-xs">Key 环境变量名（高级备用）
+        <label className="text-xs">Key 环境变量（备用）
           <Input aria-label="指挥官 Key 环境变量名" className="mt-1 font-mono text-xs" value={config.api_key_env} disabled={busy || listing || keySaving || verifying || loadFailed}
             onChange={(e) => change("api_key_env", e.target.value)} />
         </label>
@@ -152,13 +150,13 @@ export function CommanderSettings() {
         </label>
       </div>
       <p className="text-muted-foreground my-3 text-xs">
-        连接设置和密钥仅保存到本机 SQLite，数据库不上传 GitHub。优先使用本机保存的 key；环境变量是可选备用方式。
+        配置和密钥仅存本机，不上传 GitHub。环境变量作为备用。
       </p>
       <div className="flex flex-wrap items-center gap-3">
         <Button size="sm" disabled={busy || listing || keySaving || verifying || loadFailed || !config.endpoint.trim() || !config.model.trim() || !config.api_key_env.trim()} onClick={() => void save()}>
           {busy ? "处理中…" : "保存指挥官配置"}
         </Button>
-        {saved && <span className="text-muted-foreground text-xs">当前模型已保存，下次启动自动恢复。</span>}
+
       </div>
       <div className="mt-4 border-t pt-3">
         <div className="flex flex-wrap items-center gap-3">
@@ -167,7 +165,7 @@ export function CommanderSettings() {
           </Button>
           {verifying && <Button size="sm" variant="outline" disabled={cancelling} onClick={() => { const id = request.current; if (!id || cancelled.current === id) return; cancelled.current = id; setCancelling(true); void cancelCommanderPlan(id).catch((e: unknown) => { if (request.current === id) { cancelled.current = null; setCancelling(false); setError(String(e)); } }); }}>{cancelling ? "正在取消…" : "取消验证"}</Button>}
         </div>
-        <p className="text-muted-foreground mt-2 text-xs">向当前保存的模型发送示例目标；会产生一次 API 调用，不执行任务。验证结果仅代表本次请求，重开设置需重新验证。</p>
+        <p className="text-muted-foreground mt-2 text-xs">验证会调用一次 API，不执行任务；结果仅代表本次请求。</p>
         {plan && <div role="status" className="mt-3 text-xs">
           <p className="font-medium text-success">模型验证通过 · {plan.plan.tasks.length} 个任务 · {plan.batches.length} 个依赖批次</p>
           <ol className="mt-2 space-y-1">{plan.plan.tasks.map((task) => <li key={task.id}>{task.title} <span className="text-muted-foreground">· {task.agent_id}</span></li>)}</ol>

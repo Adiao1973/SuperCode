@@ -43,7 +43,7 @@ it("blocks IME Enter and residual Enter, supports arrows and restores focus on E
 });
 it("shows no-result and unloaded scope clearly", () => {
   render(<CommandPalette open onOpenChange={() => {}} onChoose={() => {}} returnFocus={{ current: null }} items={paletteItems([], [], [], "默认空间")} tasksLoaded={false} />);
-  expect(screen.getByText(/打开任务看板后/)).toBeVisible();
+  expect(screen.getByText(/任务未加载/)).toBeVisible();
   fireEvent.change(screen.getByRole("combobox"), { target: { value: "不存在的中文" } });
   expect(screen.getByText("没有匹配结果")).toBeVisible();
   fireEvent.keyDown(screen.getByRole("combobox"), { key: "Enter" });

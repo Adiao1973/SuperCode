@@ -305,7 +305,7 @@ export function RunConsole({
             {historyLoading && <div className="px-5"><LoadingState label="正在读取历史消息…" /></div>}
             {historyError && <div className="px-5"><InlineError title="历史消息读取失败" message={historyError} onRetry={() => setHistoryRevision((value) => value + 1)} retrying={historyLoading || stream.running} /></div>}
             {stream.items.length === 0 ? (
-              <div className="px-5">{historyLoading || historyError ? null : stream.running ? <LoadingState label="正在恢复上下文 / 等待 agent 响应…" /> : <EmptyState title={session.resumable ? "继续此会话" : "开始一个任务"} description={session.resumable ? "输入新提示词继续此会话（将恢复上下文），或查看下方历史。" : "选择 Agent 并输入任务，点击「运行」开始。"} />}</div>
+              <div className="px-5">{historyLoading || historyError ? null : stream.running ? <LoadingState label="正在恢复上下文 / 等待 agent 响应…" /> : <EmptyState title={session.resumable ? "继续此会话" : "开始一个任务"} description={session.resumable ? "输入任务，继续对话。" : "输入任务开始。"} />}</div>
             ) : (
               <MessageTimeline
                 items={stream.items}
@@ -441,7 +441,7 @@ export function RunConsole({
             id="composer-key-hint"
             className="text-muted-foreground mt-1 text-[10px]"
           >
-            Enter 运行 · Shift-Enter 换行 · ⌘R 运行 · ⌘. 停止
+            Enter 运行 · Shift-Enter 换行
           </p>
           {envFresh &&
             envReport &&
@@ -515,7 +515,7 @@ export function RunConsole({
             会话配置
           </Dialog.Title>
           <Dialog.Description className="text-muted-foreground mt-1 text-xs">
-            修改即时保留在当前会话草稿中，关闭后可继续输入。
+            修改自动保留在当前草稿。
           </Dialog.Description>
           <div className="mt-4 space-y-2">
             <p className="text-xs font-medium">Agent</p>
