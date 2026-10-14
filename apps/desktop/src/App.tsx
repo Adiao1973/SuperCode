@@ -1,6 +1,8 @@
-import { useEffect, useReducer, useState } from "react";
+import { useEffect, useReducer, useState, useRef, useCallback } from "react";
 import { AppShell, type NavId } from "@/components/AppShell";
-import type { Workspace } from "@/lib/agent";
+import { CommandPalette } from "@/components/CommandPalette";
+import { paletteItems, type PaletteChoice } from "@/lib/command-palette";
+import type { TaskEntry, Workspace } from "@/lib/agent";
 import { getVersion } from "@tauri-apps/api/app";
 import { CommanderView } from "@/components/CommanderView";
 import { ApprovalsView } from "@/components/ApprovalsView";
@@ -18,6 +20,15 @@ function App() {
       .then(setVersion)
       .catch(() => {});
   }, []);
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  const commandNonce = useRef(0);
+  const paletteOrigin = useRef<HTMLElement | null>(null);
+  const [cachedTasks, setCachedTasks] = useState<TaskEntry[]>([]);
+  const [tasksLoaded, setTasksLoaded] = useState(false);
+  const [boardRequest, setBoardRequest] = useState<{ id: string; kind: "detail" | "create"; nonce: number } | null>(null);
+  const cacheTasks = useCallback((rows: TaskEntry[]) => { setCachedTasks(rows); setTasksLoaded(true); }, []);
+  const clearBoardRequest = useCallback(() => setBoardRequest(null), []);
+  const openPalette = () => { paletteOrigin.current = document.activeElement instanceof HTMLElement ? document.activeElement : null; setPaletteOpen(true); };
   const [nav, setNav] = useState<NavId>("sessions");
   const [sessions, dispatch] = useReducer(sessionsReducer, undefined, () =>
     initialSessionsState(),
@@ -35,6 +46,9 @@ function App() {
   const workspace = workspaces.find(
     (item) => item.id === activeSession?.workspaceId,
   );
+
+  const commandWorkspaceId = workspace?.id ?? activeSession?.workspaceId ?? "default";
+  const commandWorkspaceName = workspace?.name ?? (commandWorkspaceId === "default" ? "默认空间" : "当前会话空间（待核对）");
 
   const [historyLoading, setHistoryLoading] = useState(true);
   const [historyError, setHistoryError] = useState("");
@@ -73,6 +87,7 @@ function App() {
       if (!(e.metaKey || e.ctrlKey)) {
         return;
       }
+      if (e.key.toLowerCase() === "k" && !e.altKey && !e.shiftKey && !e.repeat) { e.preventDefault(); openPalette(); return; }
       if (e.key.toLowerCase() === "n") {
         e.preventDefault();
         setNav("sessions");
@@ -93,10 +108,22 @@ function App() {
     return () => window.removeEventListener("keydown", onKey);
   }, [sessions.items]);
 
+  const chooseCommand = (choice: PaletteChoice) => {
+    if (choice.kind === "module") setNav(choice.target);
+    if (choice.kind === "session" && sessions.items.some((item) => item.key === choice.target)) { setNav("sessions"); dispatch({ type: "activate", key: choice.target }); }
+    if (choice.kind === "new-session") { setNav("sessions"); dispatch({ type: "new" }); }
+    if (choice.kind === "task" || choice.kind === "new-task") { setBoardRequest({ id: choice.kind === "task" ? choice.target : commandWorkspaceId, kind: choice.kind === "task" ? "detail" : "create", nonce: ++commandNonce.current }); setNav("kanban"); }
+    if (choice.kind !== "task" && choice.kind !== "new-task") requestAnimationFrame(() => {
+      const target = choice.kind === "session" || choice.kind === "new-session" ? document.querySelector<HTMLElement>("[data-session-heading]") : document.querySelector<HTMLElement>("[data-app-heading]");
+      target?.focus();
+    });
+  };
   return (
+    <><CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} onChoose={chooseCommand} returnFocus={paletteOrigin} tasksLoaded={tasksLoaded} items={paletteOpen ? paletteItems(sessions.items, cachedTasks, workspaces, commandWorkspaceName) : []} />
     <AppShell
       nav={nav}
       onNavigate={setNav}
+      onSearch={openPalette}
       pendingCount={pendingCount}
       version={version}
       project={{
@@ -141,6 +168,9 @@ function App() {
       {nav === "settings" && <SettingsView onWorkspacesChanged={setWorkspaces} />}
       {nav === "kanban" && (
         <KanbanView
+          onTasksLoaded={cacheTasks}
+          request={boardRequest}
+          onRequestHandled={clearBoardRequest}
           onWorktreeSession={(workspace, task, worktree) => {
             const existing = sessions.items.find(
               (entry) => entry.taskId === task.id,
@@ -169,7 +199,7 @@ function App() {
           }}
         />
       )}
-    </AppShell>
+    </AppShell></>
   );
 }
 

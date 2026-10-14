@@ -62,3 +62,38 @@ it("distinguishes initial loading from empty and retries failed reads without an
   expect(await screen.findByText("还没有任务")).toBeVisible();
   expect(calls.every((c) => ["list_tasks", "list_workspaces"].includes(c.command))).toBe(true);
 });
+
+it("refreshes command navigation, opens a readonly detail or new form and never saves automatically", async () => {
+  const task = { id: "command-task", workspace_id: "default", title: "命令定位任务", status: "backlog" as const, session_id: null };
+  handle("list_tasks", () => [task]); handle("list_workspaces", () => [{ id: "default", name: "默认空间", kind: "default", path: null }]);
+  handle("get_task_context", () => ({ task, stored_cwd: "/fixture", worktree: null, session: null }));
+  const view = render(<KanbanView bindableSessions={[]} request={{ id: task.id, kind: "detail", nonce: 1 }} />);
+  expect(await screen.findByRole("dialog")).toHaveTextContent("命令定位任务");
+  fireEvent.click(screen.getByRole("button", { name: "关闭详情" }));
+  view.rerender(<KanbanView bindableSessions={[]} request={{ id: "default", kind: "create", nonce: 2 }} />);
+  await screen.findByRole("textbox", { name: "新任务标题" });
+  expect(calls.filter((c) => c.command === "list_tasks")).toHaveLength(2);
+  expect(calls.some((c) => /create_task|move_task|run_prompt|execute/.test(c.command))).toBe(false);
+  handle("list_tasks", () => []);
+  view.rerender(<KanbanView bindableSessions={[]} request={{ id: task.id, kind: "detail", nonce: 3 }} />);
+  expect(await screen.findByRole("alert")).toHaveTextContent("该任务已不在当前看板");
+  expect(screen.queryByRole("dialog")).toBeNull();
+  view.rerender(<KanbanView bindableSessions={[]} request={{ id: "removed-space", kind: "create", nonce: 4 }} />);
+  await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent("目标空间不存在"));
+  expect(screen.queryByRole("textbox", { name: "新任务标题" })).toBeNull();
+});
+
+it("does not save a command-opened new-task draft on IME commit or a held Enter", async () => {
+  handle("list_tasks", () => []); handle("list_workspaces", () => [{ id: "default", name: "默认空间", kind: "default", path: null }]);
+  handle("create_task", () => ({ id: "new", title: "中文任务", workspace_id: "default", status: "backlog", session_id: null }));
+  render(<KanbanView bindableSessions={[]} request={{ id: "default", kind: "create", nonce: 20 }} />);
+  const input = await screen.findByRole("textbox", { name: "新任务标题" });
+  fireEvent.compositionStart(input); fireEvent.change(input, { target: { value: "中文任务" } });
+  fireEvent.keyDown(input, { key: "Enter", isComposing: true });
+  fireEvent.compositionEnd(input); fireEvent.keyDown(input, { key: "Enter" });
+  fireEvent.keyDown(input, { key: "Enter", repeat: true });
+  expect(calls.some((c) => c.command === "create_task")).toBe(false);
+  await new Promise((done) => setTimeout(done, 60));
+  fireEvent.keyDown(input, { key: "Enter" });
+  await waitFor(() => expect(calls.filter((c) => c.command === "create_task")).toHaveLength(1));
+});

@@ -106,3 +106,7 @@ env -u SUPERCODE_LLM_API_KEY SUPERCODE_DB="$scratch/fixture.db" \
 ## P4-19 统一状态与短反馈
 
 `feedback.test.tsx` 覆盖 Toast 合并/超时/暂停/关闭回焦和复制失败无假成功；`kanban.test.tsx`、`commander-view.test.tsx`、`session-list.test.tsx` 验证读取失败到只读重试，不启动 Agent 或计划派单。`approval-center.test.ts` 覆盖部分监听注册失败清理与重试，权限提交失败沿用 UUID 防重契约。原生五页、故障注入、剪贴板/焦点与多尺寸证据见 [P4-19](../../../docs/acceptance/p4-19.md)。
+
+## P4-20 命令面板与快捷键
+
+`command-palette.test.tsx` 覆盖标题投影、白名单、作用域/上限、IME 及键盘/回焦；`app-shell.test.tsx` 验证打开搜索无 IPC、会话完整 key 定位，以及其他弹层/终端不被 Cmd-K 拦截；`kanban.test.tsx` 覆盖命令导航重新读取、已删除目标不误跳、新建只打开表单与 IME/重复 Enter 防误保存。真实 macOS IME 与多尺寸出口见 [P4-20](../../../docs/acceptance/p4-20.md)，自动测试不替代原生验收。

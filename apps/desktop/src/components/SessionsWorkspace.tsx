@@ -439,7 +439,7 @@ export function SessionsWorkspace({
             aria-label="当前会话上下文"
             className="shrink-0 border-b px-4 py-2.5"
           >
-            <h2 title={active.title} className="truncate text-sm font-medium">
+            <h2 data-session-heading tabIndex={-1} title={active.title} className="truncate text-sm font-medium">
               {active.title}
             </h2>
             <p className="text-muted-foreground flex min-w-0 items-center gap-2 text-[11px]">
