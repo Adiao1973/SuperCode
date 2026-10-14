@@ -14,7 +14,7 @@ it("groups settings with keyboard buttons while retaining unfinished model input
   fireEvent.click(screen.getByRole("button", { name: "Agent 与项目" }));
   expect(screen.getByRole("region", { name: "Agent 与项目设置" })).toBeVisible();
   expect(screen.queryByRole("region", { name: "模型设置" })).toBeNull();
-  expect(screen.getByText(/版本已检测到不代表已认证/)).toBeVisible();
+  expect(screen.getByText(/登录与模型可用性需在会话中验证/)).toBeVisible();
   fireEvent.click(screen.getByRole("button", { name: "规则" }));
   expect(screen.getByRole("region", { name: "规则设置" })).toBeVisible();
   fireEvent.change(screen.getByLabelText("规则匹配式"), { target: { value: "unsaved-rule" } });

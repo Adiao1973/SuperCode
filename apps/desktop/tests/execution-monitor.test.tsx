@@ -11,7 +11,7 @@ it("renders persisted states, truncation and inactive running without restarting
   const host = render(<ExecutionMonitor view={view} onOpenSession={open} renderPending={() => null} />);
   expect(screen.getByRole("status")).toHaveTextContent("不会自动恢复");
   expect(screen.getByText("预览过长，已截断；完整内容请查看会话。")).toBeVisible();
-  expect(screen.getByText("前置任务未成功，未执行此任务。")).toBeVisible();
+  expect(screen.getByText("依赖未成功，已跳过。")).toBeVisible();
   expect(calls).toHaveLength(0);
   const row = { local_id: "local-uuid", agent_session_id: "remote-id", agent_id: "opencode", cwd: "/fixture" };
   handle("list_history_sessions", () => [row]);

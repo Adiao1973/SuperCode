@@ -67,7 +67,7 @@ it("prefills current project, offers ACP multiselect with honest availability, a
   expect(screen.getByLabelText("工作目录")).toHaveValue("/fixture/current");
   expect(screen.getByRole("checkbox", { name: /MiMo/ })).toBeChecked();
   expect(screen.getByRole("checkbox", { name: /ZCode/ })).toBeDisabled();
-  expect(screen.getByText(/已接入不代表已安装/)).toBeVisible();
+  expect(screen.getByText(/执行前检查安装与登录/)).toBeVisible();
   await user.click(screen.getByRole("checkbox", { name: /OpenCode/ }));
   fireEvent.change(screen.getByLabelText("任务目标"), {
     target: { value: "实现中文待办\n保留已有数据" },

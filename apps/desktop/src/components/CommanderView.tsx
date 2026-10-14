@@ -181,7 +181,7 @@ export function CommanderView({
             </Button>
           </div>
           {reading && <LoadingState label="正在读取计划历史…" />}
-          {!reading && !error && history.length === 0 && <EmptyState title="还没有计划" description="生成的计划会保存在这里。重新打开应用不会自动执行。" />}
+          {!reading && !error && history.length === 0 && <EmptyState title="还没有计划" description="生成计划后在此审阅。" />}
           {history.map((view) => (
             <button
               key={view.run.id}

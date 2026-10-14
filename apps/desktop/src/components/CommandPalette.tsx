@@ -24,7 +24,7 @@ export function CommandPalette({ open, onOpenChange, onChoose, returnFocus, item
       onCloseAutoFocus={(event) => { event.preventDefault(); if (!navigating.current && returnFocus.current?.isConnected) returnFocus.current.focus({ preventScroll: true }); }}
       onEscapeKeyDown={(event) => { if (composing.current || composingKey(event) || performance.now() - ended.current < 50) event.preventDefault(); }}>
       <div className="flex items-center justify-between gap-3 px-4 pt-4"><Dialog.Title className="font-semibold">搜索与快捷键</Dialog.Title><Dialog.Close asChild><button aria-label="关闭搜索" className="rounded p-1 focus-visible:ring-2 focus-visible:ring-ring"><X className="size-4" /></button></Dialog.Close></div>
-      <Dialog.Description className="px-4 pt-2 text-xs text-muted-foreground">仅搜索已加载的标题与分组，最多显示 80 项；不搜索文件、正文或密钥。</Dialog.Description>
+      <Dialog.Description className="px-4 pt-2 text-xs text-muted-foreground">搜索已加载的模块、会话与任务。</Dialog.Description>
       <div className="m-4 flex items-center gap-2 rounded-md border px-3 focus-within:ring-2 focus-within:ring-ring"><Search aria-hidden="true" className="size-4 text-muted-foreground" /><input ref={input} role="combobox" aria-label="搜索模块、会话或任务" aria-autocomplete="list" aria-expanded="true" aria-controls={listId} aria-activedescendant={results.length ? `${listId}-${selected}` : undefined} className="min-w-0 flex-1 bg-transparent py-3 text-sm outline-none command-palette-input" placeholder="搜索模块、会话或任务…" value={query}
         onChange={(e) => { setQuery(e.target.value); setActive(0); }} onCompositionStart={() => { composing.current = true; }} onCompositionEnd={() => { composing.current = false; ended.current = performance.now(); }}
         onKeyDown={(event) => {
@@ -33,12 +33,12 @@ export function CommandPalette({ open, onOpenChange, onChoose, returnFocus, item
           if (event.key === "Enter") { event.preventDefault(); if (!event.repeat && results[selected]) choose(results[selected]); }
         }} /></div>
       <div className="min-h-0 flex-1 overflow-y-auto px-2"><div id={listId} role="listbox" aria-label="搜索结果">{results.map((item, index) => <div key={item.id} id={`${listId}-${index}`} role="option" aria-selected={index === selected} onMouseMove={() => setActive(index)} onMouseDown={(event) => event.preventDefault()} onClick={() => choose(item)} className={`mx-1 cursor-pointer rounded-md px-3 py-2 ${index === selected ? "bg-accent text-accent-foreground" : "hover:bg-muted"}`}><p className="text-sm font-medium [overflow-wrap:anywhere]">{item.title}</p><p className="mt-1 text-xs text-muted-foreground [overflow-wrap:anywhere]">{item.scope}</p></div>)}</div>
-        {results.length === 0 && <div className="px-3"><EmptyState title="没有匹配结果" description="试试其他标题或先进入会话、看板加载列表。" /></div>}
+        {results.length === 0 && <div className="px-3"><EmptyState title="没有匹配结果" description="换个关键词，或先加载会话与看板。" /></div>}
       </div>
       <div className="shrink-0 space-y-2 border-t px-4 py-3 text-xs text-muted-foreground">
-        {!tasksLoaded && <p>打开任务看板后，可搜索已加载任务。</p>}
+        {!tasksLoaded && <p>任务未加载，先打开看板。</p>}
         <p aria-live="polite">{results.length} 项结果 · ↑↓ 选择 · Enter 打开 · Esc 返回</p>
-        <details><summary className="cursor-pointer rounded focus-visible:ring-2 focus-visible:ring-ring">快捷键与作用范围</summary><dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-4 gap-y-2"><dt>⌘/Ctrl K</dt><dd>打开搜索；终端内请用侧栏入口。</dd><dt>⌘/Ctrl N</dt><dd>新建默认空间会话草稿。</dd><dt>⌘/Ctrl 1～8</dt><dd>切换已加载的前八个会话。</dd><dt>⌘/Ctrl R · ⌘/Ctrl .</dt><dd>当前会话运行 / 停止，沿用原权限流程。</dd><dt>Enter · Shift Enter</dt><dd>会话输入区运行 / 换行。</dd></dl><p className="mt-3">组合输入、其他弹层与终端拥有自己的按键；命令面板不提供运行、删除、裁决或派单。</p></details>
+        <details><summary className="cursor-pointer rounded focus-visible:ring-2 focus-visible:ring-ring">快捷键与作用范围</summary><dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-4 gap-y-2"><dt>⌘/Ctrl K</dt><dd>打开搜索；终端内请用侧栏入口。</dd><dt>⌘/Ctrl N</dt><dd>新建默认空间会话草稿。</dd><dt>⌘/Ctrl 1～8</dt><dd>切换已加载的前八个会话。</dd><dt>⌘/Ctrl R · ⌘/Ctrl .</dt><dd>当前会话运行 / 停止，沿用原权限流程。</dd><dt>Enter · Shift Enter</dt><dd>会话输入区运行 / 换行。</dd></dl><p className="mt-3">仅导航与新建草稿，不执行任务。最多显示 80 项；不搜索文件或正文。终端和其他弹层保留按键。</p></details>
       </div>
     </Dialog.Content>
   </Dialog.Portal></Dialog.Root>;

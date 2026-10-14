@@ -40,7 +40,7 @@ export function ProjectSettings({ onSaved }: { onSaved?: (rows: Workspace[]) => 
     finally { locked.current = false; if (alive.current) setBusy(false); }
   };
   return <section aria-label="项目目录设置" className="space-y-3 border-b pb-6">
-    <div><h2 className="text-base font-semibold">项目目录</h2><p className="mt-1 text-xs text-muted-foreground">选择已有目录并添加项目空间，随后在会话或指挥官中选择使用。</p></div>
+    <div><h2 className="text-base font-semibold">项目目录</h2><p className="mt-1 text-xs text-muted-foreground">添加已有项目目录。</p></div>
     <label className="block text-xs">项目目录<Input aria-label="项目目录" className="mt-1" value={path} disabled={busy} onChange={(e) => { setPath(e.target.value); setNotice(""); }} placeholder="选择本机项目文件夹" /></label>
     <div className="flex flex-wrap gap-2"><Button variant="outline" size="sm" disabled={busy} onClick={() => void perform("pick")}>选择项目目录</Button><Button size="sm" disabled={busy || !path.trim()} onClick={() => void perform("save")}>{busy ? "处理中…" : "添加项目空间"}</Button></div>
     {notice && <p role="status" className="text-xs text-muted-foreground">{notice}</p>}

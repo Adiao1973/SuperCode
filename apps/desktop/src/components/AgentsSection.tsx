@@ -151,7 +151,7 @@ export function AgentsSection() {
         </Button>
       </div>
 
-      <p className="mb-4 text-xs text-muted-foreground">先检查命令，再在会话中完成登录与模型验证。版本已检测到不代表已认证或拥有模型权限；此处不会运行任务。</p>
+      <p className="mb-4 text-xs text-muted-foreground">检测命令版本；登录与模型可用性需在会话中验证。</p>
 
       {loading && <LoadingState label="正在检测 Agent 命令…" />}
       {error && <InlineError title="Agent 操作未完成" message={error} onRetry={() => void refresh()} retrying={loading || submitting} />}
