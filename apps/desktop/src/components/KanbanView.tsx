@@ -34,6 +34,9 @@ const COLUMNS: { status: TaskEntry["status"]; label: string }[] = [
 ];
 
 interface KanbanViewProps {
+  onTasksLoaded?: (tasks: TaskEntry[]) => void;
+  request?: { id: string; kind: "detail" | "create"; nonce: number } | null;
+  onRequestHandled?: () => void;
   /** 绑定会话跳转：切回会话视图并激活对应会话（找不到时提示） */
   onOpenSession?: (agentSessionId: string) => Promise<void>;
   onWorktreeSession?: (workspace: Workspace, task: TaskEntry, entry: TaskWorktree) => void;
@@ -41,7 +44,7 @@ interface KanbanViewProps {
   bindableSessions: { key: string; title: string; acpSessionId: string | null }[];
 }
 
-export function KanbanView({ onOpenSession, onWorktreeSession, bindableSessions }: KanbanViewProps) {
+export function KanbanView({ onOpenSession, onWorktreeSession, bindableSessions, onTasksLoaded, request: commandRequest, onRequestHandled }: KanbanViewProps) {
   const saving = useRef(false);
   const revision = useRef(0);
   const keyboardDrag = useRef(false);
@@ -67,6 +70,10 @@ export function KanbanView({ onOpenSession, onWorktreeSession, bindableSessions 
     return () => events.forEach((name) => window.removeEventListener(name, capture, true));
   }, []);
   const [activeId, setActiveId] = useState<string | null>(null);
+  const handledCommand = useRef<number | null>(null);
+  const titleComposing = useRef(false);
+  const titleCompositionEnded = useRef(-Infinity);
+  const [commandReady, setCommandReady] = useState<number | null>(null);
   const [detailId, setDetailId] = useState<string | null>(null);
   const detailTrigger = useRef<HTMLElement | null>(null);
   const [landed, setLanded] = useState<string | null>(null);
@@ -89,16 +96,40 @@ export function KanbanView({ onOpenSession, onWorktreeSession, bindableSessions 
     try {
       const [t, w] = await Promise.all([listTasks(), listWorkspaces()]);
       if (request !== revision.current) return;
-      setTasks(t);
+      setTasks(t); onTasksLoaded?.(t);
       setWorkspaces(w);
     } catch (e) {
       if (request === revision.current) setError(String(e));
     } finally { if (request === revision.current) setReading(false); }
-  }, []);
+  }, [onTasksLoaded]);
 
   useEffect(() => {
-    void refresh();
+    if (!commandRequest) void refresh();
   }, [refresh]);
+  useEffect(() => {
+    if (!commandRequest) return;
+    setCreatingIn(null); setDetailId(null);
+    let alive = true;
+    void refresh().then(() => { if (alive) setCommandReady(commandRequest.nonce); });
+    return () => { alive = false; };
+  }, [commandRequest?.nonce, refresh]);
+
+  useEffect(() => {
+    if (!commandRequest || commandReady !== commandRequest.nonce || handledCommand.current === commandRequest.nonce || reading || busy) return;
+    handledCommand.current = commandRequest.nonce;
+    if (error) { onRequestHandled?.(); return; }
+    const { id, kind } = commandRequest;
+    if (kind === "detail") {
+      if (tasks.some((task) => task.id === id)) {
+        detailTrigger.current = Array.from(document.querySelectorAll<HTMLElement>("[data-task-detail]")).find((element) => element.dataset.taskDetail === id) ?? null;
+        setDetailId(id);
+      } else setError("该任务已不在当前看板，请刷新后重新搜索。");
+    } else if (workspaces.some((w) => w.id === id)) {
+      setCreatingIn(id);
+      requestAnimationFrame(() => document.querySelector<HTMLInputElement>("[data-new-task-input]")?.focus());
+    } else setError("目标空间不存在，请刷新看板后再新建任务。");
+    onRequestHandled?.();
+  }, [commandRequest, commandReady, reading, busy, error, tasks, workspaces, onRequestHandled]);
 
   const create = useCallback(
     async (workspaceId: string) => {
@@ -193,6 +224,7 @@ export function KanbanView({ onOpenSession, onWorktreeSession, bindableSessions 
     try {
       const stored = await moveTask(original.id, workspaceId, status);
       setTasks((items) => items.map((task) => task.id === stored.id ? stored : task));
+      onTasksLoaded?.(tasks.map((task) => task.id === stored.id ? stored : task));
       setLanded(stored.id); clearTimeout(landingTimer.current);
       landingTimer.current = setTimeout(() => setLanded(null), 450);
       setNotice(`已保存：${workspaces.find((workspace) => workspace.id === stored.workspace_id)?.name ?? "空间"} · ${COLUMNS.find((column) => column.status === stored.status)?.label}`);
@@ -275,9 +307,14 @@ export function KanbanView({ onOpenSession, onWorktreeSession, bindableSessions 
             {creatingIn === workspace.id && (
               <div className="mb-2 flex gap-1.5">
                 <Input
+                  data-new-task-input
+                  aria-label="新任务标题"
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
+                  onCompositionStart={() => { titleComposing.current = true; }}
+                  onCompositionEnd={() => { titleComposing.current = false; titleCompositionEnded.current = performance.now(); }}
                   onKeyDown={(e) => {
+                    if (titleComposing.current || e.nativeEvent.isComposing || e.keyCode === 229 || e.repeat || performance.now() - titleCompositionEnded.current < 50) return;
                     if (e.key === "Enter") void create(workspace.id);
                     if (e.key === "Escape") setCreatingIn(null);
                   }}

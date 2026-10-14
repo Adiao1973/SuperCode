@@ -141,6 +141,8 @@ html { background: var(--background); }
 body { margin: 0; }
 select, option { background-color: var(--background); color: var(--foreground); }
 :focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+/* The search wrapper owns the focus indicator, including its icon. */
+.command-palette-input:focus-visible { outline: none; }
 
 /* P4-5: one timing policy shared with motionTokens. No transition gates an action. */
 :root { --motion-micro: 120ms; --motion-presence: 180ms; --motion-ease: cubic-bezier(0.2, 0, 0, 1); }

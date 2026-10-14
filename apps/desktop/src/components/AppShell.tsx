@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Popover } from "radix-ui";
 import {
   Folder,
+  Search,
   LayoutGrid,
   MessageSquare,
   PanelLeftClose,
@@ -30,6 +31,7 @@ export type NavId = (typeof NAV_ITEMS)[number]["id"];
 export function AppShell({
   nav,
   onNavigate,
+  onSearch,
   pendingCount,
   project,
   version,
@@ -37,6 +39,7 @@ export function AppShell({
 }: {
   nav: NavId;
   onNavigate: (nav: NavId) => void;
+  onSearch?: () => void;
   pendingCount: number;
   project: { name: string; cwd: string; agent: string };
   version: string | null;
@@ -136,6 +139,7 @@ export function AppShell({
               </Tooltip>
             ))}
           </nav>
+          {onSearch && <div className="px-2 pt-2"><Button variant="ghost" className="w-full justify-start gap-2" aria-label="搜索与快捷键（⌘K / Ctrl K）" title="搜索与快捷键（⌘K / Ctrl K）" onClick={onSearch}><Search className="size-4 shrink-0" />{!collapsed && <><span>搜索与快捷键</span><kbd className="ml-auto text-[10px] text-muted-foreground">⌘K</kbd></>}</Button></div>}
           <div className="mt-auto border-t p-2">
             <Button
               variant="ghost"
@@ -160,6 +164,7 @@ export function AppShell({
           <header className="flex h-14 shrink-0 items-center gap-4 border-b px-5">
             <h1
               ref={heading}
+              data-app-heading
               tabIndex={-1}
               className="shrink-0 text-sm font-semibold outline-none"
             >

@@ -191,12 +191,13 @@ it("preserves the real session host, draft, running Channel and PTY across modul
     expect(calls.filter((c) => c.command === "open_terminal")).toHaveLength(1),
   );
   const terminalHost = document.querySelector("[data-session-terminal]")!;
-  for (const key of ["r", ".", "n", "1"])
+  for (const key of ["r", ".", "n", "1", "k"])
     fireEvent.keyDown(terminalHost, { key, metaKey: true });
   expect(calls.filter((c) => c.command === "run_prompt")).toHaveLength(0);
   expect(calls.filter((c) => c.command === "cancel_run")).toHaveLength(0);
   expect(calls.filter((c) => c.command === "close_terminal")).toHaveLength(0);
   expect(prompt).toHaveValue("合成草稿，不连接真实模型");
+  expect(screen.queryByRole("combobox")).toBeNull();
   handle("save_layout_preferences", () => undefined);
   fireEvent.keyDown(screen.getByRole("separator", { name: "调整终端高度" }), {
     key: "Enter",
@@ -217,6 +218,8 @@ it("preserves the real session host, draft, running Channel and PTY across modul
   await user.click(screen.getByRole("button", { name: /当前项目/ }));
   fireEvent.keyDown(window, { key: "r", metaKey: true });
   fireEvent.keyDown(window, { key: "n", metaKey: true });
+  fireEvent.keyDown(window, { key: "k", metaKey: true });
+  expect(screen.queryByRole("combobox")).toBeNull();
   expect(calls.filter((c) => c.command === "run_prompt")).toHaveLength(0);
   await user.keyboard("{Escape}");
   await user.click(screen.getByRole("button", { name: "运行" }));
@@ -262,4 +265,28 @@ it("preserves the real session host, draft, running Channel and PTY across modul
   unmount();
   await act(async () => {});
   expect(calls.filter((c) => c.command === "close_terminal")).toHaveLength(1);
+});
+
+it("opens scoped search without IPC and activates the exact loaded session without running", async () => {
+  vi.stubGlobal("ResizeObserver", class { observe() {} unobserve() {} disconnect() {} });
+  const history = { local_id: "p420-local-uuid", agent_session_id: "p420-remote", agent_id: "opencode", title: "唯一中文会话", cwd: "/fixture", workspace_id: "default", status: "completed", updated_at: "" };
+  handle("list_history_sessions", () => [history]); handle("list_session_messages", () => []);
+  handle("list_workspaces", () => [{ id: "default", name: "默认空间", kind: "default", path: null }]);
+  handle("list_agent_definitions", () => []); handle("check_opencode_env", () => null); handle("check_node_env", () => null); handle("appearance_ready", () => undefined);
+  render(<MotionProvider initial={{ preferences: { motion: "reduce" }, error: null }}><AppearanceProvider initial={{ preferences: { theme: "light" }, error: null }}><LayoutProvider initial={{ preferences: DEFAULT_LAYOUT, error: null }}><App /></LayoutProvider></AppearanceProvider></MotionProvider>);
+  await screen.findByRole("button", { name: "选择会话 唯一中文会话" });
+  await act(async () => {});
+  const before = calls.length;
+  fireEvent.keyDown(window, { key: "k", metaKey: true, isComposing: true });
+  expect(screen.queryByRole("combobox")).toBeNull();
+  fireEvent.keyDown(window, { key: "k", metaKey: true });
+  const input = await screen.findByRole("combobox");
+  fireEvent.change(input, { target: { value: "唯一中文会话" } });
+  expect(calls).toHaveLength(before);
+  fireEvent.keyDown(window, { key: "r", metaKey: true });
+  expect(calls.some((c) => c.command === "run_prompt")).toBe(false);
+  fireEvent.keyDown(input, { key: "Enter" });
+  await waitFor(() => expect(screen.queryByRole("combobox")).toBeNull());
+  expect(screen.getByLabelText("当前会话上下文")).toHaveTextContent("唯一中文会话");
+  expect(calls.some((c) => /run_prompt|execute_commander|create_task|respond_permission/.test(c.command))).toBe(false);
 });

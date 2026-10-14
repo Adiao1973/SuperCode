@@ -1,0 +1,8 @@
+2026-10-14 macOS arm64
+just verify: PASS (exit 0)
+Frontend: 34 files, 106 tests passed
+Rust: 162 passed, 1 existing smoke ignored
+Typecheck, build, fmt --check, clippy --all-targets -- -D warnings: PASS
+Native Tauri build: PASS; navigation/focus/terminal/modal/layout: PASS; real Chinese IME: PASS user confirmation
+Final focus-style fix: just verify PASS after enabling local HTTP fixture tests.
+Native mouse focus: single wrapper ring PASS. Local dev merge after acceptance; no release.
