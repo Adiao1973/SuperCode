@@ -229,3 +229,14 @@ it("reports actual clipboard fallback failure and restores focus without leaking
     delete (document as Partial<Document>).execCommand;
   }
 });
+
+it("bounds growing stream parsing without losing source and restores completed Markdown", async () => {
+  const text = "# 流式预算\n\n" + "中文内容 ".repeat(1900);
+  const view = render(<MessageMarkdown text={text} active />);
+  expect(view.container.querySelector("pre")!.textContent).toBe(text);
+  expect(screen.queryByRole("heading", { name: "流式预算" })).toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: "复制全文" }));
+  await waitFor(() => expect(copy).toHaveBeenLastCalledWith(text));
+  view.rerender(<MessageMarkdown text={text} active={false} />);
+  expect(await screen.findByRole("heading", { name: "流式预算" })).toBeVisible();
+});

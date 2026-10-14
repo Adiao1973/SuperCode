@@ -1,0 +1,9 @@
+2026-10-15 macOS arm64
+just verify PASS exit0
+Frontend 107 tests / 34 files PASS
+Bundle graph 2 node tests PASS; initial gzip 304273 / budget443752 PASS
+Rust 162 PASS, 1 existing smoke ignored
+Typecheck/build/fmt/clippy PASS
+Normal release and tauri/devtools release builds PASS
+Native performance acceptance PENDING: startup and stream budgets not passed; Mac locked
+No dev merge, no release

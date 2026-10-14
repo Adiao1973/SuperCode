@@ -1,5 +1,5 @@
 /** Rendering policy only; original messages stay authoritative in the stream/store. */
-export const ACTIVE_MARKDOWN_LIMIT = 32 * 1024;
+export const ACTIVE_MARKDOWN_LIMIT = 8 * 1024;
 export const MARKDOWN_LIMIT = 128 * 1024;
 export const HIGHLIGHT_LANGUAGES = new Set([
   "js",

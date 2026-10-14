@@ -1,0 +1,17 @@
+{
+  "scope": "host RSS only, KiB; not attributed WebContent/GPU/XPC; not whole-app leak proof",
+  "initial": {
+    "release": 105728,
+    "probeLongHistory": 126352
+  },
+  "afterStream": {
+    "release": 114560,
+    "probe": 129728
+  },
+  "baseline": {
+    "release": 117424,
+    "probeLongHistory": 126560,
+    "probeAfterStream": 129152
+  },
+  "twentyCycleAudit": "PENDING Mac unlock"
+}

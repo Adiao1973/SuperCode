@@ -1,0 +1,87 @@
+[
+  {
+    "label": "long-history-scroll-1000",
+    "samples": 1800,
+    "p95Ms": 18,
+    "maxMs": 39,
+    "over50Ms": 0,
+    "viewport": [
+      1280,
+      768,
+      2
+    ],
+    "visibility": [
+      "visible"
+    ],
+    "dom": {
+      "minVirtualItems": 5,
+      "maxVirtualItems": 8,
+      "totalElements": 532,
+      "longtaskSupported": false
+    },
+    "valid": true,
+    "note": ""
+  },
+  {
+    "label": "long-history-scroll-1000-1280x800",
+    "samples": 1799,
+    "p95Ms": 18,
+    "maxMs": 38,
+    "over50Ms": 0,
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "visibility": [
+      "visible"
+    ],
+    "dom": {
+      "minVirtualItems": 5,
+      "maxVirtualItems": 11,
+      "totalElements": 536,
+      "longtaskSupported": false
+    },
+    "valid": true,
+    "note": ""
+  },
+  {
+    "label": "trusted-input-click-paint-proxy",
+    "samples": 32,
+    "p95Ms": 33,
+    "maxMs": 35,
+    "over50Ms": 0,
+    "viewport": [
+      1280,
+      300,
+      2
+    ],
+    "visibility": null,
+    "dom": null,
+    "valid": true,
+    "note": "input viewport captured at Inspector export, actual event viewport 1280x800; numeric double-rAF proxy only"
+  },
+  {
+    "label": "stream-20hz",
+    "samples": 1802,
+    "p95Ms": 22,
+    "maxMs": 43,
+    "over50Ms": 0,
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "visibility": [
+      "visible"
+    ],
+    "dom": {
+      "minVirtualItems": 0,
+      "maxVirtualItems": 1,
+      "totalElements": 953,
+      "longtaskSupported": false
+    },
+    "valid": true,
+    "note": ""
+  }
+]
