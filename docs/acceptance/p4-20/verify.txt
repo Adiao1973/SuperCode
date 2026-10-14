@@ -1,0 +1,7 @@
+2026-10-14 macOS arm64
+just verify: PASS (exit 0)
+Frontend: 34 files, 106 tests passed
+Rust: 162 passed, 1 existing smoke ignored
+Typecheck, build, fmt --check, clippy --all-targets -- -D warnings: PASS
+Native Tauri build: PASS; interaction acceptance: PENDING (Mac locked)
+No dev merge or release before native acceptance.
