@@ -4,7 +4,6 @@
     "samples": 1800,
     "p95Ms": 18,
     "maxMs": 39,
-    "over50Ms": 0,
     "viewport": [
       1280,
       768,
@@ -19,7 +18,7 @@
       "totalElements": 532,
       "longtaskSupported": false
     },
-    "valid": true,
+    "qualified": true,
     "note": ""
   },
   {
@@ -27,7 +26,6 @@
     "samples": 1799,
     "p95Ms": 18,
     "maxMs": 38,
-    "over50Ms": 0,
     "viewport": [
       1280,
       800,
@@ -42,7 +40,7 @@
       "totalElements": 536,
       "longtaskSupported": false
     },
-    "valid": true,
+    "qualified": true,
     "note": ""
   },
   {
@@ -50,7 +48,6 @@
     "samples": 32,
     "p95Ms": 33,
     "maxMs": 35,
-    "over50Ms": 0,
     "viewport": [
       1280,
       300,
@@ -58,15 +55,14 @@
     ],
     "visibility": null,
     "dom": null,
-    "valid": true,
-    "note": "input viewport captured at Inspector export, actual event viewport 1280x800; numeric double-rAF proxy only"
+    "qualified": true,
+    "note": ""
   },
   {
     "label": "stream-20hz",
     "samples": 1802,
     "p95Ms": 22,
     "maxMs": 43,
-    "over50Ms": 0,
     "viewport": [
       1280,
       800,
@@ -81,7 +77,275 @@
       "totalElements": 953,
       "longtaskSupported": false
     },
-    "valid": true,
+    "qualified": true,
+    "note": ""
+  },
+  {
+    "label": "stream-20hz-active8k",
+    "samples": 339,
+    "p95Ms": 33,
+    "maxMs": 68539709,
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "visibility": [
+      "visible"
+    ],
+    "dom": {
+      "minVirtualItems": 0,
+      "maxVirtualItems": 0,
+      "totalElements": 457,
+      "longtaskSupported": false
+    },
+    "qualified": false,
+    "note": "Inspector/lock interference; not accepted as a performance pass"
+  },
+  {
+    "label": "stream-20hz-active8k-unlocked",
+    "samples": 1801,
+    "p95Ms": 28,
+    "maxMs": 33,
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "visibility": [
+      "visible"
+    ],
+    "dom": {
+      "minVirtualItems": 1,
+      "maxVirtualItems": 1,
+      "totalElements": 488,
+      "longtaskSupported": false
+    },
+    "qualified": true,
+    "note": ""
+  },
+  {
+    "label": "stream-20hz-coalesced-layout",
+    "samples": 1802,
+    "p95Ms": 27,
+    "maxMs": 38,
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "visibility": [
+      "visible"
+    ],
+    "dom": {
+      "minVirtualItems": 0,
+      "maxVirtualItems": 1,
+      "totalElements": 504,
+      "longtaskSupported": false
+    },
+    "qualified": true,
+    "note": ""
+  },
+  {
+    "label": "stream-20hz-stable-blocks-confirmed",
+    "samples": 1801,
+    "p95Ms": 23,
+    "maxMs": 32,
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "visibility": [
+      "visible"
+    ],
+    "dom": {
+      "minVirtualItems": 0,
+      "maxVirtualItems": 1,
+      "totalElements": 557,
+      "longtaskSupported": false
+    },
+    "qualified": true,
+    "note": ""
+  },
+  {
+    "label": "stream-20hz-active4k-raw1k",
+    "samples": 1801,
+    "p95Ms": 22,
+    "maxMs": 27,
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "visibility": [
+      "visible"
+    ],
+    "dom": {
+      "minVirtualItems": 1,
+      "maxVirtualItems": 1,
+      "totalElements": 588,
+      "longtaskSupported": false
+    },
+    "qualified": true,
+    "note": ""
+  },
+  {
+    "label": "stream-20hz-transition",
+    "samples": 1801,
+    "p95Ms": 22,
+    "maxMs": 28,
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "visibility": [
+      "visible"
+    ],
+    "dom": {
+      "minVirtualItems": 1,
+      "maxVirtualItems": 1,
+      "totalElements": 604,
+      "longtaskSupported": false
+    },
+    "qualified": true,
+    "note": ""
+  },
+  {
+    "label": "mixed-anchor-before",
+    "samples": 0,
+    "p95Ms": null,
+    "maxMs": null,
+    "viewport": null,
+    "visibility": null,
+    "dom": {
+      "key": "message-1000",
+      "offset": -9788,
+      "top": 128057,
+      "height": 128520,
+      "viewport": 0,
+      "rows": 2,
+      "unread": true
+    },
+    "qualified": false,
+    "note": "Inspector/lock interference; not accepted as a performance pass"
+  },
+  {
+    "label": "mixed-1000-20hz-reading",
+    "samples": 1797,
+    "p95Ms": 22,
+    "maxMs": 56,
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "visibility": [
+      "visible"
+    ],
+    "dom": {
+      "minVirtualItems": 1,
+      "maxVirtualItems": 2,
+      "totalElements": 591,
+      "longtaskSupported": false
+    },
+    "qualified": false,
+    "note": "Inspector/lock interference; not accepted as a performance pass"
+  },
+  {
+    "label": "mixed-anchor-after-page",
+    "samples": 0,
+    "p95Ms": null,
+    "maxMs": null,
+    "viewport": null,
+    "visibility": null,
+    "dom": {
+      "key": "message-1000",
+      "offset": -9788,
+      "top": 128057,
+      "height": 128520,
+      "viewport": 0,
+      "rows": 2,
+      "unread": true
+    },
+    "qualified": false,
+    "note": "Inspector/lock interference; not accepted as a performance pass"
+  },
+  {
+    "label": "mixed-reading-before-delayed",
+    "samples": 0,
+    "p95Ms": null,
+    "maxMs": null,
+    "viewport": null,
+    "visibility": null,
+    "dom": {
+      "key": "message-871",
+      "offset": -46.625,
+      "top": 103223,
+      "height": 125867,
+      "viewport": 463,
+      "rows": 22,
+      "unread": true
+    },
+    "qualified": true,
+    "note": ""
+  },
+  {
+    "label": "mixed-reading-after-delayed",
+    "samples": 0,
+    "p95Ms": null,
+    "maxMs": null,
+    "viewport": null,
+    "visibility": null,
+    "dom": {
+      "key": "message-871",
+      "offset": -46.625,
+      "top": 103223,
+      "height": 125867,
+      "viewport": 463,
+      "rows": 22,
+      "unread": true
+    },
+    "qualified": true,
+    "note": ""
+  },
+  {
+    "label": "mixed-reading-expanded-delayed",
+    "samples": 0,
+    "p95Ms": null,
+    "maxMs": null,
+    "viewport": null,
+    "visibility": null,
+    "dom": {
+      "key": "message-871",
+      "offset": -46.625,
+      "top": 103223,
+      "height": 126014,
+      "viewport": 463,
+      "rows": 19,
+      "unread": true
+    },
+    "qualified": true,
+    "note": ""
+  },
+  {
+    "label": "mixed-jump-bottom-delayed",
+    "samples": 0,
+    "p95Ms": null,
+    "maxMs": null,
+    "viewport": null,
+    "visibility": null,
+    "dom": {
+      "key": "message-1000",
+      "offset": -9999,
+      "top": 125761,
+      "height": 126013,
+      "viewport": 252,
+      "rows": 2,
+      "unread": false
+    },
+    "qualified": true,
     "note": ""
   }
 ]

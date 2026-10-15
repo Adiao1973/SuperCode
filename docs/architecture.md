@@ -855,7 +855,7 @@ DispatchOptions 增 interactive_approvals（默认 false，CLI 行为不变）�
 
 - 视觉：沿用纸白/石墨与单一强调色，正文以标题、列表、表格和留白形成阅读层次；代码仅用细边界与等宽字体。内容依次为正文、代码操作、原文回退。交互沿用短颜色反馈，不对 token 或正文高度做入场动画。
 - 只替换会话 `message` 展示，用户文本/思考/工具/审批及 Channel、SQLite 历史契约不变。活跃和历史消息使用同一 renderer；原始文本永不改写，原文查看/全文复制随时可用。代码复制保留源位置内的内容（包括尾部换行），不复制围栏或语言名。
-- 采用 P4-2 选定的 react-markdown 10.1.0 + remark-gfm 4.0.1（MIT），延迟加载；加载/解析失败回退原文。流中允许未闭合语法按 CommonMark 暂态呈现，100ms 合并展示更新，结束立即显示完整文本。活动消息超过 8K UTF-16 码元或任何消息超过 128K UTF-16 码元 时自动显示可复制原文，避免大文档每批重解析；不截断文本。
+- 采用 P4-2 选定的 react-markdown 10.1.0 + remark-gfm 4.0.1（MIT），延迟加载；加载/解析失败回退原文。流中允许未闭合语法按 CommonMark 暂态呈现，Markdown与原文均以100ms合并展示更新，结束立即显示完整文本。活动消息超过 4K UTF-16 码元或任何消息超过 128K UTF-16 码元 时自动显示可复制原文，避免大文档每批重解析；不截断文本。
 - 组件和插件引用固定，完成消息 memo，虚拟列表 key 与宿主不变。按需高亮只在用户点击时加载 Shiki 4.4.3 的 JS 引擎、两套主题与有限语言（JS/TS/JSON/Python/Bash/CSS）；只处理已结束消息、≤16K UTF-16 码元/200 行代码，不支持语言保持原文。令牌以 React span 文本渲染，禁止 dangerouslySetInnerHTML。
 - skipHtml，不接 raw HTML 插件；图片仅显示替代文字且不创建 img/请求；链接只接受完整 http/https URL（无凭据、空白或控制符），危险/相对/本地链接退为文本。外链由 Radix 确认显示完整地址，用户点击“在浏览器打开”才调用现有 opener；Esc/取消回到链接，不自动导航。
 - 原文切换和复制操作不重建执行宿主，复制/打开失败在原处可见。P4-10 不改阅读锚点/工具折叠（P4-11）。同构建口径记录首包 gzip 增量≤20% 与 lazy chunk；原生专项检查虚拟列表 20Hz 增量，仅活动消息更新，无全列表重新挂载。超预算先采用流中原文/完成后渲染对照，不带问题进入下一任务。
@@ -960,6 +960,11 @@ Agent 分组明确版本探测仅表示命令可用，认证与模型权限需�
 P4-20 前端接线：AppShell.onSearch 打开受控 CommandPalette；App 仅在面板打开时构造投影，KanbanView.onTasksLoaded 发布成功读取/已保存的任务缓存。看板 request={id,kind:detail|create,nonce} 每次先刷新，再只处理一次并 onRequestHandled 清理；详情返回原卡片、表单聚焦标题。没有新 IPC 或数据库迁移。
 
 
-### P4-21 — 性能回归检查（进行中）
+### P4-21 — 性能回归检查（待验收）
 
 生产构建输出 Vite manifest，`scripts/performance/bundle-budget.mjs` 从唯一 entry 沿 imports 递归求首包图，去重并逐文件 gzip level9；dynamicImports 不计入首包。基线 369794 bytes，预算 +20%，接入 just verify 并用含共享/循环/按需依赖的图测试防止漏计。临时原生探针只用于隔离验收，不进入产品、不导出正文/配置。性能出口见 acceptance/p4-21.md。
+
+
+P4-21 原生时间线显示长原文布局p95约10ms。活动原文按1024码元后首个换行边界切稳定块，块以layout containment隔离且memo保留已完成块；不截断/不拆单行或代理对，复制仍用完整权威源，完成态恢复原有排版。
+
+P4-21 终端厂商运行时：RunConsole 改用 TerminalLoader 的 React.lazy/Suspense，实际 SessionTerminal/xterm 仅打开终端时加载。加载失败可关闭终端；模块加载错误缓存需重启应用后重试；关闭早于加载完成时不挂载/不创建PTY，已打开终端切页仍按原有保留规则处理。

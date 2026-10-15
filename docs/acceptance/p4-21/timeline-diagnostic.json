@@ -1,0 +1,123 @@
+{
+  "scope": "Inspector-open diagnostic, includes recording overhead; numeric aggregates only; overlapping nested events must not be summed as wall-time",
+  "durationSec": 37.833844165317714,
+  "records": [
+    {
+      "type": "timeline-record-type-rendering-frame",
+      "event": "frame",
+      "count": 1998,
+      "sumMs": 37527.51,
+      "p95Ms": 25.36,
+      "maxMs": 4533.26,
+      "over50Ms": 1
+    },
+    {
+      "type": "timeline-record-type-script",
+      "event": "event-dispatched",
+      "count": 1971,
+      "sumMs": 1957.53,
+      "p95Ms": 4.63,
+      "maxMs": 15.93,
+      "over50Ms": 0
+    },
+    {
+      "type": "timeline-record-type-layout",
+      "event": "layout",
+      "count": 245,
+      "sumMs": 1381.81,
+      "p95Ms": 10.05,
+      "maxMs": 10.51,
+      "over50Ms": 0
+    },
+    {
+      "type": "timeline-record-type-layout",
+      "event": "composite",
+      "count": 1998,
+      "sumMs": 585.66,
+      "p95Ms": 1.29,
+      "maxMs": 20.98,
+      "over50Ms": 0
+    },
+    {
+      "type": "timeline-record-type-script",
+      "event": "animation-frame-fired",
+      "count": 1942,
+      "sumMs": 183.77,
+      "p95Ms": 0.36,
+      "maxMs": 6.45,
+      "over50Ms": 0
+    },
+    {
+      "type": "timeline-record-type-script",
+      "event": "garbage-collected",
+      "count": 71,
+      "sumMs": 121.56,
+      "p95Ms": 7.19,
+      "maxMs": 15.01,
+      "over50Ms": 0
+    },
+    {
+      "type": "timeline-record-type-script",
+      "event": "script-evaluated",
+      "count": 893,
+      "sumMs": 94.46,
+      "p95Ms": 0.19,
+      "maxMs": 1.48,
+      "over50Ms": 0
+    },
+    {
+      "type": "timeline-record-type-layout",
+      "event": "paint",
+      "count": 1108,
+      "sumMs": 81.85,
+      "p95Ms": 0.37,
+      "maxMs": 1.23,
+      "over50Ms": 0
+    },
+    {
+      "type": "timeline-record-type-script",
+      "event": "microtask-dispatched",
+      "count": 2261,
+      "sumMs": 72.31,
+      "p95Ms": 0.14,
+      "maxMs": 14.85,
+      "over50Ms": 0
+    },
+    {
+      "type": "timeline-record-type-layout",
+      "event": "recalculate-styles",
+      "count": 355,
+      "sumMs": 58.16,
+      "p95Ms": 0.3,
+      "maxMs": 0.44,
+      "over50Ms": 0
+    },
+    {
+      "type": "timeline-record-type-script",
+      "event": "timer-fired",
+      "count": 1736,
+      "sumMs": 31.64,
+      "p95Ms": 0.05,
+      "maxMs": 0.12,
+      "over50Ms": 0
+    },
+    {
+      "type": "timeline-record-type-script",
+      "event": "observer-callback",
+      "count": 1784,
+      "sumMs": 19.58,
+      "p95Ms": 0.03,
+      "maxMs": 0.12,
+      "over50Ms": 0
+    },
+    {
+      "type": "timeline-record-type-layout",
+      "event": "forced-layout",
+      "count": 2,
+      "sumMs": 2.26,
+      "p95Ms": 1.21,
+      "maxMs": 1.21,
+      "over50Ms": 0
+    }
+  ]
+}

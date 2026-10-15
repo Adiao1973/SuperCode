@@ -1,0 +1,14 @@
+{
+  "samplesMs": [
+    1394,
+    913,
+    945,
+    903,
+    937
+  ],
+  "medianMs": 937,
+  "historicalBaselineMedianMs": 747,
+  "budgetMs": 821.7,
+  "fixture": "12 initial sessions / 1022 messages, copied v1 DB migrated normally",
+  "method": "process-cold warm OS cache; CUA launch + AX-ready upper bound"
+}

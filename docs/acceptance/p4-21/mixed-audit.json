@@ -1,0 +1,17 @@
+{
+  "replay": [
+    {
+      "phase": "replay",
+      "messages": 333,
+      "thoughts": 333,
+      "tools": 333
+    },
+    {
+      "phase": "stream-complete",
+      "chunks": 1200
+    }
+  ],
+  "status": "completed",
+  "storedAppendChunks": 1200,
+  "exactSequence1to1200": true
+}

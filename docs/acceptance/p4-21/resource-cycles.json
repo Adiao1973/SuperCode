@@ -1,0 +1,30 @@
+{
+  "scope": "host + directly owned descendants only; shared WebKit/GPU XPC not reliably attributed",
+  "samples": [
+    {
+      "checkpoint": "before-cycles",
+      "hostRssKiB": 110096,
+      "ownedChildren": []
+    },
+    {
+      "checkpoint": "cycle-5",
+      "hostRssKiB": 109712,
+      "ownedChildren": []
+    },
+    {
+      "checkpoint": "cycle-10",
+      "hostRssKiB": 109696,
+      "ownedChildren": []
+    },
+    {
+      "checkpoint": "cycle-15",
+      "hostRssKiB": 109728,
+      "ownedChildren": []
+    },
+    {
+      "checkpoint": "cycle-20",
+      "hostRssKiB": 109776,
+      "ownedChildren": []
+    }
+  ]
+}

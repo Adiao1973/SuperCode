@@ -40,6 +40,7 @@ export function MessageTimeline({
   const scroller = useRef<HTMLElement | null>(null);
   const shown = useRef(visible);
   shown.current = visible;
+  const previousItemCount = useRef(items.length);
   const currentItems = useRef(items);
   currentItems.current = items;
   const adjusting = useRef(false);
@@ -145,7 +146,9 @@ export function MessageTimeline({
     noteTimelineUpdate(memory, items);
     if (expanded !== memory.expanded) setRevision((n) => n + 1);
     setUnread(memory.unread);
-    adjust();
+    // Text growth is observed below; avoid forced layout for unchanged display batches.
+    if (previousItemCount.current !== items.length) adjust();
+    previousItemCount.current = items.length;
   }, [items, memory, adjust]);
   useLayoutEffect(() => {
     if (!visible) return;

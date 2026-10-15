@@ -13,5 +13,5 @@
     "probeLongHistory": 126560,
     "probeAfterStream": 129152
   },
-  "twentyCycleAudit": "PENDING Mac unlock"
+  "twentyCycleAudit": "Historical pre-unlock snapshot; superseded by resource-cycles.json"
 }

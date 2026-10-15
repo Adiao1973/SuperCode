@@ -1,0 +1,12 @@
+{
+  "samplesMs": [
+    1408,
+    935,
+    945,
+    975,
+    959
+  ],
+  "medianMs": 959,
+  "budgetMs": 821.7,
+  "method": "process-cold warm OS cache, CUA launch + AX-ready upper bound"
+}

@@ -8,7 +8,7 @@ import {
 } from "@testing-library/react";
 import { expect, it, vi } from "vitest";
 import { MessageMarkdown } from "../src/components/MessageMarkdown";
-import { safeExternalUrl, codeSource, canHighlight } from "../src/lib/markdown";
+import { safeExternalUrl, codeSource, canHighlight, rawTextChunks } from "../src/lib/markdown";
 import { streamReducer, initialStream } from "../src/lib/stream";
 import { openUrl } from "@tauri-apps/plugin-opener";
 vi.mock("@tauri-apps/plugin-opener", () => ({ openUrl: vi.fn() }));
@@ -102,7 +102,7 @@ it("copies code exactly, preserves entire source on toggle, and bounds expensive
   expect(await screen.findByRole("button", { name: "复制代码" })).toBeVisible();
   view.rerender(<MessageMarkdown text={"中".repeat(33000)} active />);
   expect(screen.getByText(/长消息/)).toBeVisible();
-  expect(view.container.querySelector("pre")!.textContent).toHaveLength(33000);
+  await waitFor(() => expect(view.container.querySelector("pre")!.textContent).toHaveLength(33000));
   expect(screen.queryByRole("button", { name: "高亮代码" })).toBeNull();
   expect(
     codeSource("```py\nprint(1)\n", {
@@ -239,4 +239,30 @@ it("bounds growing stream parsing without losing source and restores completed M
   await waitFor(() => expect(copy).toHaveBeenLastCalledWith(text));
   view.rerender(<MessageMarkdown text={text} active={false} />);
   expect(await screen.findByRole("heading", { name: "流式预算" })).toBeVisible();
+});
+
+it("coalesces raw streaming layout updates and flushes all content at completion", () => {
+  vi.useFakeTimers();
+  try {
+    const initial = "中".repeat(9000);
+    const view = render(<MessageMarkdown text={initial} active />);
+    view.rerender(<MessageMarkdown text={initial + "第一批"} active />);
+    expect(view.container.querySelector("pre")!.textContent).toBe(initial);
+    act(() => { vi.advanceTimersByTime(100); });
+    expect(view.container.querySelector("pre")!.textContent).toBe(initial + "第一批");
+    view.rerender(<MessageMarkdown text={initial + "第一批第二批"} active />);
+    view.rerender(<MessageMarkdown text={initial + "第一批第二批"} active={false} />);
+    fireEvent.click(screen.getByRole("button", { name: "查看原文" }));
+    expect(view.container.querySelector("pre")!.textContent).toBe(initial + "第一批第二批");
+  } finally { vi.useRealTimers(); }
+});
+
+it("keeps raw chunks lossless and stable at newline boundaries while appending Unicode", () => {
+  const prefix = "中文🙂\n".repeat(1000);
+  const before = rawTextChunks(prefix);
+  const after = rawTextChunks(prefix + "追加🙂\n");
+  expect(before.join("")).toBe(prefix);
+  expect(after.join("")).toBe(prefix + "追加🙂\n");
+  expect(after[0]).toBe(before[0]);
+  expect(rawTextChunks("🙂".repeat(5000))).toEqual(["🙂".repeat(5000)]);
 });

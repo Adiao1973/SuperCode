@@ -31,7 +31,7 @@ export function report(dist) {
     initial, all };
 }
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
-  const result = report(process.argv[2] ?? 'apps/desktop/dist');
+  const result = report(process.argv.slice(2).find(arg => !arg.startsWith('--')) ?? 'apps/desktop/dist');
   if (process.argv.includes('--json')) console.log(JSON.stringify(result, null, 2));
   else console.log(`Initial gzip JS: ${result.gzipBytes} / ${result.budgetGzipBytes} bytes (${result.initial.length} files): ${result.pass ? 'PASS' : 'FAIL'}`);
   if (!result.pass) process.exitCode = 1;
