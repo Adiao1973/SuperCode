@@ -200,7 +200,7 @@ export function CommanderView({
             </button>
           ))}
         </aside>
-        <main className="min-w-0 flex-1 overflow-y-auto p-6">
+        <section aria-label="规划与审阅" className="min-w-0 flex-1 overflow-y-auto p-6">
           <div className="mx-auto max-w-4xl space-y-6">
             {selected && selected.run.status !== "draft" && (
               <Button type="button" variant="ghost" aria-expanded={planningOpen} onClick={() => setPlanningOpen((value) => !value)}>
@@ -275,7 +275,7 @@ export function CommanderView({
               </section>
             )}
           </div>
-        </main>
+        </section>
       </div>
     </div>
   );

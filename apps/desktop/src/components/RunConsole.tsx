@@ -311,7 +311,7 @@ export function RunConsole({
           )}
 
           {slowAgent && stream.running && (
-            <p className="text-muted-foreground/80 shrink-0 border-t px-5 pt-2 text-center text-[11px]">
+            <p className="text-muted-foreground shrink-0 border-t px-5 pt-2 text-center text-[11px]">
               agent 已超过 45
               秒无响应——可能是模型限流或网络问题，可点「停止」中止后稍后再试
             </p>

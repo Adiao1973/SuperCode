@@ -4,7 +4,7 @@
  * 项目空间内新建会话 cwd 预填空间路径；删除项目空间仅摘分组，会话移入默认空间。
  */
 import { EmptyState, InlineError, LoadingState } from "./FeedbackState";
-import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { memo, useId, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -59,6 +59,7 @@ export function SessionsWorkspace({
   onWorkspacesChange,
   historyState,
 }: SessionsWorkspaceProps) {
+  const projectPathHint = useId();
   const committedState = useRef(state);
   useLayoutEffect(() => { committedState.current = state; }, [state]);
   const active = state.items.find((it) => it.key === state.activeKey) ?? null;
@@ -299,6 +300,9 @@ export function SessionsWorkspace({
             <div className="space-y-1.5 px-3 pb-2">
               <div className="flex gap-1.5">
                 <Input
+                  aria-label="新项目目录"
+                  aria-describedby={projectPathHint}
+                  aria-invalid={!!createError}
                   value={newPath}
                   onChange={(e) => setNewPath(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && void createSpace()}
@@ -329,9 +333,9 @@ export function SessionsWorkspace({
                   <X className="size-3.5" />
                 </Button>
               </div>
-              <p className="text-muted-foreground text-[10px] leading-snug">
+              <p id={projectPathHint} className="text-muted-foreground text-[10px] leading-snug">
                 {createError ? (
-                  <span className="text-destructive">{createError}</span>
+                  <span role="alert" className="text-destructive">{createError}</span>
                 ) : (
                   "项目根目录的绝对路径；同路径去重，目录须已存在"
                 )}
@@ -356,7 +360,7 @@ export function SessionsWorkspace({
                   >
                     {workspace.name}
                   </span>
-                  <span className="text-muted-foreground/60 shrink-0 text-[10px] tabular-nums">
+                  <span className="text-muted-foreground shrink-0 text-[10px] tabular-nums">
                     {query.trim()
                       ? `${visibleSessions.length}/${sessions.length}`
                       : sessions.length}
@@ -393,7 +397,7 @@ export function SessionsWorkspace({
                         "shrink-0 rounded px-0.5 opacity-0 group-hover/ws:opacity-100 focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring",
                         confirmWs === workspace.id
                           ? "text-destructive text-[10px] font-medium"
-                          : "text-muted-foreground/50 hover:text-destructive",
+                          : "text-muted-foreground hover:text-destructive",
                       )}
                     >
                       {confirmWs === workspace.id ? (

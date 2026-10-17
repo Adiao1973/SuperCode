@@ -1,0 +1,16 @@
+{
+  "date": "2026-10-17",
+  "ime": {
+    "candidateEnterKeepsSearchOpen": true,
+    "secondEnterNavigates": true,
+    "source": "user confirmation"
+  },
+  "voiceOver": {
+    "source": "user confirmation after enabling macOS Accessibility VoiceOver toggle",
+    "searchAndCloseNamesReadable": true,
+    "sessionConfigAndPermissionModeReadable": true,
+    "initialSystemSetting": "off",
+    "settingVerifiedAfterTest": "off"
+  },
+  "note": "No audio recorded; user confirmed actual hearing, not inferred from AX alone."
+}

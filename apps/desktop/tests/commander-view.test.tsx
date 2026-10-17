@@ -59,6 +59,8 @@ it("generates a draft through the real workspace host without dispatch or startu
     />,
   );
   await screen.findByText("fixture-model · 配置可用");
+  expect(screen.queryByRole("main")).not.toBeInTheDocument();
+  expect(screen.getByRole("region", { name: "规划与审阅" })).toBeInTheDocument();
   fireEvent.change(screen.getByLabelText("任务目标"), {
     target: { value: "中文目标" },
   });

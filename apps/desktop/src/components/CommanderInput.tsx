@@ -245,7 +245,7 @@ export function CommanderInput({
           <div className="flex flex-wrap gap-2">
             <select
               aria-label="项目空间"
-              className="min-w-0 flex-1 rounded-md border bg-background px-3 py-2 text-sm"
+              className="w-0 min-w-0 flex-1 overflow-hidden rounded-md border bg-background px-3 py-2 text-sm"
               value={
                 workspaces.find((w) => w.path === cwd && w.kind === "project")
                   ?.id ?? ""
@@ -283,6 +283,7 @@ export function CommanderInput({
           <div className="flex items-start gap-2">
             <Input
               aria-label="工作目录"
+              className="overflow-hidden"
               value={cwd}
               onChange={(e) => changeCwd(e.target.value)}
               placeholder="选择已存在的项目目录"

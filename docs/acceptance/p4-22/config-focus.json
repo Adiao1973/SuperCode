@@ -1,0 +1,14 @@
+[
+  "106 pop up button 权限模式, Help: 权限模式：plan 计划(全拒绝) / ask 确认 / autoedit 自动编辑 / full 完全访问, Value: 确认",
+  "109 text entry area (settable) 预授权规则, Value: [text entry area: 预授权规则], Placeholder: 预授权规则（每行一条，如 write 或 bash(git *)）",
+  "122 button 收紧引导",
+  "123 button 重新检测, Help: 按当前 cwd 重新检测",
+  "126 button 完成配置",
+  "106 pop up button 权限模式, Help: 权限模式：plan 计划(全拒绝) / ask 确认 / autoedit 自动编辑 / full 完全访问, Value: 确认",
+  "109 text entry area (settable) 预授权规则, Value: [text entry area: 预授权规则], Placeholder: 预授权规则（每行一条，如 write 或 bash(git *)）",
+  "122 button 收紧引导",
+  "123 button 重新检测, Help: 按当前 cwd 重新检测",
+  "126 button 完成配置",
+  "106 pop up button 权限模式, Help: 权限模式：plan 计划(全拒绝) / ask 确认 / autoedit 自动编辑 / full 完全访问, Value: 确认",
+  "109 text entry area (settable) 预授权规则, Value: [text entry area: 预授权规则], Placeholder: 预授权规则（每行一条，如 write 或 bash(git *)）"
+]

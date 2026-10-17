@@ -1,0 +1,50 @@
+{
+  "note": "System mode resolved dark on this machine. Inspector-open transient sizes excluded from size matrix; raw diagnostics retained. Commander overflow investigation retained in raw data and final screenshots replaced after fix.",
+  "viewports": {
+    "(960, 640)": {
+      "resolvedThemes": [
+        "dark",
+        "light"
+      ],
+      "pages": [
+        "任务看板",
+        "会话",
+        "审批中心",
+        "指挥官",
+        "设置"
+      ],
+      "globalOverflow": false,
+      "unnamedControlFindings": []
+    },
+    "(1280, 800)": {
+      "resolvedThemes": [
+        "dark",
+        "light"
+      ],
+      "pages": [
+        "任务看板",
+        "会话",
+        "审批中心",
+        "指挥官",
+        "设置"
+      ],
+      "globalOverflow": false,
+      "unnamedControlFindings": []
+    },
+    "(1440, 900)": {
+      "resolvedThemes": [
+        "dark",
+        "light"
+      ],
+      "pages": [
+        "任务看板",
+        "会话",
+        "审批中心",
+        "指挥官",
+        "设置"
+      ],
+      "globalOverflow": false,
+      "unnamedControlFindings": []
+    }
+  }
+}

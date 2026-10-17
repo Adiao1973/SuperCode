@@ -57,6 +57,7 @@ it("keeps navigation semantics and traps project focus, returning to trigger or 
     );
   }
   render(<Host />);
+  expect(screen.getByRole("main", { name: "指挥官" })).toBeInTheDocument();
   const user = userEvent.setup();
   expect(screen.getByRole("button", { name: "指挥官" })).toHaveAttribute(
     "aria-current",
