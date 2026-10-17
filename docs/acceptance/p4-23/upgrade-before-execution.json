@@ -1,0 +1,14 @@
+{
+  "migration_version": 10,
+  "persisted_sessions": 1,
+  "draft_plans": 2,
+  "historical_task": [
+    [
+      "1.0 保留任务",
+      "review",
+      "historical-acp"
+    ]
+  ],
+  "rpc_started": false,
+  "native_history_text_visible": true
+}

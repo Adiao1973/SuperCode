@@ -156,3 +156,5 @@ just smoke     # 真实 opencode 冒烟（CLI，需本机认证）
 ## License
 
 [MIT](LICENSE)
+
+[P4-23 全链路与升级验收](docs/acceptance/p4-23.md)在任务分支待真实模型复验：升级、合成 ACP、原生 worktree/看板/PTY 与重启通过，MiMo HTTPS 连接失败；尚未合入 dev，P4-24 未启动。

@@ -1,0 +1,11 @@
+{
+  "task_id": "cb18b078-ec70-4c08-9037-f2521c9eca9d",
+  "task_stored_cwd": "/private/tmp/sc-p423-real/project",
+  "board_workspace": "default",
+  "board_status": "review",
+  "session_cwd": "/private/tmp/sc-p423-real/project/.git/supercode-worktrees/cb18b078-ec70-4c08-9037-f2521c9eca9d",
+  "session_workspace": "project",
+  "session_binding_preserved": true,
+  "acp_worktree_cwd_observed": true,
+  "native_detail_original_workspace_visible": true
+}
