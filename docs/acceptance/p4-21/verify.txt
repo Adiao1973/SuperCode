@@ -1,9 +1,9 @@
 2026-10-17 macOS 26.5.2 arm64
 just verify PASS exit0 (normal host privileges for loopback fixtures)
-Frontend 116 tests / 36 files PASS
-Bundle graph 2 node tests PASS; initial gzip 166238 / 443752 PASS
+Frontend 117 tests / 36 files PASS
+Bundle graph 2 node tests PASS; initial gzip 166389 / 443752 PASS
 Rust 164 PASS, 1 existing smoke ignored
 Typecheck/build/fmt/clippy PASS
 Native prior builds: startup median 767ms; direct-follow stream p95 18ms; history p95 18ms; IME p95 28ms
-Final-source native retests and fixed manual split: blocked by Mac lock
+Final-source: startup median 741ms; stream/history/mixed p95 18ms. Fixed manual split and ordinary-release resource retest pending.
 No dev merge or release

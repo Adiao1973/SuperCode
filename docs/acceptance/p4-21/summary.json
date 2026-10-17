@@ -502,5 +502,87 @@
       "rows": 2,
       "unread": false
     }
+  },
+  {
+    "label": "verified-history-1000",
+    "samples": 1800,
+    "p95Ms": 18,
+    "maxMs": 37,
+    "dom": {
+      "viewports": [
+        "1280x800"
+      ],
+      "splitterRanges": [
+        {
+          "min": 21.293,
+          "max": 21.293
+        },
+        {
+          "min": 100,
+          "max": 100
+        }
+      ],
+      "minVirtualItems": 0,
+      "maxVirtualItems": 8,
+      "totalElements": 494,
+      "longtaskSupported": false
+    },
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "visibility": [
+      "visible"
+    ],
+    "qualified": true,
+    "note": "baed1ec固定12会话起点；历史通过，流式22ms未达标；此后减少正文无关UI重渲染，待复验。"
+  },
+  {
+    "label": "verified-stream-20hz",
+    "samples": 1801,
+    "p95Ms": 22,
+    "maxMs": 33,
+    "dom": {
+      "viewports": [
+        "1280x800"
+      ],
+      "splitterRanges": [
+        {
+          "min": 21.293,
+          "max": 21.293
+        },
+        {
+          "min": 100,
+          "max": 100
+        }
+      ],
+      "minVirtualItems": 1,
+      "maxVirtualItems": 1,
+      "totalElements": 453,
+      "longtaskSupported": false
+    },
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "visibility": [
+      "visible"
+    ],
+    "qualified": true,
+    "note": "baed1ec固定12会话起点；历史通过，流式22ms未达标；此后减少正文无关UI重渲染，待复验。"
+  },
+  {
+    "label": "verified-failed-stream-bottom",
+    "dom": {
+      "key": "message-1",
+      "offset": -7536,
+      "top": 7536,
+      "height": 7975,
+      "viewport": 439,
+      "rows": 2,
+      "unread": false
+    }
   }
 ]

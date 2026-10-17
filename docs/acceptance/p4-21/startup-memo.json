@@ -1,0 +1,42 @@
+{
+  "samples": [
+    {
+      "launchMs": 1919,
+      "fullAXMs": 2154,
+      "ready": true,
+      "history": true
+    },
+    {
+      "launchMs": 741,
+      "fullAXMs": 931,
+      "ready": true,
+      "history": true
+    },
+    {
+      "launchMs": 732,
+      "fullAXMs": 938,
+      "ready": true,
+      "history": true
+    },
+    {
+      "launchMs": 731,
+      "fullAXMs": 933,
+      "ready": true,
+      "history": true
+    },
+    {
+      "launchMs": 741,
+      "fullAXMs": 933,
+      "ready": true,
+      "history": true
+    }
+  ],
+  "medianMs": 741,
+  "budgetMs": 821.7,
+  "historicalBaselineMedianMs": 747,
+  "build": "ordinary release, no devtools",
+  "initialAXReadyVerified": true,
+  "finalSourceQualified": true,
+  "fixture": "12 persisted sessions / 1022 messages plus transient draft",
+  "method": "Process cold, warm OS cache. getApp first AX response already contains history rows and task input; extra duplicate full AX read recorded separately in fullAXMs."
+}

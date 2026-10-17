@@ -1,0 +1,168 @@
+[
+  {
+    "label": "memo-stream-active-bottom",
+    "dom": {
+      "key": "message-1",
+      "offset": -6259,
+      "top": 6259,
+      "height": 6722,
+      "viewport": 463,
+      "rows": 1,
+      "unread": false
+    }
+  },
+  {
+    "label": "memo-stream-20hz",
+    "visibility": [
+      "visible"
+    ],
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "viewports": [
+        "1280x800"
+      ],
+      "splitterRanges": [
+        {
+          "min": 21.293,
+          "max": 21.293
+        },
+        {
+          "min": 100,
+          "max": 100
+        }
+      ],
+      "minVirtualItems": 0,
+      "maxVirtualItems": 1,
+      "totalElements": 423,
+      "longtaskSupported": false
+    },
+    "frameCount": 1802,
+    "p95Ms": 18,
+    "maxMs": 25
+  },
+  {
+    "label": "memo-theme-light-before-reload",
+    "dom": {
+      "dark": false,
+      "bootstrap": true
+    }
+  },
+  {
+    "label": "memo-theme-light-before-reload",
+    "dom": {
+      "dark": false,
+      "bootstrap": true
+    }
+  },
+  {
+    "label": "memo-theme-light-after-reload",
+    "dom": {
+      "dark": false,
+      "bootstrap": false
+    }
+  },
+  {
+    "label": "memo-history-1000",
+    "visibility": [
+      "visible"
+    ],
+    "viewport": [
+      1280,
+      300,
+      2
+    ],
+    "dom": {
+      "viewports": [
+        "1280x300"
+      ],
+      "splitterRanges": [
+        {
+          "min": 21.643,
+          "max": 21.643
+        },
+        {
+          "min": 100,
+          "max": 100
+        }
+      ],
+      "minVirtualItems": 5,
+      "maxVirtualItems": 5,
+      "totalElements": 494,
+      "longtaskSupported": false
+    },
+    "frameCount": 1,
+    "p95Ms": 113499,
+    "maxMs": 113499,
+    "excluded": "Inspector open; 1280x300; interrupted sampling, not acceptance evidence"
+  },
+  {
+    "label": "memo-history-1000-closed",
+    "visibility": [
+      "visible"
+    ],
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "viewports": [
+        "1280x800"
+      ],
+      "splitterRanges": [
+        {
+          "min": 21.293,
+          "max": 21.643
+        },
+        {
+          "min": 100,
+          "max": 100
+        }
+      ],
+      "minVirtualItems": 0,
+      "maxVirtualItems": 7,
+      "totalElements": 494,
+      "longtaskSupported": false
+    },
+    "frameCount": 1799,
+    "p95Ms": 18,
+    "maxMs": 49
+  },
+  {
+    "label": "memo-mixed-1000-20hz",
+    "visibility": [
+      "visible"
+    ],
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "viewports": [
+        "1280x800"
+      ],
+      "splitterRanges": [
+        {
+          "min": 21.293,
+          "max": 21.293
+        },
+        {
+          "min": 100,
+          "max": 100
+        }
+      ],
+      "minVirtualItems": 0,
+      "maxVirtualItems": 10,
+      "totalElements": 407,
+      "longtaskSupported": false
+    },
+    "frameCount": 1800,
+    "p95Ms": 18,
+    "maxMs": 35
+  }
+]
