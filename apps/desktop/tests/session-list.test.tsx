@@ -253,3 +253,19 @@ it("keeps a newly selected draft active when an earlier confirmed history deleti
   expect(latest.items.some(item => item.key === draftKey)).toBe(true);
   expect(latest.items.some(item => item.key === history.key)).toBe(false);
 });
+
+
+it("names the project directory field and associates a failed create with its error", async () => {
+  vi.stubGlobal("ResizeObserver", class { observe() {} disconnect() {} });
+  handle("list_workspaces", () => []);
+  handle("create_workspace", () => { throw new Error("合成目录不存在"); });
+  render(<LayoutProvider initial={{ preferences: DEFAULT_LAYOUT, error: null }}><SessionsWorkspace state={{ ...initialSessionsState(), items: [], activeKey: null }} dispatch={() => {}} /></LayoutProvider>);
+  fireEvent.click(await screen.findByRole("button", { name: "新建项目空间（绑定一个项目目录）" }));
+  const path = screen.getByRole("textbox", { name: "新项目目录" });
+  fireEvent.change(path, { target: { value: "/fixture/missing" } });
+  fireEvent.click(screen.getByRole("button", { name: "创建" }));
+  expect(await screen.findByRole("alert")).toHaveTextContent("合成目录不存在");
+  expect(path).toHaveAttribute("aria-invalid", "true");
+  expect(path).toHaveAccessibleDescription(/合成目录不存在/);
+  expect(calls.some(c => /run_prompt|execute/.test(c.command))).toBe(false);
+});

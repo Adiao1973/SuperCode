@@ -163,7 +163,7 @@ export function AppShell({
     <TooltipProvider delayDuration={300}>
       <div className="bg-background text-foreground flex h-dvh">
         {navigation}
-        <main className="flex min-w-0 flex-1 flex-col">
+        <main aria-label={active.label} className="flex min-w-0 flex-1 flex-col">
           <header className="flex h-14 shrink-0 items-center gap-4 border-b px-5">
             <h1
               ref={heading}

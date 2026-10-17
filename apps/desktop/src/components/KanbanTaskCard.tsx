@@ -43,7 +43,7 @@ export function TaskCard({
           aria-label={`删除任务：${task.title}`}
           onClick={onDelete}
           disabled={busy}
-          className="text-muted-foreground/40 hover:text-destructive shrink-0 px-0.5"
+          className="text-muted-foreground hover:text-destructive shrink-0 px-0.5"
         >
           <Trash2 className="size-3" />
         </button>
@@ -67,7 +67,7 @@ export function TaskCard({
             type="button"
             onClick={onBind}
             disabled={busy}
-            className="text-muted-foreground/60 hover:text-foreground text-[10px]"
+            className="text-muted-foreground hover:text-foreground text-[10px]"
             title="绑定会话"
             aria-label={`绑定会话：${task.title}`}
           >

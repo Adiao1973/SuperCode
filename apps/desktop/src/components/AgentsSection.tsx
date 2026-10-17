@@ -161,12 +161,14 @@ export function AgentsSection() {
         <div className="mb-3 flex flex-col gap-2 rounded-md border p-3">
           <div className="grid grid-cols-2 gap-2">
             <Input
+              aria-label="Agent 标识"
               value={form.id}
               onChange={(e) => setForm((f) => ({ ...f, id: e.target.value }))}
               placeholder="id（[a-z0-9-]+，如 my-agent）"
               className="font-mono text-xs"
             />
             <Input
+              aria-label="Agent 显示名"
               value={form.displayName}
               onChange={(e) => setForm((f) => ({ ...f, displayName: e.target.value }))}
               placeholder="显示名（缺省用 id）"
@@ -174,6 +176,7 @@ export function AgentsSection() {
             />
           </div>
           <Input
+            aria-label="Agent 启动命令"
             value={form.command}
             onChange={(e) => setForm((f) => ({ ...f, command: e.target.value }))}
             placeholder="spawn 命令，如 my-agent --acp"
@@ -181,12 +184,14 @@ export function AgentsSection() {
           />
           <div className="grid grid-cols-2 gap-2">
             <Input
+              aria-label="版本检测参数"
               value={versionArgsText}
               onChange={(e) => setVersionArgsText(e.target.value)}
               placeholder="version_args 逗号分隔（缺省 --version）"
               className="font-mono text-xs"
             />
             <select
+              aria-label="Agent 驱动协议"
               value={form.driverKind}
               onChange={(e) =>
                 setForm((f) => ({ ...f, driverKind: e.target.value as AgentInput["driverKind"] }))
