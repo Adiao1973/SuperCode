@@ -199,7 +199,7 @@ export function SessionTerminal({
       <div
         ref={host}
         className="min-h-0 flex-1 overflow-hidden p-2"
-        style={{ background: "var(--background)" }}
+        style={{ background: "var(--background)", contain: "layout paint" }}
       />
     </section>
   );

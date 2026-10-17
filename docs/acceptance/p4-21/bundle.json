@@ -1,8 +1,8 @@
 {
   "baselineGzipBytes": 369794,
   "budgetGzipBytes": 443752,
-  "gzipBytes": 166389,
-  "ratio": 0.4499505129883124,
+  "gzipBytes": 166396,
+  "ratio": 0.44996944244633497,
   "pass": true,
   "initial": [
     {
@@ -21,9 +21,9 @@
       "gzipBytes": 11747
     },
     {
-      "file": "assets/index-C5bj_vuj.js",
+      "file": "assets/index-Bs4ePJC8.js",
       "rawBytes": 466707,
-      "gzipBytes": 147838
+      "gzipBytes": 147845
     },
     {
       "file": "assets/react-Cvdyeg_0.js",
@@ -38,44 +38,44 @@
   ],
   "all": [
     {
-      "file": "assets/ApprovalsView-DhACzSeb.js",
+      "file": "assets/ApprovalsView-CoObFP6V.js",
       "rawBytes": 2580,
       "gzipBytes": 1325
     },
     {
-      "file": "assets/CommanderView-Db6F7Dgs.js",
+      "file": "assets/CommanderView-DPjNNXGR.js",
       "rawBytes": 20130,
       "gzipBytes": 6714
     },
     {
-      "file": "assets/DiffPreview-jg026Aap.js",
+      "file": "assets/DiffPreview-Cnq_5Q-N.js",
       "rawBytes": 345686,
       "gzipBytes": 89178
     },
     {
-      "file": "assets/KanbanView-9q-gUcXf.js",
+      "file": "assets/KanbanView-vc5XSfnu.js",
       "rawBytes": 63141,
       "gzipBytes": 20328
     },
     {
-      "file": "assets/MarkdownBody-DjSiTL22.js",
+      "file": "assets/MarkdownBody-Dww4MbOH.js",
       "rawBytes": 141355,
       "gzipBytes": 41963
     },
     {
-      "file": "assets/SessionTerminal-B-elcirO.js",
-      "rawBytes": 335455,
-      "gzipBytes": 83636
+      "file": "assets/SessionTerminal-CLrWhgvp.js",
+      "rawBytes": 335478,
+      "gzipBytes": 83651
     },
     {
-      "file": "assets/SettingsView-D8n7JZKe.js",
+      "file": "assets/SettingsView-BGutYVae.js",
       "rawBytes": 29490,
       "gzipBytes": 8177
     },
     {
-      "file": "assets/StreamTimeline-BGYS-Ahm.js",
+      "file": "assets/StreamTimeline-DzkiOR1s.js",
       "rawBytes": 79131,
-      "gzipBytes": 25903
+      "gzipBytes": 25905
     },
     {
       "file": "assets/abap-CLvhMVsD.js",
@@ -303,9 +303,9 @@
       "gzipBytes": 10799
     },
     {
-      "file": "assets/code-highlight-BwKqJday.js",
+      "file": "assets/code-highlight-BSdMYcT_.js",
       "rawBytes": 1515,
-      "gzipBytes": 646
+      "gzipBytes": 645
     },
     {
       "file": "assets/codeowners-C8r90Shi.js",
@@ -763,9 +763,9 @@
       "gzipBytes": 9354
     },
     {
-      "file": "assets/index-C5bj_vuj.js",
+      "file": "assets/index-Bs4ePJC8.js",
       "rawBytes": 466707,
-      "gzipBytes": 147838
+      "gzipBytes": 147845
     },
     {
       "file": "assets/ini-B5eOa1yu.js",
@@ -1028,7 +1028,7 @@
       "gzipBytes": 3726
     },
     {
-      "file": "assets/motion-features-rwFXBpkd.js",
+      "file": "assets/motion-features-7cakjkT-.js",
       "rawBytes": 37860,
       "gzipBytes": 14387
     },

@@ -1,0 +1,45 @@
+{
+  "scope": "ordinary release host + owned descendants only",
+  "cycles": 20,
+  "terminalInputEveryOpen": true,
+  "baselineHostRssKiB": 117424,
+  "budgetHostRssKiB": 140908.8,
+  "samples": [
+    {
+      "checkpoint": "initial",
+      "hostRssKiB": 113376,
+      "ownedTotalRssKiB": 113376,
+      "ownedChildren": 0
+    },
+    {
+      "checkpoint": "history1000",
+      "hostRssKiB": 119392,
+      "ownedTotalRssKiB": 119392,
+      "ownedChildren": 0
+    },
+    {
+      "checkpoint": "cycle5",
+      "hostRssKiB": 120656,
+      "ownedTotalRssKiB": 120656,
+      "ownedChildren": 0
+    },
+    {
+      "checkpoint": "cycle10",
+      "hostRssKiB": 120816,
+      "ownedTotalRssKiB": 120816,
+      "ownedChildren": 0
+    },
+    {
+      "checkpoint": "cycle15",
+      "hostRssKiB": 120880,
+      "ownedTotalRssKiB": 120880,
+      "ownedChildren": 0
+    },
+    {
+      "checkpoint": "cycle20",
+      "hostRssKiB": 120928,
+      "ownedTotalRssKiB": 120928,
+      "ownedChildren": 0
+    }
+  ]
+}

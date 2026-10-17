@@ -1,9 +1,11 @@
 2026-10-17 macOS 26.5.2 arm64
-just verify PASS exit0 (normal host privileges for loopback fixtures)
+Final just verify PASS exit0; /tmp/p421-contain-verify-final.log
 Frontend 117 tests / 36 files PASS
-Bundle graph 2 node tests PASS; initial gzip 166389 / 443752 PASS
+Bundle graph 2 node tests PASS; initial gzip 166396 / 443752 PASS
 Rust 164 PASS, 1 existing smoke ignored
 Typecheck/build/fmt/clippy PASS
-Native prior builds: startup median 767ms; direct-follow stream p95 18ms; history p95 18ms; IME p95 28ms
-Final-source: startup median 741ms; stream/history/mixed p95 18ms. Fixed manual split and ordinary-release resource retest pending.
-No dev merge or release
+Startup median 741ms; stream/history/mixed p95 18ms; IME p95 28ms
+Fixed manual terminal split p95 18ms; final list keyboard + open terminal p95 18ms
+Ordinary host RSS after 20 cycles 120928KiB / budget 140908.8KiB; owned children 0
+Final terminal containment additional 5 close cycles: host133232KiB; owned children0
+Local dev integration only; no push or release

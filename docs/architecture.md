@@ -977,3 +977,5 @@ TerminalLoader按需加载SessionTerminal/xterm；加载完成前关闭不会挂
 sessionStorage只保存无敏感信息的启动nonce。完整WebView重载不重放旧快照，重新走IPC读取当前偏好；sessionStorage不可用同样回退。新进程的新nonce允许新快照，不把界面偏好另存到浏览器。
 
 流式更新只重绘变化的会话行摘要：标题、Agent/cwd、运行/结束状态、审批数、选中与删除确认独立为memo基础类型属性。行事件按key从最新已提交会话状态读取目标，避免缓存回调持有旧会话或异步删除后错误切换。导航aside按实际导航属性缓存；审批同步仅在待决集合或session身份映射变化时执行，正文变化不触发重复同步。
+
+终端视口使用layout/paint containment，将xterm尺寸调整造成的布局和绘制影响限制在既有overflow-hidden视口内；保持即时fit、PTY通知和屏幕阅读模式。
