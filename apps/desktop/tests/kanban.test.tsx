@@ -66,9 +66,14 @@ it("distinguishes initial loading from empty and retries failed reads without an
 it("refreshes command navigation, opens a readonly detail or new form and never saves automatically", async () => {
   const task = { id: "command-task", workspace_id: "default", title: "命令定位任务", status: "backlog" as const, session_id: null };
   handle("list_tasks", () => [task]); handle("list_workspaces", () => [{ id: "default", name: "默认空间", kind: "default", path: null }]);
-  handle("get_task_context", () => ({ task, stored_cwd: "/fixture", worktree: null, session: null }));
+  const context = { task, stored_cwd: "/fixture", worktree: null, session: null };
+  let resolveContext!: (value: typeof context) => void;
+  handle("get_task_context", () => new Promise<typeof context>((resolve) => { resolveContext = resolve; }));
   const view = render(<KanbanView bindableSessions={[]} request={{ id: task.id, kind: "detail", nonce: 1 }} />);
-  expect(await screen.findByRole("dialog")).toHaveTextContent("命令定位任务");
+  expect(await screen.findByRole("dialog")).toHaveTextContent("正在读取任务上下文…");
+  await waitFor(() => expect(resolveContext).toBeTypeOf("function"));
+  await act(async () => resolveContext(context));
+  await waitFor(() => expect(screen.getByRole("dialog")).toHaveTextContent("命令定位任务"));
   fireEvent.click(screen.getByRole("button", { name: "关闭详情" }));
   view.rerender(<KanbanView bindableSessions={[]} request={{ id: "default", kind: "create", nonce: 2 }} />);
   await screen.findByRole("textbox", { name: "新任务标题" });
