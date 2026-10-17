@@ -29,7 +29,7 @@ function App() {
   const [boardRequest, setBoardRequest] = useState<{ id: string; kind: "detail" | "create"; nonce: number } | null>(null);
   const cacheTasks = useCallback((rows: TaskEntry[]) => { setCachedTasks(rows); setTasksLoaded(true); }, []);
   const clearBoardRequest = useCallback(() => setBoardRequest(null), []);
-  const openPalette = () => { paletteOrigin.current = document.activeElement instanceof HTMLElement ? document.activeElement : null; setPaletteOpen(true); };
+  const openPalette = useCallback(() => { paletteOrigin.current = document.activeElement instanceof HTMLElement ? document.activeElement : null; setPaletteOpen(true); }, []);
   const [nav, setNav] = useState<NavId>("sessions");
   const [commanderVisited, setCommanderVisited] = useState(false);
   useEffect(() => { if (nav === "commander") setCommanderVisited(true); }, [nav]);
@@ -68,11 +68,12 @@ function App() {
     return () => { alive = false; };
   }, [nav, historyRevision]);
 
+  const approvalIdentity = JSON.stringify(sessions.items.map(item => [item.key, item.acpSessionId]));
   // One global collection drives all inline views, even if approval arrives before SessionStarted.
   useEffect(() => { void permissionCenter.setup().catch(() => {}); }, []);
   useEffect(() => {
     dispatch({ type: "approvalSync", pending: pendingPermissions });
-  }, [pendingPermissions, sessions.items]);
+  }, [pendingPermissions, approvalIdentity]);
 
   // 全局快捷键：⌘N 新建会话、⌘1..8 切换会话（配合详情页 ⌘R 运行 / ⌘. 停止）
   useEffect(() => {

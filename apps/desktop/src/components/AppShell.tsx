@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Popover } from "radix-ui";
 import {
   Folder,
@@ -56,10 +56,7 @@ export function AppShell({
     setProjectOpen(false);
     heading.current?.focus();
   }, [nav]);
-  const active = NAV_ITEMS.find((item) => item.id === nav)!;
-  return (
-    <TooltipProvider delayDuration={300}>
-      <div className="bg-background text-foreground flex h-dvh">
+  const navigation = useMemo(() => (
         <aside
           className={cn(
             "bg-sidebar flex shrink-0 flex-col border-r",
@@ -160,6 +157,12 @@ export function AppShell({
             </Button>
           </div>
         </aside>
+  ), [collapsed, nav, onNavigate, pendingCount, version, onSearch]);
+  const active = NAV_ITEMS.find((item) => item.id === nav)!;
+  return (
+    <TooltipProvider delayDuration={300}>
+      <div className="bg-background text-foreground flex h-dvh">
+        {navigation}
         <main className="flex min-w-0 flex-1 flex-col">
           <header className="flex h-14 shrink-0 items-center gap-4 border-b px-5">
             <h1

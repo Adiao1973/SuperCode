@@ -4,7 +4,7 @@
  * 项目空间内新建会话 cwd 预填空间路径；删除项目空间仅摘分组，会话移入默认空间。
  */
 import { EmptyState, InlineError, LoadingState } from "./FeedbackState";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -59,6 +59,8 @@ export function SessionsWorkspace({
   onWorkspacesChange,
   historyState,
 }: SessionsWorkspaceProps) {
+  const committedState = useRef(state);
+  useLayoutEffect(() => { committedState.current = state; }, [state]);
   const active = state.items.find((it) => it.key === state.activeKey) ?? null;
   const [query, setQuery] = useState("");
   const readingCache = useRef(new Map<string, ReadingMemory>());
@@ -195,8 +197,9 @@ export function SessionsWorkspace({
           return;
         }
       }
-      if (state.activeKey === entry.key) {
-        const rest = state.items.filter((it) => it.key !== entry.key);
+      const latest = committedState.current;
+      if (latest.activeKey === entry.key) {
+        const rest = latest.items.filter((it) => it.key !== entry.key);
         dispatch({
           type: "activate",
           key: rest[0]?.key ?? "",
@@ -204,8 +207,15 @@ export function SessionsWorkspace({
       }
       dispatch({ type: "remove", key: entry.key });
     },
-    [state.activeKey, state.items, dispatch],
+    [dispatch],
   );
+  const activateSession = useCallback((key: string) => dispatch({ type: "activate", key }), [dispatch]);
+  const requestDelete = useCallback((key: string, confirmed: boolean) => {
+    if (!confirmed) { setConfirmKey(key); return; }
+    setConfirmKey(null);
+    const entry = committedState.current.items.find(item => item.key === key);
+    if (entry) void removeSession(entry);
+  }, [removeSession]);
 
   return (
     <WorkspacePanels
@@ -403,25 +413,24 @@ export function SessionsWorkspace({
                   </p>
                 )}
                 <div className="flex flex-col gap-0.5">
-                  {visibleSessions.map((entry) => (
-                    <SessionListItem
+                  {visibleSessions.map((entry) => {
+                    const status = sessionStatus(entry);
+                    return <SessionListItem
                       key={entry.key}
-                      entry={entry}
+                      sessionKey={entry.key}
+                      title={entry.title}
+                      agentId={entry.draft.agentId}
+                      cwd={entry.draft.cwd}
+                      statusLabel={status.label}
+                      statusTone={status.tone}
+                      approvalCount={entry.pendingApprovals.length}
+                      running={entry.stream.running}
                       active={entry.key === state.activeKey}
                       confirmDelete={confirmKey === entry.key}
-                      onActivate={() =>
-                        dispatch({ type: "activate", key: entry.key })
-                      }
-                      onDelete={() => {
-                        if (confirmKey === entry.key) {
-                          setConfirmKey(null);
-                          void removeSession(entry);
-                        } else {
-                          setConfirmKey(entry.key);
-                        }
-                      }}
-                    />
-                  ))}
+                      onActivate={activateSession}
+                      onDelete={requestDelete}
+                    />;
+                  })}
                   {sessions.length === 0 && (
                     !workspaceLoading && !historyState?.loading && !historyState?.error && <EmptyState compact title="暂无会话" />
                   )}
@@ -491,20 +500,20 @@ export function SessionsWorkspace({
   );
 }
 
-function SessionListItem({
-  entry,
+const SessionListItem = memo(function SessionListItem({
+  sessionKey, title, agentId, cwd, statusLabel, statusTone, approvalCount, running,
   active,
   confirmDelete,
   onActivate,
   onDelete,
 }: {
-  entry: SessionEntry;
+  sessionKey: string; title: string; agentId: string; cwd: string;
+  statusLabel: string; statusTone: ReturnType<typeof sessionStatus>["tone"]; approvalCount: number; running: boolean;
   active: boolean;
   confirmDelete: boolean;
-  onActivate: () => void;
-  onDelete: () => void;
+  onActivate: (key: string) => void;
+  onDelete: (key: string, confirmed: boolean) => void;
 }) {
-  const status = sessionStatus(entry);
   return (
     <div
       className={cn(
@@ -515,9 +524,9 @@ function SessionListItem({
     >
       <button
         type="button"
-        aria-label={`选择会话 ${entry.title}`}
+        aria-label={`选择会话 ${title}`}
         aria-current={active ? "true" : undefined}
-        onClick={onActivate}
+        onClick={() => onActivate(sessionKey)}
         className="flex min-w-0 flex-1 flex-col gap-1 rounded-md px-2.5 py-2.5 text-left outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
       >
         <span className="flex w-full items-center gap-2">
@@ -525,44 +534,44 @@ function SessionListItem({
             aria-hidden="true"
             className={cn(
               "size-1.5 shrink-0 rounded-full",
-              STATUS_TONE[status.tone],
+              STATUS_TONE[statusTone],
             )}
           />
           <span
-            title={entry.title}
+            title={title}
             className="truncate text-[13px] font-medium"
           >
-            {entry.title}
+            {title}
           </span>
         </span>
         <span className="text-muted-foreground flex w-full items-center gap-2 pl-3.5 text-[10px]">
-          <span>{status.label}</span>
-          <span className="truncate">{entry.draft.agentId}</span>
-          {entry.pendingApprovals.length > 0 && (
+          <span>{statusLabel}</span>
+          <span className="truncate">{agentId}</span>
+          {approvalCount > 0 && (
             <span className="text-warning shrink-0">
-              {entry.pendingApprovals.length} 待审批
+              {approvalCount} 待审批
             </span>
           )}
         </span>
         <span
-          title={entry.draft.cwd}
+          title={cwd}
           className="text-muted-foreground w-full truncate pl-3.5 font-mono text-[10px]"
         >
-          {entry.draft.cwd}
+          {cwd}
         </span>
       </button>
       <button
         type="button"
-        disabled={entry.stream.running}
-        aria-label={`删除会话 ${entry.title}`}
+        disabled={running}
+        aria-label={`删除会话 ${title}`}
         title={
-          entry.stream.running
+          running
             ? "运行中不可删除"
             : confirmDelete
               ? "再点一次确认删除"
               : "删除会话"
         }
-        onClick={onDelete}
+        onClick={() => onDelete(sessionKey, confirmDelete)}
         className={cn(
           "mr-1 mt-2 shrink-0 rounded p-1 opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed",
           confirmDelete
@@ -574,4 +583,4 @@ function SessionListItem({
       </button>
     </div>
   );
-}
+});
