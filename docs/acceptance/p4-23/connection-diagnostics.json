@@ -1,0 +1,20 @@
+{
+  "existing_key_unchanged": true,
+  "original_database_readonly": true,
+  "configured_service_dns": "proxy_virtual_address",
+  "control_https_succeeded": true,
+  "configured_cluster_https_succeeded": false,
+  "existing_http_proxy_succeeded": false,
+  "existing_socks_proxy_succeeded": false,
+  "tls12_succeeded": false,
+  "default_tls_succeeded": false,
+  "independent_dns_providers": 2,
+  "configured_cluster_real_addresses_tested": 2,
+  "configured_cluster_real_addresses_succeeded": 0,
+  "same_provider_gateway_preserving_original_host_succeeded": false,
+  "official_alternate_cluster_tls_succeeded": true,
+  "alternate_cluster_without_credentials_http_status": 404,
+  "alternate_credentials_request_executed": false,
+  "alternate_credentials_request_review": "rejected_pending_explicit_user_authorization",
+  "official_integration_document": "https://mimo.mi.com/docs/zh-CN/tokenplan/Token%20Plan/quick-access"
+}
