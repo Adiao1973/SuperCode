@@ -1,0 +1,9 @@
+{
+  "replay": {
+    "messages": 333,
+    "thoughts": 333,
+    "tools": 333
+  },
+  "streamChunks": 1200,
+  "exact": true
+}

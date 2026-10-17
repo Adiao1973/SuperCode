@@ -10,6 +10,8 @@ verify:
     pnpm --filter @supercode/desktop test:typecheck
     pnpm --filter @supercode/desktop test
     pnpm --filter @supercode/desktop build
+    node --test scripts/performance/bundle-budget.test.mjs
+    node scripts/performance/bundle-budget.mjs
     cargo fmt --check
     cargo clippy --all-targets -- -D warnings
     cargo test

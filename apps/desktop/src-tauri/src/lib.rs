@@ -959,6 +959,28 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
+            if let Some(config) = app
+                .config()
+                .app
+                .windows
+                .first()
+                .filter(|config| !config.create)
+            {
+                let mut bootstrap = tauri::async_runtime::block_on(async {
+                    let state = app.state::<AppState>();
+                    match state.store.get_or_try_init(Store::open_default).await {
+                        Ok(store) => appearance::bootstrap_preferences(store).await,
+                        Err(error) => appearance::bootstrap_failure(error.to_string()),
+                    }
+                });
+                bootstrap["bootNonce"] = serde_json::json!(Uuid::new_v4().to_string());
+                tauri::WebviewWindowBuilder::from_config(app, config)?
+                    .initialization_script(format!(
+                        "window.__SUPERCODE_BOOTSTRAP = {bootstrap};\n{}",
+                        include_str!("../../src/bootstrap-native.js")
+                    ))
+                    .build()?;
+            }
             // Native macOS Quit terminates directly; route Cmd+Q through ExitRequested.
             #[cfg(target_os = "macos")]
             {

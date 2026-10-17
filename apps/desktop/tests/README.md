@@ -110,3 +110,9 @@ env -u SUPERCODE_LLM_API_KEY SUPERCODE_DB="$scratch/fixture.db" \
 ## P4-20 命令面板与快捷键
 
 `command-palette.test.tsx` 覆盖标题投影、白名单、作用域/上限、IME 及键盘/回焦；`app-shell.test.tsx` 验证打开搜索无 IPC、会话完整 key 定位，以及其他弹层/终端不被 Cmd-K 拦截；`kanban.test.tsx` 覆盖命令导航重新读取、已删除目标不误跳、新建只打开表单与 IME/重复 Enter 防误保存。真实 macOS IME 与多尺寸出口见 [P4-20](../../../docs/acceptance/p4-20.md)，自动测试不替代原生验收。
+
+## P4-21 性能与资源回归
+
+`just verify` 在生产构建后运行静态首包图预算及2项Node契约；native性能不使用jsdom计时冒充。`terminal-loader.test.tsx` 验证加载中关闭不挂载终端，重新打开可使用已加载模块；Markdown测试覆盖流式原文合并、稳定Unicode/换行块、完整复制和完成态恢复。当前原生预算与人工采样状态见 [P4-21](../../../docs/acceptance/p4-21.md)。
+
+P4-21 续验补充：消息时间线按需加载后，会话Channel隔离测试等待实际消息显示；加载边界仅包消息区域/单个非初始页面，不能暂停会话宿主的可见性与快捷键停用。外观测试覆盖入口提前请求窗口显示时的promise错误、StrictMode effect重放及后续主题同步、初始化到挂载期间的系统主题变化。

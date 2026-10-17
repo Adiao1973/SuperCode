@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { PendingPermission } from "@/lib/permissions";
 import { parameterText, toolCommand } from "@/lib/tool-details";
-import { TimelineCopy } from "./MessageTimeline";
+import { TimelineCopy } from "./TimelineCopy";
 
 const textClass = "mt-2 max-h-64 overflow-auto rounded bg-muted/40 p-3 text-xs whitespace-pre-wrap [overflow-wrap:anywhere] select-text";
 export function ApprovalDetails({ pending }: { pending: PendingPermission }) {

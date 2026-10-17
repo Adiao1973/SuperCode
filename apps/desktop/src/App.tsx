@@ -1,14 +1,15 @@
-import { useEffect, useReducer, useState, useRef, useCallback } from "react";
+import { DeferredContent } from "./components/DeferredContent";
+import { useEffect, useReducer, useState, useRef, useCallback, lazy } from "react";
 import { AppShell, type NavId } from "@/components/AppShell";
 import { CommandPalette } from "@/components/CommandPalette";
 import { paletteItems, type PaletteChoice } from "@/lib/command-palette";
 import type { TaskEntry, Workspace } from "@/lib/agent";
 import { getVersion } from "@tauri-apps/api/app";
-import { CommanderView } from "@/components/CommanderView";
-import { ApprovalsView } from "@/components/ApprovalsView";
-import { KanbanView } from "@/components/KanbanView";
+const CommanderView = lazy(() => import("@/components/CommanderView").then(module => ({ default: module.CommanderView })));
+const ApprovalsView = lazy(() => import("@/components/ApprovalsView").then(module => ({ default: module.ApprovalsView })));
+const KanbanView = lazy(() => import("@/components/KanbanView").then(module => ({ default: module.KanbanView })));
 import { SessionsWorkspace } from "@/components/SessionsWorkspace";
-import { SettingsView } from "@/components/SettingsView";
+const SettingsView = lazy(() => import("@/components/SettingsView").then(module => ({ default: module.SettingsView })));
 import { listHistorySessions } from "@/lib/agent";
 import { permissionCenter, type PendingPermission } from "@/lib/permissions";
 import { initialSessionsState, sessionsReducer } from "@/lib/sessions";
@@ -28,8 +29,10 @@ function App() {
   const [boardRequest, setBoardRequest] = useState<{ id: string; kind: "detail" | "create"; nonce: number } | null>(null);
   const cacheTasks = useCallback((rows: TaskEntry[]) => { setCachedTasks(rows); setTasksLoaded(true); }, []);
   const clearBoardRequest = useCallback(() => setBoardRequest(null), []);
-  const openPalette = () => { paletteOrigin.current = document.activeElement instanceof HTMLElement ? document.activeElement : null; setPaletteOpen(true); };
+  const openPalette = useCallback(() => { paletteOrigin.current = document.activeElement instanceof HTMLElement ? document.activeElement : null; setPaletteOpen(true); }, []);
   const [nav, setNav] = useState<NavId>("sessions");
+  const [commanderVisited, setCommanderVisited] = useState(false);
+  useEffect(() => { if (nav === "commander") setCommanderVisited(true); }, [nav]);
   const [sessions, dispatch] = useReducer(sessionsReducer, undefined, () =>
     initialSessionsState(),
   );
@@ -65,11 +68,12 @@ function App() {
     return () => { alive = false; };
   }, [nav, historyRevision]);
 
+  const approvalIdentity = JSON.stringify(sessions.items.map(item => [item.key, item.acpSessionId]));
   // One global collection drives all inline views, even if approval arrives before SessionStarted.
   useEffect(() => { void permissionCenter.setup().catch(() => {}); }, []);
   useEffect(() => {
     dispatch({ type: "approvalSync", pending: pendingPermissions });
-  }, [pendingPermissions, sessions.items]);
+  }, [pendingPermissions, approvalIdentity]);
 
   // 全局快捷键：⌘N 新建会话、⌘1..8 切换会话（配合详情页 ⌘R 运行 / ⌘. 停止）
   useEffect(() => {
@@ -139,7 +143,7 @@ function App() {
         inert={nav !== "commander"}
         className={nav === "commander" ? "min-h-0 flex-1" : "hidden"}
       >
-        <CommanderView
+        {(commanderVisited || nav === "commander") && <DeferredContent><CommanderView
           active={nav === "commander"}
           currentCwd={activeSession?.draft.cwd ?? workspace?.path ?? ""}
           currentAgent={activeSession?.draft.agentId ?? ""}
@@ -149,7 +153,7 @@ function App() {
             dispatch({ type: "openHistory", session });
             setNav("sessions");
           }}
-        />
+        /></DeferredContent>}
       </div>
       <div
         hidden={nav !== "sessions"}
@@ -164,10 +168,10 @@ function App() {
           onWorkspacesChange={setWorkspaces}
         />
       </div>
-      {nav === "approvals" && <ApprovalsView />}
-      {nav === "settings" && <SettingsView onWorkspacesChanged={setWorkspaces} />}
+      {nav === "approvals" && <DeferredContent><ApprovalsView /></DeferredContent>}
+      {nav === "settings" && <DeferredContent><SettingsView onWorkspacesChanged={setWorkspaces} /></DeferredContent>}
       {nav === "kanban" && (
-        <KanbanView
+        <DeferredContent><KanbanView
           onTasksLoaded={cacheTasks}
           request={boardRequest}
           onRequestHandled={clearBoardRequest}
@@ -197,7 +201,7 @@ function App() {
             dispatch({ type: "openHistory", session: rows[0] });
             setNav("sessions");
           }}
-        />
+        /></DeferredContent>
       )}
     </AppShell></>
   );

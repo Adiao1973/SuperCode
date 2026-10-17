@@ -167,7 +167,7 @@ it("keeps active context/drafts and routes two real RunConsole Channels while fi
       { type: "message_chunk", message_id: "a", text: "ONLY-A" },
     ]);
   });
-  expect(screen.getByText("ONLY-B")).toBeVisible();
+  expect(await screen.findByText("ONLY-B")).toBeVisible();
   expect(screen.queryByText("ONLY-A")).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole("button", { name: "选择会话 Alpha 中文" }));
   expect(screen.getByText("ONLY-A")).toBeVisible();
@@ -221,4 +221,35 @@ it("retries failed historical message reads without resuming or running the Agen
   await waitFor(() => expect(screen.queryByRole("alert")).toBeNull());
   expect(calls.filter((c) => c.command === "list_session_messages")).toHaveLength(2);
   expect(calls.some((c) => /run_prompt|session_load|execute/.test(c.command))).toBe(false);
+});
+
+it("keeps a newly selected draft active when an earlier confirmed history deletion finishes", async () => {
+  vi.stubGlobal("ResizeObserver", class { observe() {} unobserve() {} disconnect() {} });
+  handle("appearance_ready", () => undefined);
+  handle("list_workspaces", () => [{ id: "default", name: "默认空间", path: null, kind: "default" }]);
+  handle("list_agent_definitions", () => []);
+  handle("check_opencode_env", () => null);
+  handle("list_session_messages", () => []);
+  let release!: () => void;
+  handle("delete_session", () => new Promise<void>(resolve => { release = resolve; }));
+  let initial = sessionsReducer(initialSessionsState(), { type: "hydrate", sessions: [{ agent_id: "opencode", local_id: "local-delete", agent_session_id: "acp-delete", title: "待删除历史", cwd: "/fixture", workspace_id: "default", status: "completed", updated_at: "" }] });
+  const history = initial.items.find(item => item.acpSessionId === "acp-delete")!;
+  initial = sessionsReducer(initial, { type: "activate", key: history.key });
+  let latest = initial;
+  function Host() {
+    const [state, dispatch] = useReducer(sessionsReducer, initial);
+    latest = state;
+    return <MotionProvider initial={{ preferences: { motion: "reduce" }, error: null }}><AppearanceProvider initial={{ preferences: { theme: "light" }, error: null }}><LayoutProvider initial={{ preferences: DEFAULT_LAYOUT, error: null }}><SessionsWorkspace state={state} dispatch={dispatch} /></LayoutProvider></AppearanceProvider></MotionProvider>;
+  }
+  render(<Host />);
+  await screen.findByRole("button", { name: "选择会话 待删除历史" });
+  fireEvent.click(screen.getByRole("button", { name: "删除会话 待删除历史" }));
+  fireEvent.click(screen.getByRole("button", { name: "删除会话 待删除历史" }));
+  await waitFor(() => expect(calls.some(call => call.command === "delete_session")).toBe(true));
+  fireEvent.click(screen.getByRole("button", { name: "新建会话（⌘N，默认空间）" }));
+  const draftKey = latest.activeKey;
+  await act(async () => release());
+  expect(latest.activeKey).toBe(draftKey);
+  expect(latest.items.some(item => item.key === draftKey)).toBe(true);
+  expect(latest.items.some(item => item.key === history.key)).toBe(false);
 });

@@ -1,3 +1,4 @@
+import { DeferredContent } from "./DeferredContent";
 import { EmptyState, InlineError, LoadingState } from "./FeedbackState";
 /**
  * 会话详情视图：绑定单个会话条目，表单草稿与事件流都来自 sessions store。
@@ -5,29 +6,21 @@ import { EmptyState, InlineError, LoadingState } from "./FeedbackState";
  * 工具详情与文件变更由 ToolDetails 按需展示。
  */
 import { Dialog } from "radix-ui";
-import { MessageMarkdown } from "./MessageMarkdown";
-import { ToolDetails } from "./ToolDetails";
 import {
-  memo,
+  lazy,
   useCallback,
   useEffect,
   useRef,
   useState,
   type Dispatch,
 } from "react";
-import {
-  MessageTimeline,
-  TimelineDisclosure,
-  TimelineCopy,
-} from "./MessageTimeline";
 import { createReadingMemory, type ReadingMemory } from "@/lib/reading";
 import { TerminalPanels } from "@/components/WorkspacePanels";
 import { useLayoutPreferences } from "@/lib/layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
-import { SessionTerminal } from "./SessionTerminal";
+import { SessionTerminal } from "./TerminalLoader";
 import { PendingCard } from "@/components/PendingCard";
 import { CopyableBlock } from "@/components/CopyableBlock";
 import {
@@ -48,7 +41,6 @@ import {
   strictGuideSnippet,
   type OpencodeEnvReport,
 } from "@/lib/opencode-env";
-import type { StreamItem } from "@/lib/stream";
 import type { SessionEntry, SessionsAction } from "@/lib/sessions";
 import {
   AlertTriangle,
@@ -61,13 +53,7 @@ import {
   SlidersHorizontal,
 } from "lucide-react";
 
-const STOP_LABELS: Record<string, string> = {
-  end_turn: "本轮完成",
-  cancelled: "已取消",
-  max_tokens: "达到 token 上限",
-  max_turn_requests: "达到审批次数上限",
-  refusal: "模型拒绝",
-};
+const StreamTimeline = lazy(() => import("./StreamTimeline"));
 
 interface RunConsoleProps {
   visible?: boolean;
@@ -307,12 +293,11 @@ export function RunConsole({
             {stream.items.length === 0 ? (
               <div className="px-5">{historyLoading || historyError ? null : stream.running ? <LoadingState label="正在恢复上下文 / 等待 agent 响应…" /> : <EmptyState title={session.resumable ? "继续此会话" : "开始一个任务"} description={session.resumable ? "输入任务，继续对话。" : "输入任务开始。"} />}</div>
             ) : (
-              <MessageTimeline
+              <DeferredContent><StreamTimeline
                 items={stream.items}
                 memory={readingMemory ?? localReading.current}
                 visible={visible}
-                renderItem={renderStreamItem}
-              />
+              /></DeferredContent>
             )}
           </div>
 
@@ -860,72 +845,3 @@ export function RunConsole({
     </Dialog.Root>
   );
 }
-
-const renderStreamItem = (item: StreamItem) => <StreamItemView item={item} />;
-
-const StreamItemView = memo(function StreamItemView({
-  item,
-}: {
-  item: StreamItem;
-}) {
-  switch (item.kind) {
-    case "thought":
-      return (
-        <div className="border-l-2 py-1 pl-3 text-muted-foreground">
-          <TimelineDisclosure
-            itemKey={item.key}
-            summary={
-              <span className="min-w-0 truncate text-xs">
-                思考 · {item.active ? "生成中" : "完成"} ·{" "}
-                {item.text.split("\n", 1)[0].slice(0, 120)}
-              </span>
-            }
-          >
-            <p className="whitespace-pre-wrap break-words text-sm italic">
-              {item.text}
-            </p>
-            <TimelineCopy text={item.text} label="复制思考" />
-          </TimelineDisclosure>
-        </div>
-      );
-    case "message":
-      return <MessageMarkdown text={item.text} active={item.active} />;
-    case "user_message":
-      return (
-        <div className="flex justify-end">
-          <p className="bg-primary/10 text-foreground max-w-[85%] rounded-lg px-3 py-1.5 text-sm whitespace-pre-wrap">
-            {item.text}
-          </p>
-        </div>
-      );
-    case "tool":
-      return <ToolDetails item={item} />;
-    case "plan":
-      return (
-        <div className="text-muted-foreground rounded-md border px-3 py-2 text-xs">
-          <div className="mb-1 font-medium">计划</div>
-          {item.entries.map((entry, i) => (
-            <div key={i}>
-              [{entry.status}] {entry.content}
-            </div>
-          ))}
-        </div>
-      );
-    case "turn_end":
-      return (
-        <div className="flex items-center gap-2 py-1">
-          <Separator className="flex-1" />
-          <span className="text-muted-foreground text-[11px]">
-            {STOP_LABELS[item.stopReason] ?? item.stopReason}
-          </span>
-          <Separator className="flex-1" />
-        </div>
-      );
-    case "error":
-      return (
-        <div className="border-destructive/40 bg-destructive/10 text-destructive rounded-md border px-3 py-2 text-sm">
-          {item.message}
-        </div>
-      );
-  }
-});

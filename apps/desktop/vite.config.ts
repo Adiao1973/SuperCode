@@ -9,6 +9,7 @@ const host = process.env.TAURI_DEV_HOST;
 // https://vite.dev/config/
 export default defineConfig(() => ({
   plugins: [react(), tailwindcss()],
+  build: { manifest: true },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

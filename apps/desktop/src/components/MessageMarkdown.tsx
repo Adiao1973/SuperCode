@@ -9,7 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import { copyText } from "@/lib/clipboard";
-import { ACTIVE_MARKDOWN_LIMIT, MARKDOWN_LIMIT } from "@/lib/markdown";
+import { ACTIVE_MARKDOWN_LIMIT, MARKDOWN_LIMIT, rawTextChunks } from "@/lib/markdown";
 
 const MarkdownBody = lazy(() => import("./MarkdownBody"));
 class MarkdownBoundary extends Component<
@@ -28,10 +28,13 @@ class MarkdownBoundary extends Component<
     );
   }
 }
-function RawText({ text }: { text: string }) {
+const RawChunk = memo(function RawChunk({ text }: { text: string }) {
+  return <span className="block [contain:layout]">{text}</span>;
+});
+function RawText({ text, active = false }: { text: string; active?: boolean }) {
   return (
     <pre className="whitespace-pre-wrap break-words font-sans text-sm leading-relaxed">
-      {text}
+      {active ? rawTextChunks(text).map((chunk, index) => <RawChunk key={index} text={chunk} />) : text}
     </pre>
   );
 }
@@ -101,10 +104,10 @@ export const MessageMarkdown = memo(function MessageMarkdown({
         <span role={feedback.includes("失败") ? "alert" : "status"} aria-live={feedback.includes("失败") ? "assertive" : "off"}>{feedback}</span>
       </div>
       {raw || tooLong ? (
-        <RawText text={text} />
+        <RawText text={visibleText} active={active} />
       ) : (
         <MarkdownBoundary text={text}>
-          <Suspense fallback={<RawText text={text} />}>
+          <Suspense fallback={<RawText text={visibleText} active={active} />}>
             <MarkdownBody text={visibleText} active={active} />
           </Suspense>
         </MarkdownBoundary>

@@ -1,5 +1,5 @@
 /** Rendering policy only; original messages stay authoritative in the stream/store. */
-export const ACTIVE_MARKDOWN_LIMIT = 32 * 1024;
+export const ACTIVE_MARKDOWN_LIMIT = 4 * 1024;
 export const MARKDOWN_LIMIT = 128 * 1024;
 export const HIGHLIGHT_LANGUAGES = new Set([
   "js",
@@ -63,4 +63,17 @@ export function canHighlight(text: string, language: string): boolean {
     text.split("\n").length - (text.endsWith("\n") ? 1 : 0) <= 200 &&
     HIGHLIGHT_LANGUAGES.has(language)
   );
+}
+
+/** Stable newline-aligned chunks bound append-only raw-text relayout. No text is dropped. */
+export function rawTextChunks(text: string, budget = 1024): string[] {
+  const chunks: string[] = [];
+  let start = 0;
+  while (start < text.length) {
+    const newline = text.indexOf("\n", start + budget);
+    const end = newline < 0 ? text.length : newline + 1;
+    chunks.push(text.slice(start, end));
+    start = end;
+  }
+  return chunks;
 }

@@ -19,7 +19,6 @@ import {
   noteTimelineUpdate,
   type ReadingMemory,
 } from "@/lib/reading";
-import { copyText } from "@/lib/clipboard";
 const DisclosureContext = createContext<{
   expanded: Set<string>;
   toggle: (key: string) => void;
@@ -40,8 +39,7 @@ export function MessageTimeline({
   const scroller = useRef<HTMLElement | null>(null);
   const shown = useRef(visible);
   shown.current = visible;
-  const currentItems = useRef(items);
-  currentItems.current = items;
+  const previousItemCount = useRef(items.length);
   const adjusting = useRef(false);
   const frame = useRef<number | null>(null);
   const followFrame = useRef<number | null>(null);
@@ -81,11 +79,7 @@ export function MessageTimeline({
       adjusting.current = true;
       if (memory.following) {
         if (el.scrollHeight - el.clientHeight - el.scrollTop > 2)
-          list.current?.scrollToIndex({
-            index: currentItems.current.length - 1,
-            align: "end",
-            behavior: "auto",
-          });
+          el.scrollTop = el.scrollHeight - el.clientHeight;
       } else if (memory.anchor) {
         const row = Array.from(
           el.querySelectorAll<HTMLElement>("[data-timeline-key]"),
@@ -145,7 +139,9 @@ export function MessageTimeline({
     noteTimelineUpdate(memory, items);
     if (expanded !== memory.expanded) setRevision((n) => n + 1);
     setUnread(memory.unread);
-    adjust();
+    // Text growth is observed below; avoid forced layout for unchanged display batches.
+    if (previousItemCount.current !== items.length) adjust();
+    previousItemCount.current = items.length;
   }, [items, memory, adjust]);
   useLayoutEffect(() => {
     if (!visible) return;
@@ -303,21 +299,4 @@ export function TimelineDisclosure({
     </div>
   );
 }
-export function TimelineCopy({ text, label }: { text: string; label: string }) {
-  const [feedback, setFeedback] = useState("");
-  return (
-    <div className="mt-1 flex gap-2 text-[11px] text-muted-foreground">
-      <button
-        type="button"
-        onClick={() =>
-          void copyText(text)
-            .then(() => setFeedback("已复制"))
-            .catch(() => setFeedback("复制失败，请选择文本复制"))
-        }
-      >
-        {label}
-      </button>
-      <span role={feedback.includes("失败") ? "alert" : "status"} aria-live={feedback.includes("失败") ? "assertive" : "off"}>{feedback}</span>
-    </div>
-  );
-}
+export { TimelineCopy } from "./TimelineCopy";

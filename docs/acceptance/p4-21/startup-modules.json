@@ -1,0 +1,35 @@
+{
+  "date": "2026-10-17",
+  "samples": [
+    {
+      "ms": 1050,
+      "ready": true,
+      "history": true
+    },
+    {
+      "ms": 1067,
+      "ready": true,
+      "history": true
+    },
+    {
+      "ms": 1055,
+      "ready": true,
+      "history": true
+    },
+    {
+      "ms": 1045,
+      "ready": true,
+      "history": true
+    },
+    {
+      "ms": 1058,
+      "ready": true,
+      "history": true
+    }
+  ],
+  "medianMs": 1055,
+  "method": "getApp launch to extra full AX-ready response; process stopped before each; 12 persisted sessions/1022 messages plus transient draft",
+  "targetMs": 821.7,
+  "build": "release with tauri/devtools; diagnostic only, not ordinary-release gate",
+  "qualified": false
+}
