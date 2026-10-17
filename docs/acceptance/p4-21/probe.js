@@ -37,15 +37,17 @@ window.p421 = (() => {
       setTimeout(() => {
         const start=performance.now(); let last=start, min=Infinity, max=0;
         const frames=[], visibility=new Set(), viewports=new Set();
+        const splitters=[...document.querySelectorAll('[role="separator"][aria-valuenow]')].map(el=>({el,min:Infinity,max:-Infinity}));
         function tick(now) {
           frames.push(now-last); last=now; visibility.add(document.visibilityState); viewports.add(innerWidth+"x"+innerHeight);
+          for(const range of splitters) { const value=Number(range.el.getAttribute('aria-valuenow'));range.min=Math.min(range.min,value);range.max=Math.max(range.max,value); }
           const nodes=document.querySelectorAll('[data-item-index]').length;
           min=Math.min(min,nodes);max=Math.max(max,nodes);
           const scroller=document.querySelector('[data-virtuoso-scroller]');
           if(scroll&&scroller) scroller.scrollTop=(1-Math.abs(((now-start)/1000%6)-3)/3)*2700;
           if(now-start<30000) requestAnimationFrame(tick);
           else { const payload={label,frames,visibility:[...visibility],viewport:[innerWidth,innerHeight,devicePixelRatio],
-            dom:{viewports:[...viewports],minVirtualItems:min,maxVirtualItems:max,totalElements:document.querySelectorAll('*').length,
+            dom:{viewports:[...viewports],splitterRanges:splitters.map(({min,max})=>({min,max})),minVirtualItems:min,maxVirtualItems:max,totalElements:document.querySelectorAll('*').length,
             longtaskSupported:PerformanceObserver.supportedEntryTypes?.includes('longtask')??false}};
             send(payload).then(()=>done?.(payload));
           }

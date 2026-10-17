@@ -167,7 +167,7 @@ it("keeps active context/drafts and routes two real RunConsole Channels while fi
       { type: "message_chunk", message_id: "a", text: "ONLY-A" },
     ]);
   });
-  expect(screen.getByText("ONLY-B")).toBeVisible();
+  expect(await screen.findByText("ONLY-B")).toBeVisible();
   expect(screen.queryByText("ONLY-A")).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole("button", { name: "选择会话 Alpha 中文" }));
   expect(screen.getByText("ONLY-A")).toBeVisible();

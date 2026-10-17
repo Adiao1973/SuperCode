@@ -1,0 +1,43 @@
+{
+  "samples": [
+    {
+      "launchMs": 1719,
+      "fullAXMs": 1859,
+      "ready": true,
+      "history": true
+    },
+    {
+      "launchMs": 766,
+      "fullAXMs": 944,
+      "ready": true,
+      "history": true
+    },
+    {
+      "launchMs": 770,
+      "fullAXMs": 916,
+      "ready": true,
+      "history": true
+    },
+    {
+      "launchMs": 767,
+      "fullAXMs": 905,
+      "ready": true,
+      "history": true
+    },
+    {
+      "launchMs": 753,
+      "fullAXMs": 901,
+      "ready": true,
+      "history": true
+    }
+  ],
+  "medianMs": 767,
+  "budgetMs": 821.7,
+  "historicalBaselineMedianMs": 747,
+  "build": "ordinary release, no devtools",
+  "initialAXReadyVerified": true,
+  "fixture": "12 persisted sessions, 1022 messages, transient empty draft",
+  "method": "Process cold / warm OS cache. End at getApp first AX response, whose emitted tree already contains all history rows and task input. Extra duplicate full AX read is recorded separately in fullAXMs and not added to first-ready time.",
+  "finalSourceQualified": false,
+  "note": "原生提前初始化构建的5次有效样本；随后增加快照重载nonce及初始系统主题竞态保护。最终相同代码构建的复测遇到Mac锁屏，尚未完成。getApp已自带首个AX读取；fullAXMs是额外第二次读取。"
+}

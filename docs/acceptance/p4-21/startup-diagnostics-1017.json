@@ -1,0 +1,38 @@
+{
+  "ordinaryModule": [
+    {
+      "launchMs": 888050,
+      "fullAXMs": 888204,
+      "ready": true,
+      "history": true
+    },
+    {
+      "launchMs": 966,
+      "fullAXMs": 1189,
+      "ready": true,
+      "history": true
+    }
+  ],
+  "earlyWindow": [
+    {
+      "launchMs": 1992,
+      "fullAXMs": 2123,
+      "ready": true,
+      "history": true
+    },
+    {
+      "launchMs": 882,
+      "fullAXMs": 1031,
+      "ready": true,
+      "history": true
+    }
+  ],
+  "oldSameDay": [
+    {
+      "launchMs": 707,
+      "fullAXMs": 852,
+      "history": true
+    }
+  ],
+  "note": "888050ms sample invalid: abnormal control-tool wait; remaining incomplete series diagnostic only, not five-sample gate"
+}

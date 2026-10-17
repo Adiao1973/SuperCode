@@ -1,3 +1,4 @@
+import { StrictMode } from "react";
 import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { expect, it, vi } from "vitest";
@@ -105,4 +106,28 @@ it("applies the saved theme before asking the native window to show", async () =
     </AppearanceProvider>,
   );
   expect(ready).toHaveBeenCalledOnce();
+});
+
+it("observes an early window failure across effect replay and still applies later theme changes", async () => {
+  handle("appearance_ready", () => undefined);
+  handle("save_appearance_preferences", () => undefined);
+  let rejectReady!: (reason: Error) => void;
+  const ready = new Promise<void>((_, reject) => { rejectReady = reject; });
+  render(<StrictMode><AppearanceProvider initial={{ preferences: { theme: "light" }, error: null }} windowReady={ready}><AppearanceSettings /></AppearanceProvider></StrictMode>);
+  expect(calls.filter(call => call.command === "appearance_ready")).toHaveLength(0);
+  await act(async () => rejectReady(new Error("fixture window unavailable")));
+  expect(screen.getByRole("alert")).toHaveTextContent("fixture window unavailable");
+  await userEvent.setup().selectOptions(screen.getByLabelText("主题"), "dark");
+  expect(calls.filter(call => call.command === "appearance_ready")).toHaveLength(1);
+  expect(document.documentElement.dataset.theme).toBe("dark");
+});
+
+it("does not reuse an early window promise after the system theme changes before React mounts", () => {
+  const media = mediaFixture();
+  media.set(SYSTEM_DARK, true);
+  vi.stubGlobal("matchMedia", media.matchMedia);
+  handle("appearance_ready", () => undefined);
+  render(<AppearanceProvider initial={{ preferences: { theme: "system" }, error: null }} windowReady={new Promise(() => {})} windowReadyKey="system:light"><AppearanceSettings /></AppearanceProvider>);
+  expect(calls.find(call => call.command === "appearance_ready")?.args).toEqual({ theme: "system", dark: true });
+  expect(document.documentElement.dataset.theme).toBe("dark");
 });

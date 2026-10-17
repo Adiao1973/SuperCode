@@ -62,11 +62,16 @@ const AppearanceContext = createContext<AppearanceContextValue | null>(null);
 export function AppearanceProvider({
   initial,
   children,
+  windowReady,
+  windowReadyKey,
 }: {
   initial: AppearanceLoad;
   children: ReactNode;
+  windowReady?: Promise<void>;
+  windowReadyKey?: string;
 }) {
   const [value, setValue] = useState(initial);
+  const initialWindowReady = useRef(windowReady);
   const [systemDark, setSystemDark] = useState(
     () => matchMedia(SYSTEM_DARK).matches,
   );
@@ -74,6 +79,7 @@ export function AppearanceProvider({
   const locked = useRef(false);
   const loaded = useRef(initial.error === null);
   const resolved = resolveTheme(value.preferences.theme, systemDark);
+  const initialWindowKey = useRef(windowReadyKey ?? `${value.preferences.theme}:${resolved}`);
   useEffect(() => {
     const media = matchMedia(SYSTEM_DARK);
     const update = () => setSystemDark(media.matches);
@@ -88,10 +94,13 @@ export function AppearanceProvider({
     // Layout effects have applied CSS before the still-hidden native window is shown.
     // Do not await rAF: WebKit can suspend frames for an invisible window.
     let disposed = false;
-    void invoke("appearance_ready", {
+    if (initialWindowKey.current !== `${value.preferences.theme}:${resolved}`)
+      initialWindowReady.current = undefined;
+    const ready = initialWindowReady.current ?? invoke("appearance_ready", {
       dark: resolved === "dark",
       theme: value.preferences.theme,
-    }).catch((e) => {
+    });
+    void ready.catch((e) => {
       if (!disposed) setValue((v) => ({ ...v, error: String(e) }));
     });
     return () => {

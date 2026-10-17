@@ -93,10 +93,10 @@ export function AppShell({
             aria-label="模块"
             className="flex flex-col gap-1 border-t p-2"
           >
-            {NAV_ITEMS.map(({ id, label, icon: Icon }) => (
-              <Tooltip key={id}>
-                <TooltipTrigger asChild>
+            {NAV_ITEMS.map(({ id, label, icon: Icon }) => {
+              const button = (
                   <button
+                    key={id}
                     type="button"
                     aria-label={
                       id === "approvals" && pendingCount
@@ -127,17 +127,17 @@ export function AppShell({
                       </span>
                     )}
                   </button>
-                </TooltipTrigger>
-                {collapsed && (
+              );
+              return collapsed ? (
+                <Tooltip key={id}>
+                  <TooltipTrigger asChild>{button}</TooltipTrigger>
                   <TooltipContent side="right">
                     {label}
-                    {id === "approvals" && pendingCount > 0
-                      ? ` · ${pendingCount} 项待审批`
-                      : ""}
+                    {id === "approvals" && pendingCount > 0 ? ` · ${pendingCount} 项待审批` : ""}
                   </TooltipContent>
-                )}
-              </Tooltip>
-            ))}
+                </Tooltip>
+              ) : button;
+            })}
           </nav>
           {onSearch && <div className="px-2 pt-2"><Button variant="ghost" className="w-full justify-start gap-2" aria-label="搜索与快捷键（⌘K / Ctrl K）" title="搜索与快捷键（⌘K / Ctrl K）" onClick={onSearch}><Search className="size-4 shrink-0" />{!collapsed && <><span>搜索与快捷键</span><kbd className="ml-auto text-[10px] text-muted-foreground">⌘K</kbd></>}</Button></div>}
           <div className="mt-auto border-t p-2">

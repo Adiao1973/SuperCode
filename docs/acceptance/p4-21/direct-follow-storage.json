@@ -1,0 +1,7 @@
+{
+  "status": "completed",
+  "chunks": 900,
+  "sequence": "0..899",
+  "exact": true,
+  "fixture": "P4-1 synthetic ACP, isolated SQLite"
+}

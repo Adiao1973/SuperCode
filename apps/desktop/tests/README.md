@@ -114,3 +114,5 @@ env -u SUPERCODE_LLM_API_KEY SUPERCODE_DB="$scratch/fixture.db" \
 ## P4-21 性能与资源回归
 
 `just verify` 在生产构建后运行静态首包图预算及2项Node契约；native性能不使用jsdom计时冒充。`terminal-loader.test.tsx` 验证加载中关闭不挂载终端，重新打开可使用已加载模块；Markdown测试覆盖流式原文合并、稳定Unicode/换行块、完整复制和完成态恢复。当前原生预算与人工采样状态见 [P4-21](../../../docs/acceptance/p4-21.md)。
+
+P4-21 续验补充：消息时间线按需加载后，会话Channel隔离测试等待实际消息显示；加载边界仅包消息区域/单个非初始页面，不能暂停会话宿主的可见性与快捷键停用。外观测试覆盖入口提前请求窗口显示时的promise错误、StrictMode effect重放及后续主题同步、初始化到挂载期间的系统主题变化。

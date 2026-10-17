@@ -962,9 +962,16 @@ P4-20 前端接线：AppShell.onSearch 打开受控 CommandPalette；App 仅在�
 
 ### P4-21 — 性能回归检查（待验收）
 
-生产构建输出 Vite manifest，`scripts/performance/bundle-budget.mjs` 从唯一 entry 沿 imports 递归求首包图，去重并逐文件 gzip level9；dynamicImports 不计入首包。基线 369794 bytes，预算 +20%，接入 just verify 并用含共享/循环/按需依赖的图测试防止漏计。临时原生探针只用于隔离验收，不进入产品、不导出正文/配置。性能出口见 acceptance/p4-21.md。
+生产构建输出Vite manifest。首包检查从唯一entry沿静态imports递归去重，逐文件gzip level9；dynamicImports不计入首包。基线369794 bytes、预算+20%，接入just verify，图测试覆盖共享、循环和按需依赖。临时原生探针只用于隔离验收，不进入产品、不导出正文或配置；性能结论只见[验收记录](acceptance/p4-21.md)。
 
+非初始页面（指挥官、看板、审批、设置）首次访问才加载，指挥官首次进入后保持挂载。消息时间线和虚拟列表在实际存在消息后加载；审批复制按钮独立于虚拟列表模块。各页面/消息区域有独立加载与错误边界，不暂停会话宿主、输入、Channel或全局审批订阅。模块加载失败可切换页面，需重启应用重试。
 
-P4-21 原生时间线显示长原文布局p95约10ms。活动原文按1024码元后首个换行边界切稳定块，块以layout containment隔离且memo保留已完成块；不截断/不拆单行或代理对，复制仍用完整权威源，完成态恢复原有排版。
+TerminalLoader按需加载SessionTerminal/xterm；加载完成前关闭不会挂载或创建PTY。终端已打开后的切页保留规则不变，加载失败可以关闭，模块错误需重启应用重试。
 
-P4-21 终端厂商运行时：RunConsole 改用 TerminalLoader 的 React.lazy/Suspense，实际 SessionTerminal/xterm 仅打开终端时加载。加载失败可关闭终端；模块加载错误缓存需重启应用后重试；关闭早于加载完成时不挂载/不创建PTY，已打开终端切页仍按原有保留规则处理。
+活动Markdown阈值4K UTF-16码元、完成态阈值128K；两种活动展示均100ms合并更新，复制始终使用完整权威源。长原文按1024码元后首个换行切稳定块，以memo/layout containment隔离；不截断、不拆单行或代理对，结束后恢复原排版。新增条目立即校正位置，纯正文增长由既有DOM/尺寸观察器触发；跟随模式直接调整原生滚动容器到底部，离底锚点、首次恢复和显式跳转保持原逻辑。
+
+主窗口配置create=false，由setup按原窗口配置创建；自动创建的开发/验收覆盖配置仍支持既有IPC路径。复用AppState Store预读三项界面偏好及各自读取错误，初始化脚本只注入这些字段和随机启动nonce，不包含模型连接、key或其他SQLite数据。读取失败保留各Provider默认值/错误及禁止覆盖语义。没有新增持久化表或IPC命令。
+
+初始化脚本等待html根节点，先应用主题/动效属性，再通过受保护的Tauri桥接请求appearance_ready；原生背景在显示前设为对应颜色，应用模块随后加载。main消费预读快照并复用同主题显示promise；桥接不可用或期间系统主题变化时回退SDK调用。首次React root提交使用flushSync，之后维持正常调度。Provider观察首个显示请求错误，StrictMode重放不重复请求，后续主题变化仍同步原生窗口。
+
+sessionStorage只保存无敏感信息的启动nonce。完整WebView重载不重放旧快照，重新走IPC读取当前偏好；sessionStorage不可用同样回退。新进程的新nonce允许新快照，不把界面偏好另存到浏览器。
