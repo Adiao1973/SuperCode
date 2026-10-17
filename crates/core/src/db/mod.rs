@@ -1,6 +1,9 @@
 //! SQLite 持久层（sqlx，docs/architecture.md §6）。
 //! Store 为连接池薄封装（Clone 廉价）；事件流落库经 [`recorder::SessionRecorder`]。
 
+#[cfg(test)]
+mod upgrade_tests;
+
 mod layout;
 pub use layout::LayoutPreferences;
 mod motion;
