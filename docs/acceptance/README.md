@@ -8,6 +8,7 @@
 | Phase 1 / v0.2.0 | [整体验收](phase1.md) |
 | Phase 2 / v0.3.0 | [最终范围与整体验收](phase2.md)，[构建产物记录](phase2-artifacts.json) |
 | Phase 3 / v1.0.0 macOS arm64 | [阶段验收](phase3.md)，[构建产物](phase3-artifacts.json)，[P3-10B 安装与发布](p3-10b.md) |
+| P4-23 全链路与升级 | [已验收：升级、真实 MiMo/双 Agent、审批取消、worktree/看板/PTY 与重启](p4-23.md) |
 | P4-22 可访问性与多尺寸回归 | [九格、键盘、中文IME与VoiceOver听读](p4-22.md)；已验收 |
 | P4-21 性能与资源回归 | [待验收：优化样本达标，最终原生复测待解锁](p4-21.md) |
 | UX-COPY 全应用文案减负 | [已验收：删除重复说明、帮助折叠、保留关键影响](ux-copy.md) |

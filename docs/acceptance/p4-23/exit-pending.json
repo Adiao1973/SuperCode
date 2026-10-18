@@ -1,0 +1,39 @@
+{
+  "status_after_exit": "cancelled",
+  "tasks": [
+    {
+      "id": "a",
+      "status": "cancelled",
+      "session_id": "1fcd55a6-e18c-4d91-be3c-ebe669253183"
+    },
+    {
+      "id": "b",
+      "status": "cancelled",
+      "session_id": "d00aeb81-8afe-49aa-9863-2d0bac40bf97"
+    },
+    {
+      "id": "c",
+      "status": "cancelled",
+      "session_id": null
+    }
+  ],
+  "status_after_restart": "cancelled",
+  "tasks_after_restart": [
+    {
+      "id": "a",
+      "status": "cancelled",
+      "session_id": "1fcd55a6-e18c-4d91-be3c-ebe669253183"
+    },
+    {
+      "id": "b",
+      "status": "cancelled",
+      "session_id": "d00aeb81-8afe-49aa-9863-2d0bac40bf97"
+    },
+    {
+      "id": "c",
+      "status": "cancelled",
+      "session_id": null
+    }
+  ],
+  "running_runs_after_restart": 0
+}

@@ -156,3 +156,5 @@ just smoke     # 真实 opencode 冒烟（CLI，需本机认证）
 ## License
 
 [MIT](LICENSE)
+
+[P4-23 全链路与升级验收](docs/acceptance/p4-23.md)已验收并接入 dev：1.0 数据保留、真实 MiMo 中国入口及 OpenCode/Codex 链路、审批取消、worktree/看板/PTY 与重启通过；原模型配置与 key 未修改，P4-24 未启动。

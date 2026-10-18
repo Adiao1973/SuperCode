@@ -1,0 +1,8 @@
+{
+  "native_restart": true,
+  "all_persisted_records_equal": true,
+  "rpc_before": 34,
+  "rpc_after": 34,
+  "sessions_before": 7,
+  "sessions_after": 7
+}

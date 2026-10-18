@@ -17,3 +17,5 @@
 当前已发布 v1.0.0，包含 P3-1～7；[Phase 3 验收](acceptance/phase3.md)汇总功能与安装证据。P3-6 已完成 macOS 桌面闭环，CLI 与桌面均支持计划预览、确认执行、取消及结果读取；Windows 实机验收留待 P3-8/9。P3-7 核心 Codex NativeDriver 已完成真实恢复、审批与取消验收，产品入口仍使用 ACP。用户授权全力开发 macOS，P3-8/P3-9 延期，Windows 实现保留独立分支；[P3-10A macOS 整体回归](acceptance/p3-10a.md)已通过；P3-10B 已验收并发布，Phase 3 闭环完成，见其[记录](acceptance/p3-10b.md)。P2-6 延期，Claude ACP 本机问题按用户要求暂不处理。下一版本 v2.0.0 规划为 Phase 4 体验升级，[P4-1 体验基线](acceptance/p4-1.md)已验收，[P4-2 原型与选型](acceptance/p4-2.md)已验收，[P4-3 前端验证与 fixture 基础](acceptance/p4-3.md)已验收，[P4-4 主题与外观偏好](acceptance/p4-4.md)已验收，[P4-5 动效基础与减少动态](acceptance/p4-5.md)已验收，[P4-6 AppShell、导航与焦点](acceptance/p4-6.md)已验收，[P4-7 可调整分栏](acceptance/p4-7.md)已验收，[P4-8 会话列表与上下文定位](acceptance/p4-8.md)已验收，[P4-9 底部输入区与配置弹层](acceptance/p4-9.md)已验收并接入 dev，[P4-10 流式 Markdown 与代码阅读](acceptance/p4-10.md)已验收并接入 dev；[分析](design/desktop-v2.md)与任务拆分已写入现行 roadmap。
 
 每类信息只在对应入口维护：roadmap 不写操作流水账，architecture 不保存过时实现约定，验收历史不冒充当前状态。存量记录保留，历史段落由顶部最终结论限定。
+
+[P4-23 全链路与升级验收](acceptance/p4-23.md)已验收并接入 dev：1.0 数据保留、真实 MiMo 中国入口及 OpenCode/Codex 链路、审批取消、worktree/看板/PTY 与重启通过；原模型配置与 key 未修改，P4-24 未启动。

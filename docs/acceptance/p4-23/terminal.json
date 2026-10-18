@@ -1,0 +1,18 @@
+{
+  "native_pwd_matches_worktree": true,
+  "chinese_ansi_visible": true,
+  "stty_before": [
+    12,
+    112
+  ],
+  "stty_after": [
+    8,
+    112
+  ],
+  "ctrl_c_returned_prompt": true,
+  "exit_code_visible": 7,
+  "reopen_succeeded": true,
+  "shell_alive_before_app_exit": true,
+  "shell_alive_after_app_exit": false,
+  "remaining_shell_process_group_members": 0
+}
