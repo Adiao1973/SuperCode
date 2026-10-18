@@ -10,5 +10,7 @@
   "isolated_credentials_after_cleanup": 0,
   "isolated_config_after_cleanup": 0,
   "original_database_opened_readonly": true,
-  "real_end_to_end_passed": false
+  "real_end_to_end_passed": false,
+  "record_kind": "historical_failed_attempt",
+  "superseded_by": "real-end-to-end.json"
 }

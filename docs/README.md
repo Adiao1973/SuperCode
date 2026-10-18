@@ -18,4 +18,4 @@
 
 每类信息只在对应入口维护：roadmap 不写操作流水账，architecture 不保存过时实现约定，验收历史不冒充当前状态。存量记录保留，历史段落由顶部最终结论限定。
 
-[P4-23 全链路与升级验收](acceptance/p4-23.md)在任务分支待真实模型复验：升级、合成 ACP、原生 worktree/看板/PTY 与重启通过，MiMo 原入口 TLS 失败、授权备用入口 401；尚未合入 dev，P4-24 未启动。
+[P4-23 全链路与升级验收](acceptance/p4-23.md)已验收并接入 dev：1.0 数据保留、真实 MiMo 中国入口及 OpenCode/Codex 链路、审批取消、worktree/看板/PTY 与重启通过；原模型配置与 key 未修改，P4-24 未启动。

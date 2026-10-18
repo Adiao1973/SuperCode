@@ -14,10 +14,10 @@ pnpm --filter @supercode/desktop test
 
  Test Files  37 passed (37)
       Tests  119 passed (119)
-   Start at  22:02:21
-   Duration  4.16s (environment 38%, tests 25%, import 16%, setup 13%, transform 6%)
+   Start at  09:48:05
+   Duration  4.48s (environment 38%, tests 25%, import 16%, setup 14%, transform 8%)
 
-Environment  jsdom was created 37 times · 20.15s total, 38% of tracked time
+Environment  jsdom was created 37 times · 21.64s total, 38% of tracked time
              create it once per worker with pool: 'vmThreads' (keeps per-file isolation)
              learn more: https://vitest.dev/guide/improving-performance#test-environments
 
@@ -389,10 +389,10 @@ dist/assets/emacs-lisp-c_oH4hRZ.js                            790.00 kB │ gzip
 - Using dynamic import() to code-split the application
 - Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
 - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
-✓ built in 446ms
+✓ built in 467ms
 node --test scripts/performance/bundle-budget.test.mjs
-✔ initial graph includes shared transitive imports once, excludes lazy chunks and handles cycles (1.2975ms)
-✔ invalid build manifests fail closed rather than reporting an empty bundle (0.2045ms)
+✔ initial graph includes shared transitive imports once, excludes lazy chunks and handles cycles (1.406417ms)
+✔ invalid build manifests fail closed rather than reporting an empty bundle (0.253708ms)
 ℹ tests 2
 ℹ suites 0
 ℹ pass 2
@@ -400,76 +400,17 @@ node --test scripts/performance/bundle-budget.test.mjs
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 80.866209
+ℹ duration_ms 82.686042
 node scripts/performance/bundle-budget.mjs
 Initial gzip JS: 166423 / 443752 bytes (6 files): PASS
 cargo fmt --check
 cargo clippy --all-targets -- -D warnings
-   Compiling libsqlite3-sys v0.30.1
-   Compiling objc2-exception-helper v0.1.1
-   Compiling objc2 v0.6.4
-   Compiling sqlx-sqlite v0.8.6
-    Checking objc2-core-foundation v0.3.2
-    Checking block2 v0.6.2
-    Checking dispatch2 v0.3.1
-   Compiling sqlx-macros-core v0.8.6
-    Checking objc2-foundation v0.3.2
-   Compiling sqlx-macros v0.8.6
-    Checking sqlx v0.8.6
-    Checking objc2-app-kit v0.3.2
     Checking supercode-core v1.0.0 (/Users/adiaozhou/Code/SuperCode/crates/core)
-    Checking objc2-web-kit v0.3.2
-    Checking tao v0.35.3
-    Checking muda v0.19.3
-    Checking window-vibrancy v0.6.0
-    Checking rfd v0.15.4
-    Checking supercode-cli v1.0.0 (/Users/adiaozhou/Code/SuperCode/crates/cli)
-    Checking wry v0.55.1
-    Checking tauri-runtime v2.11.3
-    Checking tauri-runtime-wry v2.11.4
-    Checking tauri v2.11.6
-    Checking tauri-plugin-fs v2.4.4
-    Checking tauri-plugin-opener v2.5.5
-    Checking tauri-plugin-dialog v2.4.2
     Checking supercode-desktop v1.0.0 (/Users/adiaozhou/Code/SuperCode/apps/desktop/src-tauri)
-    Finished `dev` profile [unoptimized + debuginfo] target(s) in 25.84s
+    Checking supercode-cli v1.0.0 (/Users/adiaozhou/Code/SuperCode/crates/cli)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 22.05s
 cargo test
-   Compiling aws-lc-sys v0.45.0
-   Compiling libsqlite3-sys v0.30.1
-   Compiling objc2-exception-helper v0.1.1
-   Compiling objc2 v0.6.4
-   Compiling sqlx-sqlite v0.8.6
-   Compiling objc2-core-foundation v0.3.2
-   Compiling block2 v0.6.2
-   Compiling sqlx-macros-core v0.8.6
-   Compiling dispatch2 v0.3.1
-   Compiling objc2-foundation v0.3.2
-   Compiling sqlx-macros v0.8.6
-   Compiling sqlx v0.8.6
-   Compiling objc2-app-kit v0.3.2
-   Compiling aws-lc-rs v1.18.1
-   Compiling objc2-web-kit v0.3.2
-   Compiling tao v0.35.3
-   Compiling muda v0.19.3
-   Compiling window-vibrancy v0.6.0
-   Compiling rfd v0.15.4
-   Compiling rustls v0.23.37
-   Compiling tauri-runtime v2.11.3
-   Compiling wry v0.55.1
-   Compiling rustls-webpki v0.103.10
-   Compiling tauri-runtime-wry v2.11.4
-   Compiling tauri v2.11.6
-   Compiling tokio-rustls v0.26.4
-   Compiling rustls-platform-verifier v0.7.1
-   Compiling hyper-rustls v0.27.7
-   Compiling reqwest v0.13.5
-   Compiling tauri-plugin-fs v2.4.4
-   Compiling tauri-plugin-opener v2.5.5
-   Compiling supercode-core v1.0.0 (/Users/adiaozhou/Code/SuperCode/crates/core)
-   Compiling tauri-plugin-dialog v2.4.2
-   Compiling supercode-cli v1.0.0 (/Users/adiaozhou/Code/SuperCode/crates/cli)
-   Compiling supercode-desktop v1.0.0 (/Users/adiaozhou/Code/SuperCode/apps/desktop/src-tauri)
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 26.27s
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.43s
      Running unittests src/main.rs (target/debug/deps/supercode-8c02f3311089f1f8)
 
 running 0 tests
@@ -485,14 +426,14 @@ test ctrl_c_cancels_execution_and_preserves_report ... ok
 test failures_and_skips_are_explicit_and_not_exit_success ... ok
 test preview_confirm_execute_and_report_form_a_closed_loop ... ok
 
-test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.79s
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.63s
 
      Running tests/failed_run.rs (target/debug/deps/failed_run-b7d1c1628f4a3b5e)
 
 running 1 test
 test protocol_failure_marks_new_and_resumed_sessions_failed ... ok
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.31s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.33s
 
      Running tests/plan_generate.rs (target/debug/deps/plan_generate-98689dbe6a9b4296)
 
@@ -501,7 +442,7 @@ test cli_ctrl_c_cancels_request ... ok
 test cli_uses_local_sqlite_settings_without_creating_execution_sessions ... ok
 test cli_generates_validated_plan_and_redacts_http_errors ... ok
 
-test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.21s
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.22s
 
      Running tests/plan_validate.rs (target/debug/deps/plan_validate-8b61672eff1442bb)
 
@@ -513,34 +454,34 @@ test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; fini
      Running unittests src/lib.rs (target/debug/deps/supercode_core-c311482b06d9c078)
 
 running 85 tests
-test approval::tests::模式三形匹配 ... ok
 test approval::tests::glob匹配_星号跨空格问号单字符 ... ok
+test approval::tests::模式三形匹配 ... ok
 test approval::tests::从raw_input推断bash工具与命令 ... ok
 test approval::tests::规则求值_deny优先于allow ... ok
-test approval::tests::autoedit放行edit类bash类进队列 ... ok
-test approval::tests::fail_closed_allow命中放行_未命中直接拒绝 ... ok
-test approval::tests::full模式放行但deny规则仍拒绝 ... ok
-test approval::tests::plan模式拒绝且压过allow规则 ... ok
-test approval::tests::通配deny兜底会压掉allow规则 ... ok
-test approval::tests::allow规则命中直接放行并留痕 ... ok
-test approval::tests::模式热切换立即生效 ... ok
-test approval::tests::deny规则命中直接拒绝并留痕 ... ok
-test approval::tests::respond未知id返回错误 ... ok
-test commander::llm::credentials::tests::stored_key_precedes_environment_and_errors_never_echo_credentials ... ok
-test db::layout::tests::strict_layout_contract_and_bounds ... ok
-test db::appearance::tests::appearance_contract_rejects_unknown_fields_and_values ... ok
-test db::motion::tests::motion_contract_rejects_unknown_fields_and_values ... ok
 test commander::llm::credentials::tests::scopes_are_stable_for_base_url_but_never_cross_origins_or_paths ... ok
-test approval::tests::resolve与respond构成审批闭环 ... ok
-test approval::tests::invalid_option_keeps_request_retryable_and_cancel_is_not_user_decision ... ok
-test approval::tests::ask规则压过allow规则进队列 ... ok
+test commander::llm::credentials::tests::stored_key_precedes_environment_and_errors_never_echo_credentials ... ok
+test approval::tests::模式热切换立即生效 ... ok
+test approval::tests::full模式放行但deny规则仍拒绝 ... ok
+test approval::tests::autoedit放行edit类bash类进队列 ... ok
+test approval::tests::deny规则命中直接拒绝并留痕 ... ok
+test approval::tests::fail_closed_allow命中放行_未命中直接拒绝 ... ok
+test approval::tests::allow规则命中直接放行并留痕 ... ok
+test approval::tests::plan模式拒绝且压过allow规则 ... ok
+test approval::tests::respond未知id返回错误 ... ok
+test approval::tests::通配deny兜底会压掉allow规则 ... ok
+test db::appearance::tests::appearance_contract_rejects_unknown_fields_and_values ... ok
+test db::layout::tests::strict_layout_contract_and_bounds ... ok
+test db::motion::tests::motion_contract_rejects_unknown_fields_and_values ... ok
 test approval::tests::同一请求只能应答一次 ... ok
+test approval::tests::ask规则压过allow规则进队列 ... ok
+test approval::tests::resolve与respond构成审批闭环 ... ok
 test approval::tests::未命中规则进入待决队列并回填 ... ok
+test approval::tests::invalid_option_keeps_request_retryable_and_cancel_is_not_user_decision ... ok
 test db::layout::tests::defaults_atomic_save_and_database_bounds ... ok
-test db::tests::会话增查列表闭环 ... ok
+test db::motion::tests::motion_defaults_and_atomic_save ... ok
+test db::appearance::tests::appearance_defaults_and_atomic_save ... ok
 test db::recorder::tests::重放事件不落库 ... ok
 test db::tests::工具调用与审批落库 ... ok
-test db::appearance::tests::appearance_defaults_and_atomic_save ... ok
 test driver::acp::tests::acp进程工作目录仅在声明时切换 ... ok
 test driver::acp::tests::工具事件提取diff内容块 ... ok
 test driver::acp::tests::工具调用与状态更新转换 ... ok
@@ -548,46 +489,46 @@ test driver::acp::tests::消息块转换为message_chunk ... ok
 test driver::acp::tests::用户消息回显被忽略 ... ok
 test driver::acp::tests::用量更新转换 ... ok
 test driver::acp::tests::非文本消息块被忽略 ... ok
-test db::tests::会话删除级联子记录 ... ok
+test db::recorder::tests::事件流落库为会话消息与工具调用 ... ok
 test envcheck::tests::check_against_real_machine ... ignored
 test envcheck::tests::effective_project_overrides_global_only_when_explicit ... ok
-test db::tests::历史消息按agent会话id查询 ... ok
+test envcheck::node_tests::missing_runtime_is_reported_without_panicking ... ok
 test envcheck::tests::jsonc_parse_survives_comments_and_schema_url ... ok
-test envcheck::tests::find_in_path_skips_nonexistent_and_non_executable ... ok
 test envcheck::tests::merge_into_path_appends_missing_only ... ok
+test envcheck::tests::find_in_path_skips_nonexistent_and_non_executable ... ok
 test envcheck::tests::permission_levels_matrix ... ok
 test envcheck::tests::strict_requires_both_tools_guarded ... ok
+test db::tests::会话增查列表闭环 ... ok
 test events::aggregator::tests::不同id相邻不合并 ... ok
-test db::motion::tests::motion_defaults_and_atomic_save ... ok
+test db::tests::历史会话按cwd回填归类 ... ok
 test events::aggregator::tests::混合事件切断合并且顺序保持 ... ok
-test envcheck::tests::read_config_reports_parse_error ... ok
-test events::aggregator::tests::相邻同id的chunk合并为一条 ... ok
-test events::tests::序列化格式_符合前端契约 ... ok
+test db::tests::历史消息按agent会话id查询 ... ok
 test orchestrator::tests::launch_rejects_unsupported_driver_and_mismatched_resume ... ok
+test events::tests::序列化格式_符合前端契约 ... ok
+test events::aggregator::tests::相邻同id的chunk合并为一条 ... ok
 test proc::tests::kill_未知句柄返回错误 ... ok
 test events::aggregator::tests::到tick周期即使输入未关闭也flush ... ok
-test envcheck::node_tests::missing_runtime_is_reported_without_panicking ... ok
+test envcheck::tests::read_config_reports_parse_error ... ok
 test registry::tests::builtin_capabilities_flags ... ok
 test registry::tests::builtin_has_five_agents ... ok
 test registry::tests::claude_cli_probe_is_separate_and_does_not_apply_to_custom_commands ... ok
-test proc::tests::spawn_不存在的程序返回spawn错误 ... ok
-test db::recorder::tests::事件流落库为会话消息与工具调用 ... ok
+test db::tests::会话删除级联子记录 ... ok
 test registry::tests::find_unknown_agent_errors ... ok
 test registry::tests::missing_or_invalid_user_file_is_ignored ... ok
-test registry::tests::remove_custom_vanishes_and_override_restores_builtin ... ok
+test proc::tests::spawn_不存在的程序返回spawn错误 ... ok
 test registry::tests::detect_version_missing_command_is_none ... ok
-test registry::tests::detect_version_reads_first_line ... ok
-test registry::tests::user_file_overrides_builtin_by_id ... ok
-test tests::version_is_defined ... ok
 test registry::tests::remove_unknown_id_errors_and_save_creates_dir ... ok
-test registry::tests::upsert_writes_and_overrides_builtin ... ok
-test db::tests::历史会话按cwd回填归类 ... ok
+test registry::tests::detect_version_reads_first_line ... ok
 test db::tests::任务创建绑定流转与级联解绑 ... ok
+test tests::version_is_defined ... ok
+test registry::tests::remove_custom_vanishes_and_override_restores_builtin ... ok
+test registry::tests::user_file_overrides_builtin_by_id ... ok
+test registry::tests::upsert_writes_and_overrides_builtin ... ok
+test db::appearance::tests::appearance_upgrade_preserves_v1_sessions_credentials_and_reopens ... ok
 test db::task_move::tests::movement_is_atomic_preserves_execution_and_survives_reopen ... ok
 test db::layout::tests::layout_upgrade_preserves_v1_sessions_credentials_and_reopens ... ok
-test db::tests::规则库增删查幂等 ... ok
-test db::appearance::tests::appearance_upgrade_preserves_v1_sessions_credentials_and_reopens ... ok
 test db::tests::默认空间恒在且排最后 ... ok
+test db::tests::规则库增删查幂等 ... ok
 test db::tests::空间创建幂等与删除迁移 ... ok
 test db::motion::tests::motion_upgrade_preserves_v1_sessions_credentials_and_reopens ... ok
 test db::upgrade_tests::upgrade_v1_preserves_all_records_and_never_dispatches_on_open ... ok
@@ -599,14 +540,14 @@ test worktree::tests::copies_explicit_files_and_rejects_escape_and_tracked_files
 test proc::tests::kill_终止整个进程组含孙进程 ... ok
 test worktree::tests::isolated_reusable_and_cleanup_preserves_dirty_and_references ... ok
 
-test result: ok. 84 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.48s
+test result: ok. 84 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.49s
 
      Running tests/acp_contract.rs (target/debug/deps/acp_contract-8a0ab19ca7593e7b)
 
 running 4 tests
+test acp_load_requires_negotiated_capability ... ok
 test acp_empty_end_turn_reports_model_failure ... ok
 test acp_load_replays_history_before_session_started ... ok
-test acp_load_requires_negotiated_capability ... ok
 test acp_new_session_streams_tools_and_permission_decisions ... ok
 
 test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.13s
@@ -615,10 +556,10 @@ test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; fini
 
 running 3 tests
 test config_file_rejects_key_values_unknown_fields_and_oversize_without_echoing ... ok
-test settings_survive_reopen_and_invalid_save_preserves_old_config ... ok
 test local_key_survives_reopen_and_never_crosses_provider_scope ... ok
+test settings_survive_reopen_and_invalid_save_preserves_old_config ... ok
 
-test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
 
      Running tests/commander_plan.rs (target/debug/deps/commander_plan-6bcf1e711e2171f2)
 
@@ -647,18 +588,18 @@ test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; fini
 running 12 tests
 test unavailable_adapter_keeps_draft_without_sessions ... ok
 test persistence_failure_never_reports_success ... ok
+test cancellation_releases_explicit_ask_without_dispatching_descendants ... ok
+test interactive_fallback_ask_cancels_with_one_rejection_and_no_descendant_session ... ok
 test cancellation_drains_driver_and_stops_pending_tasks ... ok
 test invalid_workspace_directory_and_stop_reason_are_rejected ... ok
-test cancellation_releases_explicit_ask_without_dispatching_descendants ... ok
 test interactive_approval_uses_normal_ask_pipeline_and_single_record ... ok
-test interactive_fallback_ask_cancels_with_one_rejection_and_no_descendant_session ... ok
 test dropping_execution_cancels_owned_driver_then_explicit_recovery_interrupts_plan ... ok
 test failure_skips_descendants_but_independent_branch_finishes ... ok
 test concurrency_limit_and_approval_ownership_are_preserved ... ok
 test invalid_options_and_concurrent_claims_do_not_duplicate_dispatch ... ok
 test dispatches_batches_and_persists_owned_sessions ... ok
 
-test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.55s
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.57s
 
      Running tests/commander_summary.rs (target/debug/deps/commander_summary-2318bef13e681d35)
 
@@ -669,7 +610,7 @@ test summary_never_reads_another_agents_colliding_remote_session ... ok
 test summary_binds_owned_session_and_truncates_unicode_result ... ok
 test cancelled_and_interrupted_reports_keep_completed_results ... ok
 
-test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
 
      Running tests/llm_contract.rs (target/debug/deps/llm_contract-2c5f4f23fbc40f35)
 
@@ -681,22 +622,22 @@ test sends_contract_and_validates_response_without_executing ... ok
 test copied_base_url_and_key_whitespace_are_normalized ... ok
 test model_discovery_rejects_bad_responses_without_echoing_secrets ... ok
 test bounds_responses_without_content_length_and_rejects_refusals ... ok
-test rejects_errors_and_never_echoes_provider_content_or_key ... ok
 test accepts_only_complete_json_fences_and_keeps_strict_plan_schema ... ok
+test rejects_errors_and_never_echoes_provider_content_or_key ... ok
 test model_discovery_bounds_body_items_and_timeout ... ok
-test timeout_and_cancel_cover_pending_http_request ... ok
 test body_reads_share_the_deadline_and_support_cancellation ... ok
+test timeout_and_cancel_cover_pending_http_request ... ok
 
-test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.06s
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.08s
 
      Running tests/native_driver.rs (target/debug/deps/native_driver-b17501a5879a8e17)
 
 running 11 tests
+test runtime_broker_change_applies_to_next_approval_with_distinct_request_identity ... ok
+test empty_text_delta_is_valid_and_does_not_duplicate_completed_text ... ok
 test full_event_receiver_does_not_block_cancel_cleanup ... ok
 test interrupted_is_not_success ... ok
-test empty_text_delta_is_valid_and_does_not_duplicate_completed_text ... ok
 test owned_broker_pending_queue_is_empty_after_cancel ... ok
-test runtime_broker_change_applies_to_next_approval_with_distinct_request_identity ... ok
 test pre_cancel_and_stubborn_server_have_bounded_cleanup ... ok
 test dropping_run_reaps_owned_process_group_and_pending_broker ... ok
 test native_handshake_run_resume_and_normalized_events ... ok
@@ -704,27 +645,27 @@ test forged_or_modified_approval_cannot_be_sent ... ok
 test cancellation_remains_responsive_while_approval_is_pending ... ok
 test invalid_protocol_never_reports_success_or_echoes_remote_error ... ok
 
-test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.65s
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.64s
 
      Running unittests src/lib.rs (target/debug/deps/supercode_desktop_lib-947e30e554c103cf)
 
 running 14 tests
 test commander_workspace::tests::explicit_confirmation_is_required ... ok
-test tests::agent_input_accepts_camel_case_from_frontend ... ok
-test tests::agent_input_rejects_bad_id_and_empty_command ... ok
 test appearance::bootstrap_tests::startup_read_failure_keeps_defaults_and_marks_every_provider_unloaded ... ok
+test tests::agent_input_rejects_bad_id_and_empty_command ... ok
+test tests::agent_input_accepts_camel_case_from_frontend ... ok
 test terminal::tests::invalid_directory_does_not_spawn_or_create ... ok
-test commander_settings::request_tests::request_guard_prevents_overlap_and_releases_on_drop ... ok
 test commander_workspace::tests::work_is_exclusive_and_cancel_is_scoped ... ok
-test commander_workspace::tests::planning_directory_requires_existing_absolute_directory ... ok
+test commander_settings::request_tests::request_guard_prevents_overlap_and_releases_on_drop ... ok
 test commander_settings::tests::frontend_config_fields_roundtrip_without_accepting_a_key_value ... ok
+test commander_workspace::tests::planning_directory_requires_existing_absolute_directory ... ok
 test appearance::bootstrap_tests::startup_snapshot_preserves_saved_preferences_and_has_only_ui_fields ... ok
 test worktrees::tests::task_inspector_is_readonly_and_preserves_bound_session_owner ... ok
 test terminal::tests::closing_unacknowledged_output_and_shutdown_during_start_do_not_leak ... ok
 test terminal::tests::pty_io_resize_close_and_exit_reap_owned_jobs ... ok
 test worktrees::tests::moved_isolated_task_keeps_original_execution_owner ... ok
 
-test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.29s
+test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.33s
 
      Running unittests src/main.rs (target/debug/deps/supercode_desktop-e9a86576d0c90d8e)
 
