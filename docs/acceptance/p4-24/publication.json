@@ -1,0 +1,25 @@
+{
+  "date": "2026-10-19",
+  "url": "https://github.com/Adiao1973/SuperCode/releases/tag/v2.0.0",
+  "tag": "v2.0.0",
+  "draft": false,
+  "prerelease": false,
+  "published_at": "2026-10-19T14:28:10Z",
+  "tag_target": "40cfc76bf33077eedcdafcf55d418ad34c90d485",
+  "main_release_merge": "83dd8bf16f6b41a3f6124e7ce7268e436f022e1c",
+  "assets": [
+    {
+      "name": "SHA256SUMS.txt",
+      "bytes": 94,
+      "state": "uploaded",
+      "digest": "sha256:ce9765507b6c51e71ba948212abec24084234e61c6f6a4fb7d1f45447e41a90e"
+    },
+    {
+      "name": "SuperCode_2.0.0_aarch64.dmg",
+      "bytes": 11008878,
+      "state": "uploaded",
+      "digest": "sha256:7ba0e0e0674e6f40891812cc0f443267f5ca62c241c187c1090100a2207e4065"
+    }
+  ],
+  "downloaded_assets_sha256_match": true
+}

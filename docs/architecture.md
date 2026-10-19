@@ -3,7 +3,7 @@
 > 本文档是 SuperCode 接口设计的**单一事实源**：任何接口 / 数据模型变更，先改本文档再改代码。
 > 更新：2026-10-19；现行契约包含 P4-1～23，P4-24 仅调整版本元数据与发布检查，不新增产品接口。当前开发与发布范围为 macOS，Windows 延期（ADR-0008）。当前任务状态见 [roadmap](roadmap.md)，历史演进见 [快照](history/architecture-through-p3-3.md)。
 
-> v2.0.0 交付准备：ACP 路径支持 OpenCode、Claude Code、Codex、MiMo；指挥官直连规划后经确认派单，桌面体验契约见各 P4 章节。NativeDriver 限核心库，StreamJsonDriver、Windows 延期，安装包仅 arm64。发布进度和安装/签名限制见 [Phase 4](acceptance/phase4.md)。
+> v2.0.0 macOS 交付：ACP 路径支持 OpenCode、Claude Code、Codex、MiMo；指挥官直连规划后经确认派单，桌面体验契约见各 P4 章节。NativeDriver 限核心库，StreamJsonDriver、Windows 延期，安装包仅 arm64。发布进度和安装/签名限制见 [Phase 4](acceptance/phase4.md)。
 
 ## 1. 项目概述
 
@@ -846,7 +846,7 @@ DispatchOptions 增 interactive_approvals（默认 false，CLI 行为不变）�
 
 | 日期 | 变更 | 证据 |
 |---|---|---|
-| 2026-10-19 | P4-24 发布准备：版本统一 2.0.0，增加版本/文档链接检查并整理文档；无产品接口或迁移变更 | [P4-24](acceptance/p4-24.md) |
+| 2026-10-19 | P4-24 macOS 发布：版本统一 2.0.0，增加版本/文档链接检查并整理文档；无产品接口或迁移变更 | [P4-24](acceptance/p4-24.md) |
 | 2026-10-08 | P3-10A 整体回归及 P3-10B macOS arm64 安装交付；版本统一 1.0.0，无接口/迁移变更 | [Phase 3](acceptance/phase3.md) |
 | 2026-10-02 | P3-1～4 计划契约、直连 LLM/本机凭据与执行状态持久化已集成 dev | [验收索引](acceptance/README.md) |
 | 2026-10-02 | 文档结构整理，替代过时的环境变量唯一来源与裸 JSON 唯一输出约定 | [整理验收](acceptance/docs-alignment.md) |

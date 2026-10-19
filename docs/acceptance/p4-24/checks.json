@@ -7,5 +7,9 @@
   "frontend_test_files_passed": 37,
   "rust_tests_passed": 165,
   "rust_tests_ignored": 1,
-  "verify_exit": 0
+  "verify_exit": 0,
+  "documentation_guard_tests_passed": 2,
+  "dev_verify_exit": 0,
+  "dev_verified_commit": "40cfc76bf33077eedcdafcf55d418ad34c90d485",
+  "main_runtime_and_documentation_tree_equal_to_dev": true
 }
