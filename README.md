@@ -4,7 +4,7 @@
 
 ## 版本与安装
 
-**v2.0.0 正在进行发布验收，尚未发布。** 当前公开下载为 [v1.0.0](https://github.com/Adiao1973/SuperCode/releases/tag/v1.0.0)。2.0 的功能、升级与性能证据见 [Phase 4 验收](docs/acceptance/phase4.md)，发布进度见 [路线图](docs/roadmap.md)。
+**[下载 v2.0.0（macOS Apple Silicon）](https://github.com/Adiao1973/SuperCode/releases/tag/v2.0.0)** · 2026-10-19 发布。2.0 的功能、升级、性能与安装证据见 [Phase 4 验收](docs/acceptance/phase4.md)，当前路线见 [roadmap](docs/roadmap.md)。
 
 本轮交付范围为 **macOS Apple Silicon**，实测系统 macOS 26.5.2；不声明 Intel 或 Windows 支持。安装时将 DMG 中的 App 复制到 Applications，校验和随 Release 提供。安装包没有 Apple Developer ID 签名或公证；本地安装测试不代表下载隔离状态下的 Gatekeeper 验收，详见 [安装发布记录](docs/acceptance/p4-24.md)。
 
