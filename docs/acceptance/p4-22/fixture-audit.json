@@ -1,0 +1,10 @@
+{
+  "fixtureOnly": true,
+  "sessions": 12,
+  "messages": 1022,
+  "tasks": 12,
+  "planStatuses": {
+    "draft": 1
+  },
+  "note": "One draft plan seeded for confirmation UI, never executed. Invalid directory create rejected. No real endpoint/key values exported."
+}

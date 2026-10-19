@@ -1,0 +1,74 @@
+Window: "SuperCode · 工具与变更验收", App: SuperCode P411.
+0 standard window SuperCode · 工具与变更验收, Secondary Actions: Raise
+	1 scroll area
+		2 HTML content Description: SuperCode, URL: 127.0.0.1:1452/
+			3 container 应用导航
+				4 text SuperCode v1.0.0
+				5 container 模块
+					6 button 指挥官
+					7 button 会话
+					8 button 任务看板
+					9 button 审批中心
+					10 button 设置
+				11 button (expanded) 折叠导航, Secondary Actions: Collapse
+			12 container
+				13 heading 会话, Value: 1
+					14 text 会话
+				15 pop up button 当前项目：project
+				16 button (disabled, collapsed) 显示会话列表, Secondary Actions: Expand
+				17 text 窗口较窄，已收起列表；折叠导航后可展开
+				18 splitter (disabled) 调整会话列表宽度
+				19 container 当前会话上下文
+					20 heading P412 工具详情验收, Value: 2
+						21 text P412 工具详情验收
+					22 text project opencode /tmp/sc-p412/project
+				23 toggle button 查看原文, Value: off
+				24 button 复制全文
+				25 heading P4-12 工具详情, Value: 2
+					26 text P4-12 工具详情
+				27 text 下列工具均为合成事件，不执行命令。
+				28 button (collapsed) 执行中文命令 执行 完成 接收间隔 661ms, Secondary Actions: Expand
+				29 button (expanded) 编辑中文文件 编辑 完成 接收间隔 0ms, Secondary Actions: Collapse
+				30 button (collapsed) 参数, Secondary Actions: Expand
+				31 button (collapsed) 输出 · 0 段, Secondary Actions: Expand
+				32 button (expanded) 文件变更 /fixture/normal.ts, Secondary Actions: Collapse
+				33 text Agent 提供的文件变更
+				34 button 查看原文对照
+				35 container
+					36 text 1 1 2 const  title  =  " 旧 中文" ; const  title  =  " 新 中文" ; const  ready  =  true ;
+				37 button 复制旧内容
+				38 button 复制新内容
+				39 button (collapsed) 长文件完整对照 编辑 完成 接收间隔 0ms, Secondary Actions: Expand
+				40 button (collapsed) write 当前磁盘文件 编辑 完成 接收间隔 0ms, Secondary Actions: Expand
+				41 button (collapsed) 合成失败工具 删除 失败 接收间隔 0ms, Secondary Actions: Expand
+				42 toggle button 查看原文, Value: off
+				43 button 复制全文
+				44 heading 连续正文, Value: 2
+					45 text 连续正文
+				46 text 独立消息 1：详情操作不阻塞正文。 独立消息 2：详情操作不阻塞正文。 独立消息 3：详情操作不阻塞正文。 独立消息 4：详情操作不阻塞正文。 独立消息 5：详情操作不阻塞正文。 独立消息 6：详情操作不阻塞正文。 独立消息 7：详情操作不阻塞正文。 独立消息 8：详情操作不阻塞正文。 独立消息 9：详情操作不阻塞正文。 独立消息 10：详情操作不阻塞正文。 独立消息 11：详情操作不阻塞正文。 独立消息 12：详情操作不阻塞正文。 独立消息 13：详情操作不阻塞正文。 独立消息 14：详情操作不阻塞正文。 独立消息 15：详情操作不阻塞正文。 独立消息 16：详情操作不阻塞正文。 独立消息 17：详情操作不阻塞正文。 独立消息 18：详情操作不阻塞正文。 独立消息 19：详情操作不阻塞正文。 独立消息 20：详情操作不阻塞正文。 独立消息 21：详情操作不阻塞正文。 独立消息 22：详情操作不阻塞正文。 独立消息 23：详情操作不阻塞正文。 独立消息 24：详情操作不阻塞正文。 独立消息 25：详情操作不阻塞正文。 独立消息 26：详情操作不阻塞正文。 独立消息 27：详情操作不阻塞正文。 独立消息 28：
+				47 button 新消息 · 回到底部
+				48 splitter (disabled) 调整终端高度, Help: 上下键调整；Enter 收起或展开终端
+				49 container 会话输入区
+					50 text entry area (settable) 任务提示词, Value: [text entry area: 任务提示词]
+						51 text (settable) 验收草稿
+					52 pop up button 配置会话
+					53 button 运行
+					54 text Enter 运行 · Shift-Enter 换行 · ⌘R 运行 · ⌘. 停止
+					55 button 宽松权限：部分操作不会进入审批 · 查看配置
+				56 button 打开终端
+				57 text 已结束
+			58 summary P412 诊断, Value: off
+				59 text P412 诊断
+	60 close button
+	61 full screen button Help: this button also has an action to zoom the window, Secondary Actions: zoom the window
+	62 minimize button
+	63 text SuperCode · 工具与变更验收
+64 menu bar
+	65 SuperCode P411
+	66 File
+	67 Edit
+	68 View
+	69 Window
+	70 Help
+
+The focused UI element is 13 heading 会话, Value: 1

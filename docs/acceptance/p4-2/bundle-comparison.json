@@ -1,0 +1,23 @@
+{
+  "method": "Isolated static minimal React 19.3.0 renderer, Vite 8.3.1 production defaults, gzip level9, no CSS/fonts; not product entry budget",
+  "results": [
+    {
+      "engine": "baseline",
+      "jsFiles": 1,
+      "rawBytes": 219053,
+      "gzipBytes": 67613
+    },
+    {
+      "engine": "streamdown",
+      "jsFiles": 3,
+      "rawBytes": 724081,
+      "gzipBytes": 219207
+    },
+    {
+      "engine": "react-markdown",
+      "jsFiles": 1,
+      "rawBytes": 374808,
+      "gzipBytes": 113090
+    }
+  ]
+}

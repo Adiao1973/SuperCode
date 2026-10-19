@@ -1,0 +1,389 @@
+{
+  "source": "native Tauri WebKit screenshots; DPR 2; 32 CSS px titlebar",
+  "images": [
+    {
+      "file": "approvals-dark-1280.jpg",
+      "pixels": [
+        2560,
+        1664
+      ],
+      "sha256": "0aee6f0cd473c096e719414f4dff8132d8335fc891ed723c502b1577691c72b3"
+    },
+    {
+      "file": "approvals-dark-1440.jpg",
+      "pixels": [
+        2880,
+        1864
+      ],
+      "sha256": "caa6d6c555faa417fbd65bb8922ca1bcb0acac24c773ca5a3232e241b2ebf417"
+    },
+    {
+      "file": "approvals-dark-960.jpg",
+      "pixels": [
+        1920,
+        1344
+      ],
+      "sha256": "800b126e72e4ff60b83611d0d3cea062f4f41c467579d85e65c291d05608ea3c"
+    },
+    {
+      "file": "approvals-empty-dark-1280.jpg",
+      "pixels": [
+        2560,
+        1664
+      ],
+      "sha256": "078e47a55f3731befd3a059ae623c6acde669737842fe6b96911cd5e60dc6506"
+    },
+    {
+      "file": "approvals-error-light-1280.jpg",
+      "pixels": [
+        2560,
+        1664
+      ],
+      "sha256": "8d5d3011d157db921fccf7777189fb657e33c4169302019c9329fb3c8e277e84"
+    },
+    {
+      "file": "approvals-light-1280.jpg",
+      "pixels": [
+        2560,
+        1664
+      ],
+      "sha256": "0df9fc1ab35e916d36bd5f20c1ae77b2017139daf731b69e4c9999c951f06aa2"
+    },
+    {
+      "file": "approvals-light-1440.jpg",
+      "pixels": [
+        2880,
+        1864
+      ],
+      "sha256": "9807a63fbbede9d61d9a6f1223210a40fb400494dc7555a756022ce7d44e7358"
+    },
+    {
+      "file": "approvals-light-960.jpg",
+      "pixels": [
+        1920,
+        1344
+      ],
+      "sha256": "a4d8ab4ab4c5a4bbb91c5a8d0b176701d92dc253bfa11005708465c63270266f"
+    },
+    {
+      "file": "approvals-loading-dark-1280.jpg",
+      "pixels": [
+        2560,
+        1664
+      ],
+      "sha256": "9087d0dd9575c85c158aaeee07d6388a89c09adfa600b1293dbad2acf37fe38e"
+    },
+    {
+      "file": "command-search.jpg",
+      "pixels": [
+        2560,
+        1664
+      ],
+      "sha256": "58fa169d88dcc0319f0caec29e938f1f18b841add6ead98348d1c701bdac7300"
+    },
+    {
+      "file": "commander-dark-1280.jpg",
+      "pixels": [
+        2560,
+        1664
+      ],
+      "sha256": "099752d4817d1b5cf6a9e721140f017e0ce660cc730e70a9159a791c5b84b510"
+    },
+    {
+      "file": "commander-dark-1440.jpg",
+      "pixels": [
+        2880,
+        1864
+      ],
+      "sha256": "1bb3acafa0bf358bc0f9bee3753d64a217279bf925f8a6e9b311642659818359"
+    },
+    {
+      "file": "commander-dark-960.jpg",
+      "pixels": [
+        1920,
+        1344
+      ],
+      "sha256": "8e106c19a24177f04c7a5b1988ec7a23e8a907ba9ddba6b51864581251b9a13b"
+    },
+    {
+      "file": "commander-empty-dark-1280.jpg",
+      "pixels": [
+        2560,
+        1664
+      ],
+      "sha256": "8144a2465336e548f55e5f5a99dd56a8133b387031222548e5d80c63b855258c"
+    },
+    {
+      "file": "commander-error-light-1280.jpg",
+      "pixels": [
+        2560,
+        1664
+      ],
+      "sha256": "404b730746c89e138ba15b3ef33d9dbddccd4358481e911c5c12829750707b1d"
+    },
+    {
+      "file": "commander-light-1280.jpg",
+      "pixels": [
+        2560,
+        1664
+      ],
+      "sha256": "d8517c8e312b169284b4a64331b38971038ef49aee0a5d66f024a4da6b5e4c65"
+    },
+    {
+      "file": "commander-light-1440.jpg",
+      "pixels": [
+        2880,
+        1864
+      ],
+      "sha256": "d2b58163699e7f4ca045cc64350d2b2f21be1499472d86ac13cd5850eab6d7ae"
+    },
+    {
+      "file": "commander-light-960.jpg",
+      "pixels": [
+        1920,
+        1344
+      ],
+      "sha256": "4894ef5a42ebcc29e069f1a6296682e978d7accab5fd389c4888dcdc01462f38"
+    },
+    {
+      "file": "commander-loading-dark-1280.jpg",
+      "pixels": [
+        2560,
+        1664
+      ],
+      "sha256": "c9c8e83f270b5647680eb6465dfb651a05c169de72fe21821f8a3bfec603c382"
+    },
+    {
+      "file": "confirm-dark-1280.jpg",
+      "pixels": [
+        2560,
+        1664
+      ],
+      "sha256": "3778430e96e456737513868182153f8b93a994a45964d80988d5ea35f7df45a7"
+    },
+    {
+      "file": "inspector-light-1280.jpg",
+      "pixels": [
+        2560,
+        1664
+      ],
+      "sha256": "d3c1bbac07b5739ee87adcedf0420bec3c981081a6349409d6d33a514f1add08"
+    },
+    {
+      "file": "kanban-dark-1280.jpg",
+      "pixels": [
+        2560,
+        1664
+      ],
+      "sha256": "99f44d5bf987f467b29ade3d4e7d71bce357c142f71b7ecfbf160b3bae164c53"
+    },
+    {
+      "file": "kanban-dark-1440.jpg",
+      "pixels": [
+        2880,
+        1864
+      ],
+      "sha256": "f6a80e085873530b67c6c8c5f694b3a73b9795cc29aa5d2a77771231c424dbb9"
+    },
+    {
+      "file": "kanban-dark-960.jpg",
+      "pixels": [
+        1920,
+        1344
+      ],
+      "sha256": "fc3a86b8e4ddd5255a699c59e340efea31aa8f3239e16b65cafcc57ee9fed2a8"
+    },
+    {
+      "file": "kanban-empty-dark-1280.jpg",
+      "pixels": [
+        2560,
+        1664
+      ],
+      "sha256": "60a8f3ffd066d91e2f49bb7f675d22cceb2ed31fe235e3cf4b7484cac0265fc9"
+    },
+    {
+      "file": "kanban-error-light-1280.jpg",
+      "pixels": [
+        2560,
+        1664
+      ],
+      "sha256": "f0e41b6efc89b048a222f087b80d6a464debf087011073a909048461b8e5e73c"
+    },
+    {
+      "file": "kanban-light-1280.jpg",
+      "pixels": [
+        2560,
+        1664
+      ],
+      "sha256": "9c546f36eb3ce3384190a80f746474b2b9da8471c98aae7b63e6d747810dbb90"
+    },
+    {
+      "file": "kanban-light-1440.jpg",
+      "pixels": [
+        2880,
+        1864
+      ],
+      "sha256": "b1edeef50a542337bf6cd772a74b162b9bb994ff780478ea7e87d6778ca57d92"
+    },
+    {
+      "file": "kanban-light-960.jpg",
+      "pixels": [
+        1920,
+        1344
+      ],
+      "sha256": "0986317f0def5e88b6a4f3f0406a17a947992b29a42fcbb6db9eddad05e9981d"
+    },
+    {
+      "file": "kanban-loading-dark-1280.jpg",
+      "pixels": [
+        2560,
+        1664
+      ],
+      "sha256": "ee711c02330cff46d1e7e114abd5591fd3d7f60864f4bba5ebe2a2072edce5b8"
+    },
+    {
+      "file": "sessions-dark-1280.jpg",
+      "pixels": [
+        2560,
+        1664
+      ],
+      "sha256": "b05d231d10529cb02a6ea22eb2f1fec50f22f92e9b2736396ea216d81fc3e23c"
+    },
+    {
+      "file": "sessions-dark-1440.jpg",
+      "pixels": [
+        2880,
+        1864
+      ],
+      "sha256": "14c5405fab0810377bad4ea6f94006c8bae7fb33d9362a374cebabe2206c588f"
+    },
+    {
+      "file": "sessions-dark-960.jpg",
+      "pixels": [
+        1920,
+        1344
+      ],
+      "sha256": "2a49dacdf14ddef3e361006561de164ff6c748127607c7df42eda8e6df76dab6"
+    },
+    {
+      "file": "sessions-empty-dark-1280.jpg",
+      "pixels": [
+        2560,
+        1664
+      ],
+      "sha256": "bb190b62e60058d08514455c6408d4f00c869bcd55565164cf34a6f65a5ee8dd"
+    },
+    {
+      "file": "sessions-error-light-1280.jpg",
+      "pixels": [
+        2560,
+        1664
+      ],
+      "sha256": "23964792c5df00c11fbab3b6cfe5b856a533e6ef87ba6234f111e4319a43c123"
+    },
+    {
+      "file": "sessions-light-1280.jpg",
+      "pixels": [
+        2560,
+        1664
+      ],
+      "sha256": "3524897c14c2336e1ea5591f3c0a20e383ba487ac02c1705e990af611bf05dfe"
+    },
+    {
+      "file": "sessions-light-1440.jpg",
+      "pixels": [
+        2880,
+        1864
+      ],
+      "sha256": "7e5a6241d54ff558aa5abdfd4ef0927d4ccf34cb0e8d737db37adbd42039a629"
+    },
+    {
+      "file": "sessions-light-960.jpg",
+      "pixels": [
+        1920,
+        1344
+      ],
+      "sha256": "f8b633193786db9b8b4bf1ad8a6d92594234e2220c2974ebfc4add2490d31f8c"
+    },
+    {
+      "file": "sessions-loading-dark-1280.jpg",
+      "pixels": [
+        2560,
+        1664
+      ],
+      "sha256": "99a582bd264dbc2dd0ff0e5172ed0f082b1be94a383dfbc172c2e05ccebd658b"
+    },
+    {
+      "file": "settings-dark-1280.jpg",
+      "pixels": [
+        2560,
+        1664
+      ],
+      "sha256": "fdb8e5ad8ede70e7f0c39675df57a27c96afe6723f47a0f134677ab886233e8b"
+    },
+    {
+      "file": "settings-dark-1440.jpg",
+      "pixels": [
+        2880,
+        1864
+      ],
+      "sha256": "47ab2212ba3963bae3ee64f52c62a03217018655bf7f8103409de5d518291fe6"
+    },
+    {
+      "file": "settings-dark-960.jpg",
+      "pixels": [
+        1920,
+        1344
+      ],
+      "sha256": "145608f208b24a494a067ad4a2ddf01cd9efd0e2e5efb80546cc7a4cfacb6df7"
+    },
+    {
+      "file": "settings-empty-dark-1280.jpg",
+      "pixels": [
+        2560,
+        1664
+      ],
+      "sha256": "a1f011e890a23bb2765ba70ebf6054a28ecdcf1ae4735bc745411fd9debd8961"
+    },
+    {
+      "file": "settings-error-light-1280.jpg",
+      "pixels": [
+        2560,
+        1664
+      ],
+      "sha256": "228283356194f320fb89499651f6d139c47b6f7e4452db797d3e7324cc1cdcaa"
+    },
+    {
+      "file": "settings-light-1280.jpg",
+      "pixels": [
+        2560,
+        1664
+      ],
+      "sha256": "588c9e5d1a729d50f027f2a0b4ef03d3869d0d8942603d1468bb327db95a68ff"
+    },
+    {
+      "file": "settings-light-1440.jpg",
+      "pixels": [
+        2880,
+        1864
+      ],
+      "sha256": "d67285b9c7c45afc35e661a860ab1ee3b26a106013f9291d1030ea3221e7c4a5"
+    },
+    {
+      "file": "settings-light-960.jpg",
+      "pixels": [
+        1920,
+        1344
+      ],
+      "sha256": "8fa8c9055ce7cd7a4e27e070eb9c635f13befa00f8fe226a14f0eae7611574d4"
+    },
+    {
+      "file": "settings-loading-dark-1280.jpg",
+      "pixels": [
+        2560,
+        1664
+      ],
+      "sha256": "ae56db1b3f75754d2784a47d497d7b125a4cd282dbb65fd5076c0a22d01b9cd5"
+    }
+  ]
+}

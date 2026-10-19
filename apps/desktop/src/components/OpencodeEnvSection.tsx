@@ -3,6 +3,7 @@
  * 全局视角（cwd=null）；项目级严格检查在每个会话的运行框里按 cwd 联检。
  * 引导片段始终可见可复制（验收要求），状态行只做事实提示。
  */
+import { InlineError, LoadingState } from "./FeedbackState";
 import { useCallback, useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -23,7 +24,7 @@ function LevelChip({ label, level }: { label: string; level: OpencodeEnvReport["
   return (
     <span className="flex items-center gap-1.5 text-[11px]">
       <span className="text-muted-foreground">{label}</span>
-      <Badge variant="outline" className={info.ok ? "border-emerald-500/50 text-emerald-500" : "border-amber-500/50 text-amber-500"}>
+      <Badge variant="outline" className={info.ok ? "border-emerald-500/50 text-success" : "border-amber-500/50 text-warning"}>
         {info.text}
       </Badge>
     </span>
@@ -31,16 +32,15 @@ function LevelChip({ label, level }: { label: string; level: OpencodeEnvReport["
 }
 
 export function OpencodeEnvSection() {
+  const [error, setError] = useState("");
   const [report, setReport] = useState<OpencodeEnvReport | null>(null);
   const [loading, setLoading] = useState(false);
 
   const refresh = useCallback(async () => {
-    setLoading(true);
+    setLoading(true); setError("");
     try {
       setReport(await checkOpencodeEnv(null));
-    } catch {
-      // 探测命令异常时保持旧报告；设置页不弹错误打断
-    } finally {
+    } catch (e) { setError(String(e)); } finally {
       setLoading(false);
     }
   }, []);
@@ -65,6 +65,8 @@ export function OpencodeEnvSection() {
         </Button>
       </div>
 
+      {loading && <LoadingState label="正在读取 OpenCode 环境…" />}
+      {error && <InlineError title="环境检测失败" message={error} onRetry={() => void refresh()} retrying={loading} />}
       <div className="flex flex-col gap-3 rounded-md border px-3 py-3">
         {/* 安装状态 */}
         <div className="flex flex-wrap items-center gap-2 text-xs">
@@ -72,11 +74,11 @@ export function OpencodeEnvSection() {
             variant="outline"
             className={
               report?.installed
-                ? "border-emerald-500/50 text-emerald-500"
+                ? "border-emerald-500/50 text-success"
                 : "border-destructive/50 text-destructive"
             }
           >
-            {report == null ? "检测中…" : report.installed ? `已安装 v${report.version ?? "?"}` : "未安装"}
+            {report == null ? (loading ? "检测中…" : "尚无检测结果") : report.installed ? `已安装 v${report.version ?? "?"}` : "未安装"}
           </Badge>
           {report?.bin_path && <code className="text-muted-foreground text-[11px]">{report.bin_path}</code>}
           {report?.probe_error && <span className="text-destructive text-[11px]">{report.probe_error}</span>}
@@ -89,7 +91,7 @@ export function OpencodeEnvSection() {
           {report?.global_model ? (
             <code className="text-[11px]">{report.global_model}</code>
           ) : (
-            <span className="text-amber-500 text-[11px]">
+            <span className="text-warning text-[11px]">
               未设置——opencode acp 不继承 auth 默认模型，将回退免费模型（可能受到限流）
             </span>
           )}
@@ -105,7 +107,7 @@ export function OpencodeEnvSection() {
               <LevelChip label="bash" level={report.global_bash} />
               <Badge
                 variant="outline"
-                className={report.strict ? "border-emerald-500/50 text-emerald-500" : "border-amber-500/50 text-amber-500"}
+                className={report.strict ? "border-emerald-500/50 text-success" : "border-amber-500/50 text-warning"}
               >
                 {report.strict ? "已收紧" : "宽松"}
               </Badge>

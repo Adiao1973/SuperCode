@@ -1,0 +1,42 @@
+2026-10-11 macOS arm64
+just verify: exit 0
+pnpm --filter @supercode/desktop test:typecheck
+> @supercode/desktop@1.0.0 test:typecheck /Users/adiaozhou/Code/SuperCode/apps/desktop
+> tsc -p tsconfig.test.json
+pnpm --filter @supercode/desktop test
+> @supercode/desktop@1.0.0 test /Users/adiaozhou/Code/SuperCode/apps/desktop
+> vitest run
+ Test Files  14 passed (14)
+      Tests  41 passed (41)
+pnpm --filter @supercode/desktop build
+> @supercode/desktop@1.0.0 build /Users/adiaozhou/Code/SuperCode/apps/desktop
+> tsc && vite build
+vite v8.3.1 building client environment for production...
+✓ 3058 modules transformed.
+✓ built in 397ms
+cargo fmt --check
+cargo clippy --all-targets -- -D warnings
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.25s
+cargo test
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.71s
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.59s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.29s
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.20s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+test result: ok. 82 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.44s
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.12s
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.53s
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.06s
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.68s
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.26s
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+Red: 2 new session-list tests failed before implementation.
+Green: 41 frontend tests passed.

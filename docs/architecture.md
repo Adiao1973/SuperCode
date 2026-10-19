@@ -1,9 +1,9 @@
 # SuperCode 架构设计文档
 
 > 本文档是 SuperCode 接口设计的**单一事实源**：任何接口 / 数据模型变更，先改本文档再改代码。
-> 更新：2026-10-07；现行 dev 契约截至 P3-7。当前开发与发布范围为 macOS，Windows 延期（ADR-0008）。当前任务状态见 [roadmap](roadmap.md)，历史演进见 [快照](history/architecture-through-p3-3.md)。
+> 更新：2026-10-19；现行契约包含 P4-1～23，P4-24 仅调整版本元数据与发布检查，不新增产品接口。当前开发与发布范围为 macOS，Windows 延期（ADR-0008）。当前任务状态见 [roadmap](roadmap.md)，历史演进见 [快照](history/architecture-through-p3-3.md)。
 
-> v1.0.0 macOS 交付：ACP 路径支持 OpenCode、Claude Code、Codex、MiMo，指挥官直连规划后经确认派单；NativeDriver 限核心库。StreamJsonDriver、Windows 延期，当前包仅 arm64；安装/签名限制见 Phase 3 验收。
+> v2.0.0 交付准备：ACP 路径支持 OpenCode、Claude Code、Codex、MiMo；指挥官直连规划后经确认派单，桌面体验契约见各 P4 章节。NativeDriver 限核心库，StreamJsonDriver、Windows 延期，安装包仅 arm64。发布进度和安装/签名限制见 [Phase 4](acceptance/phase4.md)。
 
 ## 1. 项目概述
 
@@ -197,7 +197,7 @@ pub type PermissionHandler =
     Arc<dyn Fn(PermissionRequest) -> BoxFuture<'static, Result<PermissionDecision>> + Send + Sync>;
 
 pub struct PermissionDecision {
-    pub option_id: PermissionOptionId, // AllowOnce | AllowAlways | RejectOnce | RejectAlways
+    pub option_id: String, // Agent 提供的不透明 option_id；裁决类型从 options.kind 查询
     pub updated_input: Option<serde_json::Value>,
 }
 ```
@@ -572,12 +572,12 @@ supercode-desktop 对渲染层暴露的命令（invoke）；事件经 `tauri::ip
 - **权限事件（Tauri 全局事件，非 Channel）**：每个运行的 broker 经转发任务把
   `PendingPermission` / `DecisionRecord` 以 `permission-request` / `decision-record`
   事件广播给前端（审批中心消费）；request_id → broker 的映射由宿主登记，
-  供 respond_permission 路由。
+  供 respond_permission 路由。应答成功才移除路由；运行结束/取消清理时广播 permission-removed { ids }，前端三处视图按 UUID 同步清队列。
 - **fail-closed 权限约定**：`resolve_fail_closed` 保留给无审批 UI 宿主；桌面宿主
   P1-5 起接审批中心，兜底走待决队列。**不可**用追加通配 deny（`"*"`）实现兜底：
   规则求值 deny 优先，通配 deny 会连 allow 规则一并压掉。
 - **多会话并行（P1-3）**：`run_prompt` 可并发调用——每次运行独立 spawn agent 进程与合帧管道（互不共享状态）；Rust 侧 active run map 按 ACP session_id 管理取消与清理；前端以客户端会话键路由事件批到对应会话视图（列表 / 切换 / 取消）。
-- 运行结束（`run` 返回 StopReason 或出错）后宿主将 handle 移出 active map；结束本身不再发额外事件，以流内 `turn_completed` / `driver_error` 为准。
+- 运行结束（`run` 返回 StopReason 或出错）后宿主将 handle 移出 active map；执行终态仍以流内 `turn_completed` / `driver_error` 为准；审批队列清理另发 `permission-removed`，该事件不代表任务成功。
 
 ## 6. 数据模型（SQLite，sqlx）
 
@@ -630,6 +630,29 @@ P1-8 落地迁移 0003（workspaces + sessions.workspace_id，历史会话按 di
 迁移 0004 增 tasks.session_id 引用；0005～0007 的指挥官配置、凭据和运行快照见 §12。
 时间戳为 RFC3339 文本。`SUPERCODE_DB` 环境变量可覆盖库文件路径（测试/多环境用）。
 
+
+### 6.8 外观偏好与首帧（P4-4）
+
+SQLite 迁移 0008 新增 `appearance_preferences(id=1, theme CHECK system/light/dark)`，旧库无行时默认 system；不修改已有会话、配置或凭据表。DTO `AppearancePreferences { theme: system|light|dark }` 拒绝未知字段。IPC `get_appearance_preferences()` 返回偏好、`save_appearance_preferences(preferences)` 校验并原子 upsert。SQLite 为唯一持久事实源，无 localStorage 缓存，不导出用户数据库。
+
+主窗口配置初始 `visible=false`。前端在 mount 前读取偏好，设置根 dark 类、data-theme 与 color-scheme，React 提交且 layout effect 已应用主题后调用 `appearance_ready(dark: bool, theme: system|light|dark)`；命令仅设置调用窗口不透明背景色、匹配的原生主题并 show（system 使用 None 恢复 OS 跟随）。读取失败或 5 秒超时采用系统主题、展示可重试错误，再显示窗口，不能静默把回退偏好写入 SQLite。保存成功才更新当前偏好；失败保留旧主题并显示错误，保存期间禁用重复操作。系统主题只在 system 偏好时影响 resolved theme，监听 change 并清理。
+
+颜色/字体/间距/圆角由 CSS token 统一，图标与主要控件继承语义色。终端通过更新现有 xterm options.theme、diff 通过 themeType 跟随 resolved theme；不能把主题变化加入 PTY 启动 effect 依赖。动效偏好独立使用 0009（§6.9）；密度等后续偏好不在本迁移中预建。
+
+### 6.9 动效基础与减少动态（P4-5）
+
+迁移 0009 新增本机单例 `motion_preferences(id=1, motion CHECK system/reduce/full)`，无行默认 system；不修改 0008 外观 DTO 或历史表。严格 DTO `MotionPreferences { motion }`，IPC `get_motion_preferences()` / `save_motion_preferences(preferences)` 原子 upsert，未知字段/枚举拒绝。与主题独立保存，避免更新一项覆盖另一项。前端启动并行读取两类偏好；读取失败/超时保守回退 reduce、显示可重试错误，不写回回退值。
+
+MotionProvider 监听 `(prefers-reduced-motion: reduce)`，system 才跟随；根 data-motion=reduce/full 在显示前应用。减少模式停止既有 CSS spin/pulse/位移动画、平滑滚动与终端光标闪动，禁用 Motion 位移/退出等待；完整模式统一 120ms 微交互、180ms 存在变化、ease [0.2,0,0,1]。仅使用开源 Motion 14.0.0，LazyMotion strict + m + 异步 domAnimation，不安装另一引擎；既有 tw-animate-css 是 CSS 工具，统一受偏好控制。特性未加载/加载失败时内容直接显示可用，不阻塞操作。
+
+MotionNotice 仅用于非交互短反馈，入场/退出不承载运行宿主、审批或取消按钮；退出节点无指针交互且不参与播报。本轮以复制反馈接入存在变化，后续布局/消息动效复用基础。事件与 RPC 在操作时立即发出，不在 onAnimationComplete 中派单/裁决；减少模式即时反馈、无持续闪动。
+
+### 6.10 本机分栏偏好（P4-7）
+
+迁移 0010 新增单例 `layout_preferences(id=1, session_list_width INTEGER CHECK 180..400, session_list_collapsed INTEGER CHECK 0/1, terminal_height INTEGER CHECK 96..360, terminal_collapsed INTEGER CHECK 0/1)`。严格 DTO 为同名四字段，默认 224/false/224/false，拒绝未知字段、缺字段及越界。IPC `get_layout_preferences()` / `save_layout_preferences(preferences)` 原子 upsert，不改会话/凭据/其它偏好。只存像素偏好与用户收拢意图，不存终端打开状态、PTY id、路径或窗口派生尺寸。
+
+启动并行读取主题、动效、分栏偏好；失败/5 秒超时用默认可用布局，显示可重试错误，读取成功前不写入默认值。前端 LayoutProvider 为内存工作副本，保存串行、合并最新操作（拖动结束写、非每个 pointermove 写），失败显示可重试提示，保留当前可用布局；重试保存只写布局。自动约束/窗口 resize/隐藏模块不写偏好，不能以自动收拢覆盖用户意图。
+
 ## 7. 进程生命周期管理
 
 - **ACP 连接（AcpDriver）**：进程生命周期交由 `agent-client-protocol` SDK 管理——`AcpAgent` 以独立进程组 spawn（unix process_group(0)，专治 npx 包装器孤儿问题），连接结束由 ChildGuard 整组回收，stderr 捕获进错误信息；`AcpAgent::with_debug` 可拿到原始收发行做日志。
@@ -664,6 +687,22 @@ P1-8 落地迁移 0003（workspaces + sessions.workspace_id，历史会话按 di
 
 ## 11. 工作区、看板与终端
 
+### P4-6 — AppShell、导航与焦点
+
+AppShell 提供五个模块、可折叠导航、全局待审批计数和当前会话项目定位。折叠状态仅当前窗口内存，不新增迁移/IPC 或配置事实源；项目上下文来自现有 workspaces 与活动会话 draft.cwd，不猜测 Git 仓库或改执行目录。计数直接订阅 PermissionCenter 队列，折叠仍有可读名称及提示，不额外裁决审批。
+
+会话与指挥官宿主持续挂载，模块切页使用 hidden/inert 隔离不可见面板，不用动画 key 重建运行宿主。会话切页保留草稿、Channel 与已开 PTY，后台事件继续按原 key 更新；切回不重复 run_prompt/open_terminal，退出/关闭仍走原收尾。各页快捷键必须检查页面 active、组合输入、弹层和终端焦点，隐藏会话不能拦截 Cmd-R/Cmd-.。现有会话之间的选择生命周期不在本任务改造。
+
+项目定位使用现有 Radix modal Popover（Tab 圈定、Esc/回焦），指挥官确认用 Radix Dialog（初焦返回审阅、Tab 圈定、Esc 只关闭、回到触发器），内容与执行契约不变。导航后焦点移至模块标题，弹层存在时全局快捷键不抢焦点；关闭弹层不调用执行/审批。切离指挥官关闭其确认弹层，保留目标草稿与运行宿主。960×640 下主操作可达，研究编号只在注释/文档，不进入标题。
+
+### P4-7 — 工作区/详情/终端可调整分栏
+
+沿用 P4-2 验证的 react-resizable-panels 4.14.3（MIT），仅接入现有会话工作区：横向列表/详情、纵向内容/终端。Separator 支持鼠标、方向键、Home/End 与 Enter 收拢，提供名称、方向和数值；用细线/抓手与统一 120ms 颜色反馈，不给运行宿主加布局进入/退出动画或变化 key。减少动态模式保持即时尺寸变化。
+
+会话列表默认 224px、展开最小 180px、最大 400px，详情最小 460px；工作区可用宽度低于 780px 自动收拢列表，变宽后按用户原意恢复，不记自动收拢。始终可通过列表按钮显式收拢/展开；窄窗口时显示收拢原因，不能强行展开挤掉主区。终端默认 224px、最小 96px、最大 360px 且不超过可用区 45%，上方主内容最小 300px（P4-9 底部输入约束时按可用高度收缩）/不足时允许滚动；高度计算只在实际可见容器尺寸有效时进行。手动收起终端仅隐藏面板、保留 SessionTerminal/PTY；关闭终端/切换 cwd/会话/退出仍按已有生命周期清理，终端打开状态不持久化。切模块不重建任何 Panel 宿主。
+
+xterm ResizeObserver 在宿主宽高为零/隐藏时跳过 fit/resize，恢复显示后按实际尺寸拟合；不将尺寸/收拢/主题加入 PTY 启动 effect。输入、ANSI、中文、Ctrl-C、Channel 背压/关闭与退出语义不变。布局读取与保存错误在工作区可见，允许重试；不调用模型，不上传 SQLite。
+
 ### P2-7 任务 worktree 隔离
 
 `core::worktree` 用 Git 参数数组创建 `supercode/task-<task UUID>` 分支，基于项目 HEAD（不复制未提交源码）。托管目录及独立 JSON 记录位于 Git common dir 的 `supercode-worktrees/` 下；任务 UUID 唯一，重复请求复用既有目录，不替换已有同名分支。记录 task_id/workspace_id/project/path/branch，重启可恢复，不新增数据库表。
@@ -683,6 +722,21 @@ P1-8 落地迁移 0003（workspaces + sessions.workspace_id，历史会话按 di
 P2-7 托管 worktree 的原空间记录继续作为执行归属：创建/恢复隔离会话按 task_id 在现有项目托管记录查找，移动后复用原目录、原 workspace_id；run_prompt 按该记录而非看板归属验证。已绑定会话跳转不变；未隔离的新任务在当前项目创建 worktree。默认空间允许恢复已有隔离记录，新建隔离仍需 Git 项目。
 
 依赖依据：[dnd-kit 官方 DndContext](https://dndkit.com/legacy/api-documentation/context-provider/dnd-context/) 与 [useDraggable](https://dndkit.com/legacy/api-documentation/draggable/use-draggable/)。不变更数据库 schema。
+
+### P4-8 — 会话列表与上下文定位
+
+- 会话列表沿用现有工作空间归属与排序；项目组显示名称、完整目录提示及可见/总数，默认组和未知归属兜底不丢会话。列表以标题为主，状态、Agent 和实际 cwd 为次级信息；选中项使用 aria-current，操作按钮与选择按钮分离，键盘可达。
+- 标题过滤仅在本机内存执行：trim 后大小写无关的连续子串匹配，只匹配 title，不读取消息、不请求 IPC、不承诺全文检索。隐藏无匹配项目组；无匹配显示清除入口。过滤不改变 activeKey，不卸载当前详情或取消运行；当前会话被过滤时明确提示并可清除恢复。新建会话清除过滤，外部快捷键激活的会话即使不匹配仍保留详情。
+- 详情顶部常显会话标题、工作空间名、Agent 与实际 cwd；选择历史/草稿不改写其 cwd/agentId/workspaceId，运行 Channel 仍闭包绑定客户端 key。切换会话沿用现有终端关闭行为，切页仍保留宿主。本轮不新增更名接口或数据库迁移；标题继续由首轮 prompt/历史标题生成。
+- 历史状态保留在前端 entry 的 historyStatus，尚未载入事件时显示历史完成/失败/取消/中断；新运行与实时事件优先，invokeError 显示出错，避免将历史失败标成空闲。状态不从正文推断，不新增后台运行恢复。
+
+### P4-9 — 底部输入区与配置弹层
+
+- 底部输入占用高度后，分栏以可用高度约束显示：内容区最小值取 min(300px,55%)、终端取 min(96px,45%)；用户保存的 96～360px 意图不被窗口约束覆盖，空间不足时允许实际显示更小，展开后重新 fit。
+- 消息/审批与终端继续由现有宿主承载；输入区是详情底部固定 flex 区，不随消息滚动，不因配置弹层或模块切换重建。长提示词在限高输入框内滚动，960×640 仍能触达运行/停止。摘要常显 Agent、模式、实际目录与规则数量；目录完整值可通过提示/配置查看，警告仍有常显入口。
+- 配置复用 Radix modal Dialog，键盘焦点圈定、Esc 关闭并回触发按钮；Agent/cwd/mode/rules 直接编辑现有 session draft，不引入独立保存按钮、数据库或 IPC。运行中/已有 ACP id 锁 Agent，运行中/已有 ACP id/托管 task 锁目录；解释锁定原因。模式运行中仍调用 set_permission_mode；规则是下一轮的预授权输入，不冒充热更新。
+- 输入框 Enter 运行、Shift-Enter 换行；组合输入期间（isComposing、229、本地 composition 状态及结束后短窗口）Enter 不运行；粘贴仅修改 draft，不触发执行。运行中 Enter 不开新轮，start 同步互斥避免同一事件循环重复 invoke。⌘R/⌘. 保留，仅当前可见详情生效，组合输入/弹层/终端内不抢键。
+- 运行仍用固定客户端 key 路由 Channel；新建/续聊、cwd/workspace/task/Agent/规则/权限管线无语义变化。底部停止直接请求 cancel_run，不等待动画；本轮不改消息渲染或滚动锚点（P4-10/11）。
 
 ### P2-9 — 会话内嵌终端
 
@@ -770,7 +824,7 @@ CLI `plan run <objective> --cwd <dir> [--agents opencode,codex]` 使用本机 SQ
 
 IPC generate_commander_run(request_id,objective,cwd,agents) 读取本机配置/密钥，限制注册表并校验目录，保存 P3-3 draft；list_commander_run_views/get_commander_run_view 返回计划、批次、P3-5 summary 与 active 标志。execute_commander_run(run_id,confirmed,jobs,on_progress) 要求 confirmed=true 且 draft，复用 P3-4；同 App 最多一个生成或执行，guard 在全部清理后移除；cancel_commander_work(request_id) 只取消本 App 的请求，不改其他 CLI 正在执行记录。Channel 只传 task_id 刷新信号，不传模型输出或凭据，SQLite 是状态与结果事实源；切换导航不取消执行，页面重新进入按库读取，不重发 execute。
 
-DispatchOptions 增 interactive_approvals（默认 false，CLI 行为不变），desktop=true 使用原 broker.resolve 而非 fail-closed。独立 broker 载入全局规则、固定 Ask；待决/裁决转发既有 permission-request/decision-record 并按 AppState.pending 路由 respond_permission。裁决只由调度器写一次 SQLite，转发任务不重复写；前端待决移除同时匹配 ACP session_id/tool_call_id，避免不同 agent 同名工具串台。指挥官任务内联显示其审批卡，审批中心仍可应答；取消联动拒绝挂起请求与裁决留痕。
+DispatchOptions 增 interactive_approvals（默认 false，CLI 行为不变），desktop=true 使用原 broker.resolve 而非 fail-closed。独立 broker 载入全局规则、固定 Ask；待决/裁决转发既有 permission-request/decision-record 并按 AppState.pending 路由 respond_permission。裁决只由调度器写一次 SQLite，转发任务不重复写；前端待决优先按 request_id 精确移除；仅兼容旧用户裁决事件时回退 ACP session_id/tool_call_id（无 UUID 的自动裁决不移除待决）。指挥官任务内联显示其审批卡，审批中心仍可应答；取消联动拒绝挂起请求与裁决留痕。
 
 退出请求有活跃指挥官工作时先阻止退出、取消 token 并等待 guard 清除/driver 回收，再退出。重启从 SQLite 恢复 draft/终态/任务结果与引用，不自动执行或重跑终态。非本 App 活跃的 running 记录显示“其他宿主或遗留运行”，禁止再执行/跨宿主取消；不会自动 recover 全库以免中断 CLI。崩溃遗留记录可由独占宿主显式执行核心恢复接口，桌面不会猜测其它进程已停止。恢复指恢复历史与草稿审阅，不承诺续跑已中断任务。
 
@@ -792,6 +846,147 @@ DispatchOptions 增 interactive_approvals（默认 false，CLI 行为不变）�
 
 | 日期 | 变更 | 证据 |
 |---|---|---|
+| 2026-10-19 | P4-24 发布准备：版本统一 2.0.0，增加版本/文档链接检查并整理文档；无产品接口或迁移变更 | [P4-24](acceptance/p4-24.md) |
 | 2026-10-08 | P3-10A 整体回归及 P3-10B macOS arm64 安装交付；版本统一 1.0.0，无接口/迁移变更 | [Phase 3](acceptance/phase3.md) |
 | 2026-10-02 | P3-1～4 计划契约、直连 LLM/本机凭据与执行状态持久化已集成 dev | [验收索引](acceptance/README.md) |
 | 2026-10-02 | 文档结构整理，替代过时的环境变量唯一来源与裸 JSON 唯一输出约定 | [整理验收](acceptance/docs-alignment.md) |
+
+
+### P4-10 — 流式 Markdown 与代码阅读
+
+- 视觉：沿用纸白/石墨与单一强调色，正文以标题、列表、表格和留白形成阅读层次；代码仅用细边界与等宽字体。内容依次为正文、代码操作、原文回退。交互沿用短颜色反馈，不对 token 或正文高度做入场动画。
+- 只替换会话 `message` 展示，用户文本/思考/工具/审批及 Channel、SQLite 历史契约不变。活跃和历史消息使用同一 renderer；原始文本永不改写，原文查看/全文复制随时可用。代码复制保留源位置内的内容（包括尾部换行），不复制围栏或语言名。
+- 采用 P4-2 选定的 react-markdown 10.1.0 + remark-gfm 4.0.1（MIT），延迟加载；加载/解析失败回退原文。流中允许未闭合语法按 CommonMark 暂态呈现，Markdown与原文均以100ms合并展示更新，结束立即显示完整文本。活动消息超过 4K UTF-16 码元或任何消息超过 128K UTF-16 码元 时自动显示可复制原文，避免大文档每批重解析；不截断文本。
+- 组件和插件引用固定，完成消息 memo，虚拟列表 key 与宿主不变。按需高亮只在用户点击时加载 Shiki 4.4.3 的 JS 引擎、两套主题与有限语言（JS/TS/JSON/Python/Bash/CSS）；只处理已结束消息、≤16K UTF-16 码元/200 行代码，不支持语言保持原文。令牌以 React span 文本渲染，禁止 dangerouslySetInnerHTML。
+- skipHtml，不接 raw HTML 插件；图片仅显示替代文字且不创建 img/请求；链接只接受完整 http/https URL（无凭据、空白或控制符），危险/相对/本地链接退为文本。外链由 Radix 确认显示完整地址，用户点击“在浏览器打开”才调用现有 opener；Esc/取消回到链接，不自动导航。
+- 原文切换和复制操作不重建执行宿主，复制/打开失败在原处可见。P4-10 不改阅读锚点/工具折叠（P4-11）。同构建口径记录首包 gzip 增量≤20% 与 lazy chunk；原生专项检查虚拟列表 20Hz 增量，仅活动消息更新，无全列表重新挂载。超预算先采用流中原文/完成后渲染对照，不带问题进入下一任务。
+
+
+### P4-11 — 阅读锚点与思考/工具折叠
+
+- 视觉：保留纸白/石墨与正文阅读宽度，思考/工具使用紧凑摘要和明确展开动作。内容依次为正文、可折叠上下文、底部新消息入口。交互只改变展开状态和滚动位置，不做高度动画或逐 token 入场；减少动态下同样即时操作。
+- 保留 react-virtuoso、Channel 和原始 StreamItem。阅读状态在 SessionsWorkspace 的会话键 Map 中保存，不进入 SQLite/协议：跟随底部、首个可见 key/相对 top、滚动快照、未读标记、已展开 key。删除会话清理，列表内容重置后失效锚点回到底部；不缓存已卸载消息的 DOM。
+- 新进入历史默认定位末尾。底部（24px 阈值）跟随追加及活动文本高度变化；用户向上阅读时保持 key/相对 top，不因新 token 强行滚动。离底后新增/更新正文、思考或工具标记“新消息”，按钮显式回到末尾并恢复跟随；不将每个 token 计数或 aria-live 播报。
+- 切会话保存/恢复虚拟列表快照和 key 锚点；切模块不卸载宿主，隐藏时不把零高度/零位置写回。可见后恢复阅读位置。展开/折叠、Markdown 懒加载与尺寸变化以当前可见 key 锚定，允许虚拟列表重新测量，禁止通过重新挂载整个列表重置高度。
+- 思考默认折叠为首行摘要/状态，展开保留完整可选择/复制文本；工具默认摘要包含名称/种类/状态，展开保留原位置/完整文本与既有 diff 懒读边界。展开状态按稳定 key 保存，虚拟条目回收/切会话不丢。历史仍按已有落库契约展示消息，不捏造数据库未保存的思考或工具记录。工具参数/耗时与变更详情见下方 P4-12。
+- 自动验证阅读状态、1000 条混合 fixture、20Hz 事件更新、折叠语义/复制/持久化及完成条目引用；真实滚动/变高/会话与模块恢复须原生 WebKit 核对，jsdom 不冒充布局验收。只对可见 DOM 取锚点并合帧调整，不扫描全部历史正文或截断源数据。
+
+### P4-12 — 工具与 diff 详情层次
+
+- 视觉沿用纸白/石墨，摘要单行显示工具、种类、状态与耗时；展开后按“参数 / 输出 / 文件变更”分区，审批仍由独立 PendingCard 裁决，工具完成不等于审批批准。即时折叠、不增加高度动画或逐 token 动画。
+- 前端 StreamItem 工具保留首次 tool_call 的 raw_input 原值与本机接收时间、首次终态接收时间。StreamAction batch 可传 receivedAt（测试固定时钟），缺省本机 Date.now；同批时差允许 0ms，终态更新不反复累加，正文更新不改完成工具引用。不显示后台执行精确耗时：完成时标“接收间隔”，无终态标“尚未结束”，未知时间不补造；跨重启不保存这些视图数据。原事件/SQLite 契约不改；未提供参数或仅后续事件拥有参数的 Agent 显示“当前事件未提供参数”，不从输出猜测。
+- 摘要来自 title/name，参数仅在展开参数区时 stringify，文本与 JSON 完整可选/复制。execute 的字符串参数或 command/cmd 字符串支持完整命令复制，不执行命令。缺失、null、空对象/数组区分展示，不将参数/输出当 HTML 或 Markdown 执行。
+- 工具详情及参数/输出/变更的展开键复用会话 ReadingMemory，虚拟回收/切会话保留展开；不缓存整个 DOM。diff 仅在用户展开文件变更后挂载，使用当前锁定 @pierre/diffs 和主题；无新增依赖。新旧总长 >128Ki UTF-16 或总行数 >4000 时直接用完整原文对照（分别按需展开/复制），不计算昂贵 diff/高亮、不截断复制数据；普通 diff 也可随时切原文。新增文件只显示新内容，不把整文件行数标为真实增删统计。
+- writeLazyPath 延续已有 write/create/save + location 规则；仍只在显式展开变更时调用现有 read_text_file（1MiB 上限、lossy UTF-8）；不扫描目录、不自动刷新磁盘、不扩展后端授权范围。明确标识“当前磁盘内容”，不是调用时快照；失败原处显示错误、可重试，关闭/换路径/结构化 diff 到达时忽略旧请求回调，失败不污染消息流；重新读取只对该用户动作触发。
+- diff 首次异步初始化期间显示生成状态，5 秒未产生代码节点转原处恢复入口；同步渲染异常由局部边界捕获。diff 渲染失败有原处重试/原文回退，懒读失败无内容时不能伪装成功；长 diff 和错误不阻塞正文/运行/停止。契约测试覆盖参数原值/复制、终态时间、长内容回退、懒读按需/重试/过期响应、渲染错误隔离；原生 WebKit 核对主题/窄窗、长 diff、复制、错误恢复与连续消息阅读。
+
+### P4-13 — 指挥官目标与规划上下文（已验收）
+
+输入区沿用现有运行宿主与生成/确认契约。App 传入当前会话 cwd 和项目空间列表；初始目录及用户尚未修改的目录跟随当前会话。用户手填/选择项目/目录后保留草稿，切模块不覆盖，可用“使用当前项目”显式恢复。项目选择只修改本次规划 cwd，不创建空间、不变更会话归属；默认空间无目录时要求选择。
+
+目标输入、工作目录、参与 Agent 分区排列；窄窗口历史改为可折叠，避免挤压主要表单。Agent 使用 list_agent_definitions 只读名单，不运行版本探测或启动执行进程。ACP 可多选，未接入驱动禁选并说明；已接入不代表已安装或已登录，界面如实提示，刷新时移除已注销/不支持的选项。默认首次选择当前 ACP Agent（否则首个 ACP），不自动添加后来注册的条目。
+
+模型状态在每次激活时重新查询：加载、未配置、缺少密钥、配置可用、查询失败各有文字及设置入口；“配置可用”不声称真实推理验证。异步结果在切页/下一次查询后失效。目标/目录/Agent/模型/忙状态均满足才允许生成；提交同步锁防双击，生成只调用原 generate_commander_run，成功仍是 draft，不触发 execute/run_prompt。
+
+新增本机 IPC：validate_commander_directory(path) → void，要求已存在的绝对目录；pick_commander_directory(defaultPath?) → string|null，仅系统原生单目录选择、取消不改草稿、禁止在选择器创建目录。使用 Rust 侧 tauri-plugin-dialog =2.4.2（MIT/Apache-2.0，MSRV1.77.2 兼容项目1.88），无 JS 通用 dialog 权限扩张。选择结果及手填目录都由后端校验；generate_commander_run 再次复用目录检查与 AgentRegistry.restricted，防止目录消失或前端绕过。界面不读取项目文件、不扫描子目录，不更改 SQLite schema。计划审阅/执行监控的重构留到 P4-14/15。
+
+
+### P4-14 — 计划审阅与确认（已验收）
+
+草稿沿用纸白/石墨、单一强调色与细分隔线，先展示目标/目录，再展示任务导航和完整详情，最后显式确认执行。宽区域左右排列列表与详情，窄区域上下排列；提示词保持原始完整文本、自动换行，不执行 HTML/Markdown。任务选择按 run id 重置，显示任务 id、Agent、依赖及调度批次。已有运行/结果/审批展示不在本任务重构。
+
+并发只接受 1～16 的整数；非法输入禁用确认并原处说明。Radix 标准确认弹层展示任务数、目录、默认空间、变更前确认权限及实际并发，初始焦点位于返回审阅，Tab 困在弹层，Esc/返回只关闭弹层并回到触发按钮，不执行、不取消、不裁决审批。确认期间不能切换历史或修改并发；切模块关闭弹层。弹层与执行宿主均使用同步 ref 锁防止同一事件周期重复派单，宿主还检查 active/draft/并发与全局忙状态。继续复用后端 confirmed 和运行互斥契约，不新增 IPC/数据库字段/依赖。
+
+
+### P4-15 — 执行监控、结果与会话定位（已验收）
+
+视觉沿用纸白/石墨、单一强调色，内容依次为真实状态计数、按批次任务、结果预览和查看会话。使用细分隔和原文结果，不引入进度估算/入场或高度动画；按钮沿用既有颜色反馈，减少动态无额外运动。非草稿默认收起规划输入（保持挂载保留草稿），监控优先；并发输入仅在草稿出现，避免把当前输入值伪作历史执行配置。状态和计数仅由 SQLite RunView.summary.tasks 推导，pending 显示排队，失败/跳过/取消/中断分别显示；inactive running 明确记录未结束且当前应用不运行，不自动恢复或伪记成功。草稿审阅保持 P4-14。
+
+Channel 仅作为重新读取信号：合并繁密通知，但读取期间新通知需再读，最终执行返回及收尾刷新不能被旧读取覆盖。切模块不卸载执行宿主，不取消执行；重进读取持久化记录，不重跑。调度依赖/并发/取消仍由既有 Rust Scheduler 决定。
+
+历史列表 DTO 新增 local_id（sessions.id），不迁移 schema。历史前端 key 使用完整本地 UUID，避免 ACP id 末尾碰撞；刷新非本机实时运行条目的持久化状态，保留草稿/流/运行连接。点击任务会话先重新查询列表，以 summary.session_id 本地 UUID 唯一匹配，校验 agent_id/cwd/agent_session_id；缺失/不一致/重复远端 ID 时原处报错，不猜测跳转。验证后 App hydrate 并激活对应前端会话，沿用历史消息加载，绝不调用 run_prompt/session-load。执行中的任务暂不提供会话跳转，提示结束后查看；指挥官拥有执行状态，不冒充普通会话实时 Channel。结果为既有 8192 字节摘要，明确说明截断及完整会话入口，无结果/无会话也说明原因。
+
+
+### P4-16 — 审批上下文与裁决反馈（已验收）
+
+视觉：沿用纸白/石墨、单一警示色与轻边界，只对待决裁决使用卡片。内容依次为所属任务/会话、工具类型与完整标识、命令/变更/完整输入、一次性裁决及状态。上下文/原文按需展开，按钮沿用颜色反馈与统一复制反馈；提交使用文字提示，不增加旋转或高度动画，减少动态同样可操作。命令仅复制不执行，变更以请求中明确提供的路径/旧文/新文原文对照，不读磁盘、不补造 diff。
+
+PendingPermission 桌面事件增可选上下文 local_session_id、agent_id、cwd、session_title；指挥官增 task_title、plan_objective（保留 commander_run_id/task_id）。三处使用同一 PendingCard 和 PermissionCenter 按请求 UUID 共享 submitting/accepted/error 状态：连点/切页仅发送一次，成功等待后端裁决通知且不重新启用；失败留卡、显示原因并允许原动作重试。只展示原有 once 选项，不新增 always/批量放行/规则写入。复制失败原处可见。
+
+DecisionRecord 增可选 request_id：排队请求为 Some(UUID)，自动裁决为 None；DecisionSource 序列化改为现有 TS 契约的 {type: user|rule|mode,...}，无数据库 schema 变更。近期裁决保留当前进程最多 50 条，不声称重启恢复。裁决反馈按 options 中的 option_id → kind 判断允许/拒绝，禁止用 option_id 字符串前缀猜测；未知选项显示未识别。取消拒绝来源标记 rule:<cancelled>，不伪记用户点击。Broker.respond 先验证 option_id 属于该请求，再消费通道；失败保留路由以便重试。
+
+运行 relay 有明确结束信号，退出时清理该运行登记的 UUID 并广播 permission-removed，包含尚未转发的缓冲待决请求；取消/异常/退出均沿用既有拒绝/进程收尾。前端 App 将全局待决集合按 ACP session id 同步到会话，避免消息与审批到达顺序造成残卡或漏卡；指挥官和审批中心直接订阅同一集合。后端 request_id 和前端 UUID 防重是两层约束。
+
+
+### P4-17 — 看板层次、拖拽反馈与任务详情（已验收）
+
+视觉沿用克制工作台：空间标题/目录/数量构成分组，四列标题与计数清晰，卡片标题为详情入口，把手独立。窄窗口保持四列最小阅读宽度并在空间内横向滚动，不压缩成难读小卡。内容依次为保存反馈、空间/列、任务及只读详情；不新增列内排序。
+
+沿用既有 dnd-kit 三种传感器、键盘坐标与 WebKit 最终松手坐标。源卡保留原尺寸占位，目标列显示不参与布局的虚线落点提示；DragOverlay 继续 dropAnimation=null。成功后短暂边界/底色落位反馈，只过渡颜色和透明度，不给 draggable/overlay 添加 Motion transform/layout。减少动态下 CSS 关闭过渡，状态/动作完全等价。Space/方向键/Space 可移动，Esc/区域外/同列不写库；推进/回退也复用 move_task 与同一保存/回滚路径。保存期间禁止新拖拽、刷新和任务修改，失败恢复原卡并保留明确错误与刷新入口，不以动画代替 SQLite 结果。
+
+新增只读 IPC get_task_context(task_id) → {task, stored_cwd, worktree?, session?}，仅在显式打开详情/重试时读取。stored_cwd 来自 tasks.cwd，worktree 复用原项目托管记录查找（只读 Git/元数据、不创建、不清扫），session 为匹配绑定 ACP id 的现存 SessionRow；找不到会话返回 null、多个匹配报错。无 schema 迁移。详情显示完整标题/UUID、看板空间/状态、创建时目录、原 worktree 路径/分支/空间、实际会话目录/空间，明确组织移动不迁移执行归属；不把 stored_cwd 伪作当前执行 cwd。查询失败可重试，关闭/换任务忽略旧响应。
+
+详情使用标准 Radix Dialog，初始焦点关闭按钮，Esc/关闭回到卡片详情入口；跳转会话不把焦点拉回看板。只读历史跳转重新查询列表并唯一匹配绑定 ACP id，hydrate 后激活，找不到/歧义原处报错，不启动 Agent。绑定/隔离/删除保留原明确动作，详情查看本身不执行任务或修改任何文件。
+
+原生快速松手可能发生在 dnd-kit 测量 active 矩形之前，内部重置却不发送结束事件。mouseup/touchend 下一帧仅清理遗留拖拽显示并提示重试，不猜测落点、不发写库。正常结束先清理 ref；键盘移动成功或回滚后，定位新挂载的同任务把手恢复焦点。
+
+### P4-18 — 分组设置与初次配置引导（已验收）
+
+视觉：沿用纸白/石墨与单一主色，以顶部四组导航、简短步骤和分隔线替代连续卡片。内容依次为模型连接/密钥/验证、Agent 与项目目录、规则、外观。交互沿用颜色反馈与系统目录选择，不新增装饰位移；减少动态操作等价。
+
+设置四组为模型、Agent 与项目、规则、外观，使用原生按钮/aria-current 与具名区域，导航独立于正文滚动；切组保留未保存输入与正在验证的请求，初次进入默认模型组。模型步骤独立展示连接保存、凭据来源、推理验证：保存连接或密钥绝不视为验证通过；列表查询也不作为推理验证。验证只使用已保存连接，显式按钮说明一次 API 调用且不执行任务。取消单独显示已取消，不伪记服务失败；结果仅在当前设置生命周期有效，编辑连接或更换密钥后清除；重开显示未验证，不持久化推理认证结论。模型操作与项目添加使用同步锁防重；读取失败可重试，不显示伪成功。关闭设置取消未完成验证，不把过期结果写入新页面。
+
+复用既有 get/save_commander_config、credential_source、save_key、verify/cancel_plan IPC 和 SQLite 按 endpoint/环境变量名存凭据的范围，无 schema 迁移，不回读 key。连接表单与密钥输入禁用条件一致；凭据查询过期响应忽略。真实配置、key、SQLite 不进入日志/仓库。
+
+Agent 分组明确版本探测仅表示命令可用，认证与模型权限需在会话实际运行确认，不自动运行或登录。项目目录引导复用 pick_commander_directory 与 create_workspace；选择取消保持原值，选择本身不保存，显式添加后保存本机空间，不改已有会话 cwd。保存后 App 刷新空间列表。规则与外观沿用既有持久化及权限语义。规则区按需渲染以确保 WebKit 辅助功能树可见，草稿仍由父组件保留；项目已添加但列表刷新失败时保留保存反馈，并提供只读列表重试。
+
+### P4-19 — 统一空、错误、加载与短反馈（已验收）
+
+视觉以标题、说明、单一操作为层次，空态不模拟数据；静态 Skeleton 搭配可读加载文字，避免把正在读取误作空列表。共用 EmptyState、LoadingState、InlineError，五页沿用同一排版。错误留在发生区域，保留原原因；只读查询显式重试，不自动重试生成、派单、运行、写库或审批。存在旧数据时保留旧内容并标明读取失败，不用空态覆盖。
+
+保存/复制成功使用共用短提示：单例 Toast 最多一条、同文案合并、约 3 秒消失，可关闭，鼠标/键盘聚焦时暂停，关闭/局部 Esc 返回先前操作控件；不抢焦点、不携带 key/endpoint/命令原文。成功提示 polite，错误由原操作内联 alert 持续展示，不把失败藏进短提示。减少动态无位移/闪动，状态不只依赖颜色。复制兜底失败必须捕获并在原处提示，不能产生未处理 Promise；不重复播报同一成功提示。
+
+会话历史/空间、计划历史、看板、规则与模型配置及审批监听分别区分读取中/失败/空数据。审批监听失败清理已注册监听后允许重新订阅，重试不裁决请求。保留 P4-16 UUID 应答防重和 P4-18 凭据/验证状态，无新增后端 IPC、schema 或依赖。
+
+### P4-20 — Cmd-K 与快捷键发现（已验收）
+
+视觉以单一搜索框、分组结果、作用域说明及按需快捷键说明构成命令面板；沿用现有 Radix Dialog 与颜色反馈，无新增依赖或装饰位移。侧栏提供可发现入口，Cmd/Ctrl-K 打开，方向键选择、Enter 导航，Esc 返回原控件；导航后焦点落到目标上下文，不被关闭回焦拉回。
+
+搜索只投影 NAV_ITEMS、App 已加载 sessions 的 title/key/workspaceId 和看板成功读取的 tasks 的 title/id/workspace_id。仅标题/分组名称过滤，未加载任务明确提示先打开看板，结果标注模块/已加载会话/已加载任务和空间。过滤后最多显示 80 项，完整 UUID 作 key；不是全库全文搜索，不查询文件、密钥、prompt、正文、cwd 或环境配置，打开/输入搜索不发 IPC。缓存任务只作导航线索，跳转看板后重新读取，任务消失原处说明、不猜测替代。
+
+动作白名单仅五个模块、激活会话、查看任务只读详情、新建默认空间会话和打开当前空间的新建任务表单（输入标题后才保存）。新建任务不立即写库；空间名称未加载时标为待核对，保留原 workspace id 并重新查询，不悄悄回退默认空间；空间失效关闭旧表单并报错。表单也拦截 IME/残余 Enter/按键重复。运行/停止/删除/审批/派单/生成不进入命令列表，不绕过原确认与权限路径。
+
+中文 IME 组合输入和 keyCode229 不触发选择/快捷键；compositionend 后 50ms 内忽略残余 Enter，组合输入中的 Esc 不关闭面板。全局快捷键尊重 defaultPrevented、其他 Dialog 与终端焦点；现有 Cmd-N/数字、Cmd-R/Cmd-. 和输入 Enter 保持作用范围。说明面板列出这些快捷键与例外，终端通过侧栏入口打开搜索。标准 Dialog 圈定焦点，组合结束正常 Esc/关闭回原控件；减少动态等价可用。
+
+P4-20 前端接线：AppShell.onSearch 打开受控 CommandPalette；App 仅在面板打开时构造投影，KanbanView.onTasksLoaded 发布成功读取/已保存的任务缓存。看板 request={id,kind:detail|create,nonce} 每次先刷新，再只处理一次并 onRequestHandled 清理；详情返回原卡片、表单聚焦标题。没有新 IPC 或数据库迁移。
+
+
+### P4-21 — 性能回归检查
+
+生产构建输出Vite manifest。首包检查从唯一entry沿静态imports递归去重，逐文件gzip level9；dynamicImports不计入首包。基线369794 bytes、预算+20%，接入just verify，图测试覆盖共享、循环和按需依赖。临时原生探针只用于隔离验收，不进入产品、不导出正文或配置；性能结论只见[验收记录](acceptance/p4-21.md)。
+
+非初始页面（指挥官、看板、审批、设置）首次访问才加载，指挥官首次进入后保持挂载。消息时间线和虚拟列表在实际存在消息后加载；审批复制按钮独立于虚拟列表模块。各页面/消息区域有独立加载与错误边界，不暂停会话宿主、输入、Channel或全局审批订阅。模块加载失败可切换页面，需重启应用重试。
+
+TerminalLoader按需加载SessionTerminal/xterm；加载完成前关闭不会挂载或创建PTY。终端已打开后的切页保留规则不变，加载失败可以关闭，模块错误需重启应用重试。
+
+活动Markdown阈值4K UTF-16码元、完成态阈值128K；两种活动展示均100ms合并更新，复制始终使用完整权威源。长原文按1024码元后首个换行切稳定块，以memo/layout containment隔离；不截断、不拆单行或代理对，结束后恢复原排版。新增条目立即校正位置，纯正文增长由既有DOM/尺寸观察器触发；跟随模式直接调整原生滚动容器到底部，离底锚点、首次恢复和显式跳转保持原逻辑。
+
+主窗口配置create=false，由setup按原窗口配置创建；自动创建的开发/验收覆盖配置仍支持既有IPC路径。复用AppState Store预读三项界面偏好及各自读取错误，初始化脚本只注入这些字段和随机启动nonce，不包含模型连接、key或其他SQLite数据。读取失败保留各Provider默认值/错误及禁止覆盖语义。没有新增持久化表或IPC命令。
+
+初始化脚本等待html根节点，先应用主题/动效属性，再通过受保护的Tauri桥接请求appearance_ready；原生背景在显示前设为对应颜色，应用模块随后加载。main消费预读快照并复用同主题显示promise；桥接不可用或期间系统主题变化时回退SDK调用。首次React root提交使用flushSync，之后维持正常调度。Provider观察首个显示请求错误，StrictMode重放不重复请求，后续主题变化仍同步原生窗口。
+
+sessionStorage只保存无敏感信息的启动nonce。完整WebView重载不重放旧快照，重新走IPC读取当前偏好；sessionStorage不可用同样回退。新进程的新nonce允许新快照，不把界面偏好另存到浏览器。
+
+流式更新只重绘变化的会话行摘要：标题、Agent/cwd、运行/结束状态、审批数、选中与删除确认独立为memo基础类型属性。行事件按key从最新已提交会话状态读取目标，避免缓存回调持有旧会话或异步删除后错误切换。导航aside按实际导航属性缓存；审批同步仅在待决集合或session身份映射变化时执行，正文变化不触发重复同步。
+
+终端视口使用layout/paint containment，将xterm尺寸调整造成的布局和绘制影响限制在既有overflow-hidden视口内；保持即时fit、PTY通知和屏幕阅读模式。
+
+### P4-22 — 可访问性与多尺寸
+
+表单字段提供稳定的可访问名称，不依赖placeholder；新增Agent的标识/显示名/启动命令/版本参数/驱动协议分别命名。新建项目目录输入关联说明及校验错误，错误使用alert并标记aria-invalid，避免只靠颜色。沿用原保存/执行/权限和数据库契约，不新增常显说明。原生九格与VoiceOver/IME的实际出口见任务验收；AX树和jsdom不代替听读/布局实测。
+
+长路径下原生select显式使用零宽flex基础与min-width:0，防止WebKit内在选项宽度撑出指挥官滚动区；选项完整路径与工作目录输入内容保持，不用裁剪父容器掩盖溢出。
+
+会话数量、看板绑定动作、超时提醒及可操作删除图标使用完整muted-foreground，避免在浅色背景叠加透明度后丢失对比；隐藏图标仍在悬停/键盘聚焦时显示，禁用控件语义不变。
+
+AppShell保留唯一main地标并以当前模块命名；指挥官内层滚动区改为名为“规划与审阅”的section，避免嵌套main干扰读屏地标导航。

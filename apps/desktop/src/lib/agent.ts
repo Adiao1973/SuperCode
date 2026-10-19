@@ -1,3 +1,4 @@
+import { notifySuccess } from "./feedback";
 /**
  * supercode-desktop Tauri 命令封装（architecture §5.1 IPC 契约）。
  * invoke 参数用 camelCase，Tauri 自动映射到 Rust 侧 snake_case 形参。
@@ -54,7 +55,7 @@ export function listWorkspaces(): Promise<Workspace[]> {
 
 /** 新建（或返回既有）项目空间：目录须已存在，name 取目录名 */
 export function createWorkspace(path: string): Promise<Workspace> {
-  return invoke("create_workspace", { path });
+  return invoke<Workspace>("create_workspace", { path }).then((value) => { notifySuccess("项目空间已保存"); return value; });
 }
 
 /** 删除项目空间：会话移入默认空间，不级联删 */
@@ -97,6 +98,7 @@ export function deleteTask(id: string): Promise<void> {
 }
 
 export interface HistorySession {
+  local_id: string;
   agent_id: string;
   agent_session_id: string;
   cwd: string;
@@ -150,7 +152,7 @@ export function listRules(): Promise<RuleEntry[]> {
 }
 
 export function addRule(pattern: string, effect: string): Promise<RuleEntry> {
-  return invoke("add_rule", { pattern, effect });
+  return invoke<RuleEntry>("add_rule", { pattern, effect }).then((value) => { notifySuccess("规则已保存"); return value; });
 }
 
 export function deleteRule(id: string): Promise<void> {
@@ -207,7 +209,7 @@ export function listAgentDefinitions(): Promise<AgentRow[]> {
 
 /** 新增（或同 id 覆盖）用户自定义 agent → ~/.supercode/agents.json */
 export function addAgent(input: AgentInput): Promise<AgentRow> {
-  return invoke("add_agent", { input });
+  return invoke<AgentRow>("add_agent", { input }).then((value) => { notifySuccess("Agent 配置已保存"); return value; });
 }
 
 export function updateAgent(input: AgentInput): Promise<AgentRow> {
@@ -243,4 +245,15 @@ export function cleanupTaskWorktrees(workspaceId: string): Promise<{ removed: st
 
 export function moveTask(id: string, workspaceId: string, status: TaskEntry["status"]): Promise<TaskEntry> {
   return invoke("move_task", { id, workspaceId, status });
+}
+
+/** Explicit, read-only inspector. Does not create or validate a worktree by mutation. */
+export interface TaskContext {
+  task: TaskEntry;
+  stored_cwd: string;
+  worktree: TaskWorktree | null;
+  session: { id: string; agent_id: string; agent_session_id: string; cwd: string; title: string; status: string; workspace_id: string } | null;
+}
+export function getTaskContext(taskId: string): Promise<TaskContext> {
+  return invoke("get_task_context", { taskId });
 }

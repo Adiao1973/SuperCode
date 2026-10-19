@@ -1,0 +1,105 @@
+Window: "SuperCode · 看板体验验收", App: SuperCode P411.
+0 standard window SuperCode · 看板体验验收, Secondary Actions: Raise
+	1 scroll area
+		2 HTML content Description: SuperCode, URL: 127.0.0.1:1453/
+			3 container 应用导航
+				4 text SuperCode v1.0.0
+				5 container 模块
+					6 button 指挥官
+					7 button 会话
+					8 button 任务看板
+					9 button 审批中心
+					10 button 设置
+				11 button (expanded) 折叠导航, Secondary Actions: Collapse
+			12 container
+				13 heading 任务看板, Value: 1
+					14 text 任务看板
+				15 pop up button 当前项目：默认空间
+				16 text 3  项任务 ·  3  个空间
+				17 button 刷新看板
+				18 text 拖动把手跨列或跨空间；键盘：空格拾取，左右切列，上下切空间，Escape 取消。会话与执行目录保持原归属。
+				19 container 看板空间：原项目 A
+					20 heading 原项目 A, Value: 2
+						21 text 原项目 A
+					22 text 1  项
+					23 container /tmp/sc-p417/project-a
+						24 text /tmp/sc-p417/project-a
+					25 button 清扫孤儿
+					26 button 新建任务
+					27 container 原项目 A · 待办
+						28 text 待办 0
+						29 text 暂无任务
+					30 container 原项目 A · 进行中
+						31 text 进行中 0
+						32 text 暂无任务
+					33 container 原项目 A · 评审
+						34 text 评审 1
+						35 draggable 拖动任务：鼠标拖拽验收任务, Help: 拖动；空格拾取，左右切列，上下切空间，Escape 取消
+						36 button 查看任务详情：鼠标拖拽验收任务
+						37 button 删除任务：鼠标拖拽验收任务, Help: 删除任务
+						38 button 隔离会话：鼠标拖拽验收任务
+						39 button 绑定会话：鼠标拖拽验收任务, Help: 绑定会话
+						40 button 回退任务：鼠标拖拽验收任务, Help: 回退一列
+						41 button 推进任务：鼠标拖拽验收任务, Help: 推进一列
+					42 container 原项目 A · 完成
+						43 text 完成 0
+						44 text 暂无任务
+				45 container 看板空间：目标项目 B
+					46 heading 目标项目 B, Value: 2
+						47 text 目标项目 B
+					48 text 1  项
+					49 container /tmp/sc-p417/project-b
+						50 text /tmp/sc-p417/project-b
+					51 button 清扫孤儿
+					52 button 新建任务
+					53 container 目标项目 B · 待办
+						54 text 待办 1
+						55 draggable 拖动任务：绑定任务：跨空间仍定位原会话, Help: 拖动；空格拾取，左右切列，上下切空间，Escape 取消
+						56 button 查看任务详情：绑定任务：跨空间仍定位原会话
+						57 button 删除任务：绑定任务：跨空间仍定位原会话, Help: 删除任务
+						58 button 查看绑定会话：绑定任务：跨空间仍定位原会话, Help: 跳转到该会话
+						59 button 推进任务：绑定任务：跨空间仍定位原会话, Help: 推进一列
+					60 container 目标项目 B · 进行中
+						61 text 进行中 0
+						62 text 暂无任务
+					63 container 目标项目 B · 评审
+						64 text 评审 0
+						65 text 暂无任务
+					66 container 目标项目 B · 完成
+						67 text 完成 0
+						68 text 暂无任务
+				69 container 看板空间：默认空间
+					70 heading 默认空间, Value: 2
+						71 text 默认空间
+					72 text 1  项
+					73 button 新建任务
+					74 container 默认空间 · 待办
+						75 text 待办 1
+						76 draggable 拖动任务：隔离任务：保留原执行目录, Help: 拖动；空格拾取，左右切列，上下切空间，Escape 取消
+						77 button 查看任务详情：隔离任务：保留原执行目录
+						78 button 删除任务：隔离任务：保留原执行目录, Help: 删除任务
+						79 button 隔离会话：隔离任务：保留原执行目录
+						80 button 绑定会话：隔离任务：保留原执行目录, Help: 绑定会话
+						81 button 推进任务：隔离任务：保留原执行目录, Help: 推进一列
+					82 container 默认空间 · 进行中
+						83 text 进行中 0
+						84 text 暂无任务
+					85 container 默认空间 · 评审
+						86 text 评审 0
+						87 text 暂无任务
+					88 container 默认空间 · 完成
+						89 text 完成 0
+						90 text 暂无任务
+	91 close button
+	92 full screen button Help: this button also has an action to zoom the window, Secondary Actions: zoom the window
+	93 minimize button
+	94 text SuperCode · 看板体验验收
+95 menu bar
+	96 SuperCode P411
+	97 File
+	98 Edit
+	99 View
+	100 Window
+	101 Help
+
+The focused UI element is 13 heading 任务看板, Value: 1

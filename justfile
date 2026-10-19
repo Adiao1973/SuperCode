@@ -4,10 +4,18 @@
 default:
     @just --list
 
-# 一键验证：前端构建 + fmt 检查 + clippy 严格 + 全部测试（DoD 硬标准）
+# 一键验证：文档链接 + 版本一致性 + 前端类型/测试/构建 + fmt 检查 + clippy 严格 + 全部测试（DoD 硬标准）
 # 前端构建是前置条件：supercode-desktop 的 build.rs 要求 frontendDist（dist/）存在
 verify:
+    node --test scripts/docs/check-links.test.mjs
+    node scripts/docs/check-links.mjs
+    node --test scripts/release/check-version.test.mjs
+    node scripts/release/check-version.mjs
+    pnpm --filter @supercode/desktop test:typecheck
+    pnpm --filter @supercode/desktop test
     pnpm --filter @supercode/desktop build
+    node --test scripts/performance/bundle-budget.test.mjs
+    node scripts/performance/bundle-budget.mjs
     cargo fmt --check
     cargo clippy --all-targets -- -D warnings
     cargo test

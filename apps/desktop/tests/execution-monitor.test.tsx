@@ -1,0 +1,31 @@
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { expect, it, vi } from "vitest";
+import { ExecutionMonitor } from "../src/components/ExecutionMonitor";
+import type { RunView } from "../src/lib/commander";
+import { calls, handle } from "./fixtures/tauri";
+
+it("renders persisted states, truncation and inactive running without restarting, then resolves exact history", async () => {
+  const tasks = ["pending", "running", "failed", "skipped", "cancelled", "interrupted", "succeeded"].map((status) => ({ id: status, title: status, agent_id: "opencode", depends_on: [], status, session_id: status === "succeeded" ? "local-uuid" : null, agent_session_id: status === "succeeded" ? "remote-id" : null, result: status === "succeeded" ? "已保存的结果" : null, truncated: status === "succeeded" }));
+  const view = { run: { id: "run", cwd: "/fixture", status: "running", plan: { objective: "合成计划", tasks: tasks.map((task) => ({ ...task, prompt: "完整提示词" })) } }, summary: { tasks }, batches: [tasks.map((task) => task.id)], active: false } as RunView;
+  const open = vi.fn();
+  const host = render(<ExecutionMonitor view={view} onOpenSession={open} renderPending={() => null} />);
+  expect(screen.getByRole("status")).toHaveTextContent("不会自动恢复");
+  expect(screen.getByText("预览过长，已截断；完整内容请查看会话。")).toBeVisible();
+  expect(screen.getByText("依赖未成功，已跳过。")).toBeVisible();
+  expect(calls).toHaveLength(0);
+  const row = { local_id: "local-uuid", agent_session_id: "remote-id", agent_id: "opencode", cwd: "/fixture" };
+  handle("list_history_sessions", () => [row]);
+  fireEvent.click(screen.getByRole("button", { name: "查看会话：succeeded" }));
+  await waitFor(() => expect(open).toHaveBeenCalledWith(row));
+  handle("list_history_sessions", () => []);
+  fireEvent.click(screen.getByRole("button", { name: "查看会话：succeeded" }));
+  await screen.findByRole("alert");
+  expect(open).toHaveBeenCalledTimes(1);
+  expect(calls.every((call) => call.command === "list_history_sessions")).toBe(true);
+  let finish!: (rows: typeof row[]) => void;
+  handle("list_history_sessions", () => new Promise<typeof row[]>((resolve) => { finish = resolve; }));
+  fireEvent.click(screen.getByRole("button", { name: "查看会话：succeeded" }));
+  host.rerender(<ExecutionMonitor view={view} active={false} onOpenSession={open} renderPending={() => null} />);
+  await act(async () => { finish([row]); });
+  expect(open).toHaveBeenCalledTimes(1);
+});

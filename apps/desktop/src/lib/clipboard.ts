@@ -2,6 +2,8 @@
  * 剪贴板写入：优先 Clipboard API；WKWebView 下不可用时退回 execCommand 兜底。
  */
 
+import { notifySuccess } from "./feedback";
+
 export async function copyText(text: string): Promise<void> {
   try {
     await navigator.clipboard.writeText(text);
@@ -10,9 +12,19 @@ export async function copyText(text: string): Promise<void> {
     textarea.value = text;
     textarea.style.position = "fixed";
     textarea.style.opacity = "0";
+    const focused =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null;
     document.body.appendChild(textarea);
-    textarea.select();
-    document.execCommand("copy");
-    textarea.remove();
+    try {
+      textarea.select();
+      if (!document.execCommand("copy"))
+        throw new Error("Clipboard unavailable");
+    } finally {
+      textarea.remove();
+      focused?.focus({ preventScroll: true });
+    }
   }
+  notifySuccess("已复制");
 }

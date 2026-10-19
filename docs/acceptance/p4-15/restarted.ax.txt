@@ -1,0 +1,101 @@
+Window: "SuperCode · 执行监控验收", App: SuperCode P411.
+0 standard window SuperCode · 执行监控验收, Secondary Actions: Raise
+	1 scroll area
+		2 HTML content Description: SuperCode, URL: 127.0.0.1:1453/
+			3 container 应用导航
+				4 text SuperCode v1.0.0
+				5 container 模块
+					6 button 指挥官
+					7 button 会话
+					8 button 任务看板
+					9 button 审批中心
+					10 button 设置
+				11 button (expanded) 折叠导航, Secondary Actions: Collapse
+			12 container
+				13 heading 指挥官, Value: 1
+					14 text 指挥官
+				15 pop up button 当前项目：默认空间
+				16 container 计划历史
+					17 heading 计划历史, Value: 2
+						18 text 计划历史
+					19 button 刷新
+					20 button 并行与依赖 已完成
+					21 button 失败与跳过 失败
+					22 button 失活记录 运行中
+					23 button 取消验收 已取消
+				24 button (collapsed) 规划新目标, Secondary Actions: Expand
+				25 heading 并行与依赖, Value: 3
+					26 text 并行与依赖
+				27 container
+					28 text /tmp/sc-p415/project  ·  已完成
+				29 container 计划执行状态
+					30 description list 任务状态统计
+						31 text 排队中
+						32 text 0
+						33 text 运行中
+						34 text 0
+						35 text 已完成
+						36 text 3
+						37 text 失败
+						38 text 0
+						39 text 已跳过
+						40 text 0
+						41 text 已取消
+						42 text 0
+						43 text 已中断
+						44 text 0
+					45 container 第 1 批
+						46 heading 第 1 批, Value: 4
+							47 text 第  1  批
+						48 container 并行与依赖 a
+							49 heading 并行与依赖 a, Value: 5
+								50 text 并行与依赖 a
+							51 text 已完成
+							52 container
+								53 text a  ·  opencode  · 依赖： 无
+							54 summary 查看完整任务提示词, Value: off
+								55 text 查看完整任务提示词
+							56 heading 结果预览, Value: 6
+								57 text 结果预览
+							58 text starteddone
+							59 button 查看会话：并行与依赖 a
+						60 container 并行与依赖 b
+							61 heading 并行与依赖 b, Value: 5
+								62 text 并行与依赖 b
+							63 text 已完成
+							64 container
+								65 text b  ·  opencode  · 依赖： 无
+							66 summary 查看完整任务提示词, Value: off
+								67 text 查看完整任务提示词
+							68 heading 结果预览, Value: 6
+								69 text 结果预览
+							70 text starteddone
+							71 button 查看会话：并行与依赖 b
+					72 container 第 2 批
+						73 heading 第 2 批, Value: 4
+							74 text 第  2  批
+						75 container 并行与依赖 c
+							76 heading 并行与依赖 c, Value: 5
+								77 text 并行与依赖 c
+							78 text 已完成
+							79 container
+								80 text c  ·  opencode  · 依赖： a、b
+							81 summary 查看完整任务提示词, Value: off
+								82 text 查看完整任务提示词
+							83 heading 结果预览, Value: 6
+								84 text 结果预览
+							85 text starteddone
+							86 button 查看会话：并行与依赖 c
+	87 close button
+	88 full screen button Help: this button also has an action to zoom the window, Secondary Actions: zoom the window
+	89 minimize button
+	90 text SuperCode · 执行监控验收
+91 menu bar
+	92 SuperCode P411
+	93 File
+	94 Edit
+	95 View
+	96 Window
+	97 Help
+
+The focused UI element is 2 HTML content Description: SuperCode, URL: 127.0.0.1:1453/

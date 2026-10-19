@@ -1,0 +1,10667 @@
+[
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      300,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1263,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      128,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 943,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      608,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      608,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      608,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      128,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 943,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      128,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 943,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      608,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      608,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      608,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      608,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      608,
+      2
+    ],
+    "dom": {
+      "heading": "任务看板",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      608,
+      2
+    ],
+    "dom": {
+      "heading": "任务看板",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      608,
+      2
+    ],
+    "dom": {
+      "heading": "审批中心",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      608,
+      2
+    ],
+    "dom": {
+      "heading": "审批中心",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      608,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      608,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      608,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      608,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      608,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      608,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      608,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      128,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 943,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      128,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 943,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      160,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 943,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      160,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 943,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "任务看板",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "任务看板",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "审批中心",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "审批中心",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "任务看板",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "任务看板",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "任务看板",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "任务看板",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "审批中心",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "审批中心",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "任务看板",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "任务看板",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "审批中心",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "审批中心",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      140,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 943,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      140,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 943,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      140,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 943,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      300,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1263,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      300,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1263,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "任务看板",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "任务看板",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "审批中心",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "审批中心",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "任务看板",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "任务看板",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "审批中心",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "审批中心",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "任务看板",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "任务看板",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "任务看板",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "任务看板",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "审批中心",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "审批中心",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      300,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 1263,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      300,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 1263,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      300,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 1263,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      400,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      400,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "任务看板",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "任务看板",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "审批中心",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "审批中心",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "任务看板",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "任务看板",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "审批中心",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "审批中心",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "任务看板",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "任务看板",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "审批中心",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "审批中心",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      400,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      400,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      400,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-overflow-diagnostic",
+    "dom": {
+      "nodes": [
+        {
+          "tag": "MAIN",
+          "cls": "min-w-0 flex-1 overflow-y-auto p-6",
+          "w": 1119,
+          "scroll": 2038,
+          "overflow": "auto"
+        },
+        {
+          "tag": "DIV",
+          "cls": "mx-auto max-w-4xl space-y-6",
+          "w": 896,
+          "scroll": 1926,
+          "overflow": "visible"
+        },
+        {
+          "tag": "DIV",
+          "cls": "",
+          "w": 896,
+          "scroll": 1926,
+          "overflow": "visible"
+        },
+        {
+          "tag": "SECTION",
+          "cls": "space-y-5",
+          "w": 896,
+          "scroll": 1926,
+          "overflow": "visible"
+        },
+        {
+          "tag": "FORM",
+          "cls": "space-y-5",
+          "w": 896,
+          "scroll": 1926,
+          "overflow": "visible"
+        },
+        {
+          "tag": "FIELDSET",
+          "cls": "min-w-0 space-y-2",
+          "w": 896,
+          "scroll": 1926,
+          "overflow": "visible"
+        },
+        {
+          "tag": "DIV",
+          "cls": "flex flex-wrap gap-2",
+          "w": 896,
+          "scroll": 1926,
+          "overflow": "visible"
+        },
+        {
+          "tag": "INPUT",
+          "cls": "h-8 w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-1 text-base transition-colors outline-none file:inline-flex file:h-6 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30 dark:disabled:bg-input/80 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40",
+          "w": 786,
+          "scroll": 1841,
+          "overflow": "visible"
+        }
+      ]
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      400,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      400,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      400,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      400,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "horizontalRegions": [
+        {
+          "tag": "MAIN",
+          "cls": "min-w-0 flex-1 overflow-y-auto p-6",
+          "width": 1119,
+          "scroll": 2038
+        },
+        {
+          "tag": "SECTION",
+          "cls": "space-y-5",
+          "width": 896,
+          "scroll": 1926
+        },
+        {
+          "tag": "FORM",
+          "cls": "space-y-5",
+          "width": 896,
+          "scroll": 1926
+        }
+      ],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "horizontalRegions": [
+        {
+          "tag": "MAIN",
+          "cls": "min-w-0 flex-1 overflow-y-auto p-6",
+          "width": 1136,
+          "scroll": 2046
+        },
+        {
+          "tag": "SECTION",
+          "cls": "space-y-5",
+          "width": 896,
+          "scroll": 1926
+        },
+        {
+          "tag": "FORM",
+          "cls": "space-y-5",
+          "width": 896,
+          "scroll": 1926
+        }
+      ],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      400,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      400,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      400,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "horizontalRegions": [
+        {
+          "tag": "MAIN",
+          "cls": "min-w-0 flex-1 overflow-y-auto p-6",
+          "width": 1119,
+          "scroll": 2038
+        },
+        {
+          "tag": "SECTION",
+          "cls": "space-y-5",
+          "width": 896,
+          "scroll": 1926
+        },
+        {
+          "tag": "FORM",
+          "cls": "space-y-5",
+          "width": 896,
+          "scroll": 1926
+        }
+      ],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      400,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-select-diagnostic",
+    "dom": {
+      "nodes": [
+        {
+          "tag": "FIELDSET",
+          "cls": "min-w-0 space-y-2",
+          "rect": 896,
+          "width": "896px",
+          "min": "0px",
+          "max": "none",
+          "basis": "auto"
+        },
+        {
+          "tag": "SELECT",
+          "cls": "w-0 min-w-0 flex-1 rounded-md border bg-background px-3 py-2 text-sm",
+          "rect": 782.640625,
+          "width": "782.640625px",
+          "min": "0px",
+          "max": "none",
+          "basis": "0%"
+        },
+        {
+          "tag": "FIELDSET",
+          "cls": "space-y-2",
+          "rect": 896,
+          "width": "896px",
+          "min": "min-content",
+          "max": "none",
+          "basis": "auto"
+        }
+      ]
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "horizontalRegions": [
+        {
+          "tag": "MAIN",
+          "cls": "min-w-0 flex-1 overflow-y-auto p-6",
+          "width": 1136,
+          "scroll": 2046
+        },
+        {
+          "tag": "SECTION",
+          "cls": "space-y-5",
+          "width": 896,
+          "scroll": 1926
+        },
+        {
+          "tag": "FORM",
+          "cls": "space-y-5",
+          "width": 896,
+          "scroll": 1926
+        }
+      ],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      400,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      400,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      400,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      400,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      400,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      400,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      400,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      400,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      400,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      400,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      300,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1263,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      300,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1263,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      300,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1263,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      300,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1263,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      300,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1263,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      300,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1263,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      300,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1263,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      300,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1263,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      300,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 1263,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      140,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 943,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      140,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 943,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      140,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 943,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "full",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 1
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 1
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 1
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 1
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 1
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 1
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "任务看板",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "任务看板",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "任务看板",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "任务看板",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "light",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": false,
+      "motion": "full",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "light",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "light",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      140,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 943,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      140,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "light",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 943,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      140,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "light",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 943,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      140,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 943,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      140,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 943,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      140,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "light",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 943,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      140,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "light",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 943,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      300,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1263,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      300,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "light",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1263,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      300,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "light",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1263,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "light",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "light",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-reduced-motion",
+    "dom": {
+      "motion": "reduce",
+      "animated": false
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "theme": "light",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "theme": "light",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 1
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "theme": "light",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "theme": "light",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 1
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "theme": "light",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 1
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "theme": "light",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 1
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 1
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "theme": "light",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "theme": "light",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "theme": "light",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "theme": "light",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "theme": "light",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "theme": "light",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "theme": "light",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "theme": "light",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "theme": "light",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "theme": "light",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "theme": "light",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "theme": "light",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "theme": "light",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "theme": "light",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      300,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1263,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      300,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "theme": "light",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1263,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      300,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "theme": "light",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1263,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      300,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1263,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "theme": "light",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "会话",
+      "theme": "light",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "theme": "light",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "指挥官",
+      "theme": "light",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "任务看板",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "任务看板",
+      "theme": "light",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "任务看板",
+      "theme": "light",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "任务看板",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "任务看板",
+      "theme": "light",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "任务看板",
+      "theme": "light",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "审批中心",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "审批中心",
+      "theme": "light",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "审批中心",
+      "theme": "light",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "审批中心",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "审批中心",
+      "theme": "light",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "审批中心",
+      "theme": "light",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "light",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "light",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "light",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "light",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "light",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "light",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "light",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "light",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "reduce",
+      "systemDark": true,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "reduce",
+      "systemDark": true,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "reduce",
+      "systemDark": true,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "reduce",
+      "systemDark": true,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "reduce",
+      "systemDark": true,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "reduce",
+      "systemDark": true,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "reduce",
+      "systemDark": true,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "reduce",
+      "systemDark": true,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "light",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "light",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "light",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "light",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "reduce",
+      "systemDark": true,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "reduce",
+      "systemDark": true,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "reduce",
+      "systemDark": true,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "reduce",
+      "systemDark": true,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      300,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "reduce",
+      "systemDark": true,
+      "documentWidth": 1263,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      300,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "reduce",
+      "systemDark": true,
+      "documentWidth": 1263,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      300,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "reduce",
+      "systemDark": true,
+      "documentWidth": 1263,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      300,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "reduce",
+      "systemDark": true,
+      "documentWidth": 1263,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      300,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "reduce",
+      "systemDark": true,
+      "documentWidth": 1263,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      300,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "reduce",
+      "systemDark": true,
+      "documentWidth": 1263,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      300,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "reduce",
+      "systemDark": true,
+      "documentWidth": 1263,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      140,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "reduce",
+      "systemDark": true,
+      "documentWidth": 943,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      140,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "reduce",
+      "systemDark": true,
+      "documentWidth": 943,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      140,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "reduce",
+      "systemDark": true,
+      "documentWidth": 943,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "reduce",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "reduce",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "reduce",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "reduce",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "light",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "light",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "light",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "light",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "reduce",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "reduce",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "reduce",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "reduce",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      140,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "reduce",
+      "systemDark": true,
+      "documentWidth": 943,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      140,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "reduce",
+      "systemDark": true,
+      "documentWidth": 943,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      140,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "reduce",
+      "systemDark": true,
+      "documentWidth": 943,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      140,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "reduce",
+      "systemDark": true,
+      "documentWidth": 943,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      140,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "reduce",
+      "systemDark": true,
+      "documentWidth": 943,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      140,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "reduce",
+      "systemDark": true,
+      "documentWidth": 943,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      140,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "reduce",
+      "systemDark": true,
+      "documentWidth": 943,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      400,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "reduce",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      400,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "reduce",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      400,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "reduce",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "reduce",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "reduce",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "reduce",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "reduce",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "light",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "light",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "light",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "light",
+      "dark": false,
+      "motion": "reduce",
+      "systemDark": false,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "reduce",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "reduce",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "reduce",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "reduce",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      400,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "reduce",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      400,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "reduce",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      400,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "reduce",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      400,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "reduce",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      400,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "reduce",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      400,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "reduce",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      400,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "reduce",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      300,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "reduce",
+      "systemDark": true,
+      "documentWidth": 1263,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      300,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "reduce",
+      "systemDark": true,
+      "documentWidth": 1263,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      300,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "reduce",
+      "systemDark": true,
+      "documentWidth": 1263,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "reduce",
+      "systemDark": true,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "reduce",
+      "systemDark": true,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "reduce",
+      "systemDark": true,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "reduce",
+      "systemDark": true,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "dark": true,
+      "motion": "reduce",
+      "systemDark": true,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      400,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "reduce",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "reduce",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      900,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "reduce",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      400,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "reduce",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1440,
+      400,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "reduce",
+      "systemDark": true,
+      "documentWidth": 1440,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      140,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "reduce",
+      "systemDark": true,
+      "documentWidth": 943,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      640,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "reduce",
+      "systemDark": true,
+      "documentWidth": 960,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      960,
+      140,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "reduce",
+      "systemDark": true,
+      "documentWidth": 943,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      300,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "reduce",
+      "systemDark": true,
+      "documentWidth": 1263,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  },
+  {
+    "label": "p422-layout",
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "heading": "设置",
+      "theme": "dark",
+      "dark": true,
+      "motion": "reduce",
+      "systemDark": true,
+      "documentWidth": 1280,
+      "unnamedControls": [],
+      "horizontalRegions": [],
+      "dialogCount": 0
+    }
+  }
+]

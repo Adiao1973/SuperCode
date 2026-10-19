@@ -1,0 +1,13 @@
+{
+  "scope": "devtools release host + owned descendants only; final layout/paint containment",
+  "additionalCloseCycles": 5,
+  "terminalInputEveryOpen": true,
+  "samples": [
+    {
+      "checkpoint": "final-containment-close5",
+      "hostRssKiB": 133232,
+      "ownedTotalRssKiB": 133232,
+      "ownedChildren": 0
+    }
+  ]
+}

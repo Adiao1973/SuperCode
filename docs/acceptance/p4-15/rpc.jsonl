@@ -1,0 +1,16 @@
+{"pid":38952,"method":"initialize","time":1791811855858}
+{"pid":38953,"method":"initialize","time":1791811855857}
+{"pid":38952,"method":"session/new","time":1791811855859}
+{"pid":38953,"method":"session/new","time":1791811855859}
+{"pid":38952,"method":"session/prompt","time":1791811855861,"prompt":[{"type":"text","text":"slow"}]}
+{"pid":38953,"method":"session/prompt","time":1791811855861,"prompt":[{"type":"text","text":"fast"}]}
+{"pid":40408,"method":"initialize","time":1791811873943}
+{"pid":40408,"method":"session/new","time":1791811873944}
+{"pid":40408,"method":"session/prompt","time":1791811873945,"prompt":[{"type":"text","text":"fast"}]}
+{"pid":40497,"method":"initialize","time":1791811954626}
+{"pid":40497,"method":"session/new","time":1791811954627}
+{"pid":40497,"method":"session/prompt","time":1791811954629,"prompt":[{"type":"text","text":"fail"}]}
+{"pid":40525,"method":"initialize","time":1791811981570}
+{"pid":40525,"method":"session/new","time":1791811981571}
+{"pid":40525,"method":"session/prompt","time":1791811981572,"prompt":[{"type":"text","text":"hang"}]}
+{"pid":40525,"method":"session/cancel","time":1791811987554}

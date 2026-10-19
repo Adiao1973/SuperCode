@@ -1,0 +1,48 @@
+{
+  "tasks": [
+    {
+      "id": "ceaf2d88-f84e-4ee4-a0c6-2e57a45afa2e",
+      "title": "隔离任务：保留原执行目录",
+      "workspace_id": "default",
+      "status": "backlog",
+      "session_id": null,
+      "cwd": "/tmp/sc-p417/project-a"
+    },
+    {
+      "id": "b6495c91-fbab-41cd-ba92-0659330b75f5",
+      "title": "绑定任务：跨空间仍定位原会话",
+      "workspace_id": "project-b",
+      "status": "backlog",
+      "session_id": "p417-bound-session",
+      "cwd": "/tmp/sc-p417/project-a"
+    },
+    {
+      "id": "3a846a1a-0269-497d-a6e3-a8e422b1e093",
+      "title": "鼠标拖拽验收任务",
+      "workspace_id": "project-a",
+      "status": "review",
+      "session_id": null,
+      "cwd": "/tmp/sc-p417/project-a"
+    }
+  ],
+  "sessions": [
+    {
+      "id": "05ffb2fd-2a24-4996-8245-f6317e6b6fe0",
+      "agent_session_id": "p417-bound-session",
+      "workspace_id": "project-a",
+      "cwd": "/tmp/sc-p417/project-a"
+    }
+  ],
+  "agent_invocations": [
+    "--version",
+    "--version",
+    "--version",
+    "--version",
+    "--version",
+    "--version",
+    "--version",
+    "--version",
+    "--version",
+    "--version"
+  ]
+}

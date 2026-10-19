@@ -7,7 +7,12 @@
 import type { AgentEvent } from "./events";
 import type { HistoryMessage, HistorySession, Workspace } from "./agent";
 import type { PendingPermission } from "./permissions";
-import { beginRun, initialStream, streamReducer, type StreamState } from "./stream";
+import {
+  beginRun,
+  initialStream,
+  streamReducer,
+  type StreamState,
+} from "./stream";
 
 /** 预授权规则默认值（每行一条） */
 export const DEFAULT_RULES = "read\nwrite\nedit\nbash(ls *)";
@@ -34,6 +39,8 @@ export interface SessionEntry {
   /** ACP 侧会话 id（SessionStarted 后可用；cancel_run 需要） */
   acpSessionId: string | null;
   title: string;
+  /** 未收到实时事件时的持久化状态，仅供历史列表呈现。 */
+  historyStatus?: string;
   /** 归属工作空间（P1-8，ADR-0007）；决定侧栏分组与落库归属 */
   workspaceId: string;
   draft: SessionDraft;
@@ -52,14 +59,22 @@ export interface SessionsState {
 }
 
 export type SessionsAction =
-  | { type: "new"; workspace?: Workspace | null; taskId?: string; cwd?: string; prompt?: string }
+  | {
+      type: "new";
+      workspace?: Workspace | null;
+      taskId?: string;
+      cwd?: string;
+      prompt?: string;
+    }
   | { type: "activate"; key: string }
+  | { type: "openHistory"; session: HistorySession }
   | { type: "patchDraft"; key: string; patch: Partial<SessionDraft> }
   | { type: "batch"; key: string; batch: AgentEvent[] }
   | { type: "invokeError"; key: string; message: string | null }
   /** DEV 专用：注入合成事件（虚拟列表滚动压测，P1-4） */
   | { type: "seed"; key: string }
   /** 内联审批（P1-5）：待决请求按 ACP session id 路由；裁决后按 tool_call_id 移除 */
+  | { type: "approvalSync"; pending: PendingPermission[] }
   | { type: "approvalAdd"; acpSessionId: string; pending: PendingPermission }
   | { type: "approvalRemoveByTool"; acpSessionId: string; toolCallId: string }
   /** 从列表移除会话（P1-6 删除功能；活跃会话自动切换） */
@@ -123,8 +138,16 @@ export function sessionsReducer(
       const entry = makeEntry(action.workspace);
       entry.taskId = action.taskId;
       if (action.cwd) entry.draft.cwd = action.cwd;
-      if (action.prompt) { entry.draft.prompt = action.prompt; entry.title = action.prompt; }
+      if (action.prompt) {
+        entry.draft.prompt = action.prompt;
+        entry.title = action.prompt;
+      }
       return { items: [...state.items, entry], activeKey: entry.key };
+    }
+    case "openHistory": {
+      const hydrated = sessionsReducer(state, { type: "hydrate", sessions: [action.session] });
+      const target = hydrated.items.find((entry) => entry.acpSessionId === action.session.agent_session_id);
+      return target ? { ...hydrated, activeKey: target.key } : state;
     }
     case "activate":
       return { ...state, activeKey: action.key };
@@ -161,7 +184,10 @@ export function sessionsReducer(
         ...it,
         stream: {
           ...it.stream,
-          items: [...hist, ...it.stream.items.filter((item) => !item.key.startsWith("hist-"))],
+          items: [
+            ...hist,
+            ...it.stream.items.filter((item) => !item.key.startsWith("hist-")),
+          ],
         },
       }));
     }
@@ -172,18 +198,32 @@ export function sessionsReducer(
       );
       const hydrated = action.sessions
         .filter((session) => !existing.has(session.agent_session_id))
-        .map((session): SessionEntry => ({
-          key: `h-${session.agent_session_id.slice(-12)}`,
-          acpSessionId: session.agent_session_id,
-          title: session.title || "历史会话",
-          workspaceId: session.workspace_id || DEFAULT_WORKSPACE,
-          draft: { agentId: session.agent_id, prompt: "", cwd: session.cwd, rulesText: DEFAULT_RULES, mode: "ask" },
-          stream: initialStream,
-          invokeError: null,
-          pendingApprovals: [],
-          resumable: true,
-        }));
-      return { ...state, items: [...hydrated, ...state.items] };
+        .map(
+          (session): SessionEntry => ({
+            key: `h-${session.local_id}`,
+            acpSessionId: session.agent_session_id,
+            title: session.title || "历史会话",
+            historyStatus: session.status,
+            workspaceId: session.workspace_id || DEFAULT_WORKSPACE,
+            draft: {
+              agentId: session.agent_id,
+              prompt: "",
+              cwd: session.cwd,
+              rulesText: DEFAULT_RULES,
+              mode: "ask",
+            },
+            stream: initialStream,
+            invokeError: null,
+            pendingApprovals: [],
+            resumable: true,
+          }),
+        );
+      const rows = new Map(action.sessions.map((session) => [session.agent_session_id, session]));
+      const existingItems = state.items.map((entry) => {
+        const row = entry.acpSessionId ? rows.get(entry.acpSessionId) : undefined;
+        return row && !entry.stream.running ? { ...entry, historyStatus: row.status } : entry;
+      });
+      return { ...state, items: [...hydrated, ...existingItems] };
     }
     case "reassignWorkspace":
       // 删除空间（P1-8）：该空间会话移入默认空间分组（落库已由 Rust 侧迁移）
@@ -200,7 +240,10 @@ export function sessionsReducer(
       if (!entry) {
         return state;
       }
-      const stream = streamReducer(entry.stream, { type: "batch", batch: action.batch });
+      const stream = streamReducer(entry.stream, {
+        type: "batch",
+        batch: action.batch,
+      });
       // 首批事件到达时用提示词命名会话；session_started 顺带记录 ACP 会话 id
       const title =
         entry.title === "新会话" && entry.draft.prompt.trim()
@@ -216,9 +259,20 @@ export function sessionsReducer(
         acpSessionId,
         stream,
         // P1-6：一轮跑完（或出错）后该会话可续聊——下一轮 session/load 恢复上下文
-        resumable: !stream.running && acpSessionId != null ? true : it.resumable,
+        resumable:
+          !stream.running && acpSessionId != null ? true : it.resumable,
         invokeError: stream.running ? null : it.invokeError,
       }));
+    }
+    case "approvalSync": {
+      let changed = false;
+      const items = state.items.map((entry) => {
+        const pending = action.pending.filter((item) => item.request.session_id === entry.acpSessionId);
+        if (pending.length === entry.pendingApprovals.length && pending.every((item, index) => item.id === entry.pendingApprovals[index].id)) return entry;
+        changed = true;
+        return { ...entry, pendingApprovals: pending };
+      });
+      return changed ? { ...state, items } : state;
     }
     case "approvalAdd":
       // 注意按 ACP session id 匹配（事件携带的是 ACP id，非客户端 key）
@@ -227,7 +281,10 @@ export function sessionsReducer(
         items: state.items.map((it) =>
           it.acpSessionId === action.acpSessionId &&
           !it.pendingApprovals.some((p) => p.id === action.pending.id)
-            ? { ...it, pendingApprovals: [...it.pendingApprovals, action.pending] }
+            ? {
+                ...it,
+                pendingApprovals: [...it.pendingApprovals, action.pending],
+              }
             : it,
         ),
       };
@@ -248,7 +305,9 @@ export function sessionsReducer(
     case "remove": {
       const items = state.items.filter((it) => it.key !== action.key);
       const activeKey =
-        state.activeKey === action.key ? (items[0]?.key ?? null) : state.activeKey;
+        state.activeKey === action.key
+          ? (items[0]?.key ?? null)
+          : state.activeKey;
       return { items, activeKey };
     }
     case "seed":
@@ -265,6 +324,11 @@ export function sessionsReducer(
   }
 }
 
+/** 本机标题子串过滤；不触碰消息或会话选择。 */
+export function filterSessionTitle(title: string, query: string): boolean {
+  return title.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase());
+}
+
 /** 会话列表项的状态呈现 */
 export function sessionStatus(entry: SessionEntry): {
   label: string;
@@ -273,6 +337,7 @@ export function sessionStatus(entry: SessionEntry): {
   if (entry.stream.running) {
     return { label: "运行中", tone: "running" };
   }
+  if (entry.invokeError) return { label: "出错", tone: "failed" };
   const last = entry.stream.items[entry.stream.items.length - 1];
   if (last?.kind === "error") {
     return { label: "出错", tone: "failed" };
@@ -283,7 +348,18 @@ export function sessionStatus(entry: SessionEntry): {
       tone: "done",
     };
   }
-  return { label: "空闲", tone: "idle" };
+  const history: Record<
+    string,
+    { label: string; tone: "done" | "failed" | "idle" }
+  > = {
+    completed: { label: "已完成", tone: "done" },
+    failed: { label: "出错", tone: "failed" },
+    cancelled: { label: "已取消", tone: "done" },
+    interrupted: { label: "已中断", tone: "failed" },
+    active: { label: "上次运行未结束", tone: "idle" },
+    running: { label: "上次运行未结束", tone: "idle" },
+  };
+  return history[entry.historyStatus ?? ""] ?? { label: "空闲", tone: "idle" };
 }
 
 /** DEV 压测数据：320 条合成条目（虚拟列表滚动性能验收用，P1-4） */
@@ -313,7 +389,9 @@ function seededStream(): StreamState {
       toolKind: "edit",
       status: "completed",
       content: ["Wrote file successfully."],
-      locations: [{ path: `/tmp/seed/chunk-${String(i).padStart(3, "0")}.txt` }],
+      locations: [
+        { path: `/tmp/seed/chunk-${String(i).padStart(3, "0")}.txt` },
+      ],
       diff: {
         path: `/tmp/seed/chunk-${String(i).padStart(3, "0")}.txt`,
         old_text: null,

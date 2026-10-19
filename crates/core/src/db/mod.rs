@@ -1,6 +1,15 @@
 //! SQLite 持久层（sqlx，docs/architecture.md §6）。
 //! Store 为连接池薄封装（Clone 廉价）；事件流落库经 [`recorder::SessionRecorder`]。
 
+#[cfg(test)]
+mod upgrade_tests;
+
+mod layout;
+pub use layout::LayoutPreferences;
+mod motion;
+pub use motion::{MotionPreference, MotionPreferences};
+mod appearance;
+pub use appearance::{AppearancePreferences, ThemePreference};
 mod commander_config;
 mod commander_runs;
 mod commander_summary;
@@ -37,8 +46,7 @@ pub struct MessageRow {
 }
 
 /// 会话列表行。
-#[derive(Debug, Clone)]
-
+#[derive(Debug, Clone, serde::Serialize)]
 pub struct SessionRow {
     pub id: String,
     pub agent_id: String,
@@ -892,6 +900,7 @@ mod tests {
             .unwrap();
 
         let record = DecisionRecord {
+            request_id: None,
             request: PermissionRequest {
                 session_id: "ses_x".into(),
                 tool_call_id: "call_1".into(),

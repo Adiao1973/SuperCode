@@ -1,0 +1,122 @@
+[
+  {
+    "file": "sessions-960.jpg",
+    "bytes": 276760,
+    "sha256": "b7e36c85a4a223432a2ad9ab4ac6c8882defd8c272e10a4997d77158a14b713e"
+  },
+  {
+    "file": "sessions-1280.jpg",
+    "bytes": 370077,
+    "sha256": "b5bb362057b63bb8398a0ef7e3ae50a7e737bfe5356618b3105404d11b07c200"
+  },
+  {
+    "file": "sessions-1440.jpg",
+    "bytes": 431391,
+    "sha256": "d3dcb5b20134ec407273e1bdcc6abc53f3c5f62e59c57c3dfb434f5b6815c65e"
+  },
+  {
+    "file": "commander-960.jpg",
+    "bytes": 193350,
+    "sha256": "62ed449d5944eb85c6d19a0a2a9ace4eff0a511e4e5a2fe242c87d5fdf321226"
+  },
+  {
+    "file": "commander-1280.jpg",
+    "bytes": 230511,
+    "sha256": "a0a7eeb48318814c1ae151d46f9a9ce04775f1ebc17b3f42cac5fe09c3822018"
+  },
+  {
+    "file": "commander-1440.jpg",
+    "bytes": 253084,
+    "sha256": "eb97ee42884a42243987a92db1217c51f1d8c2dc3c62696227e1f152c288acad"
+  },
+  {
+    "file": "kanban-960.jpg",
+    "bytes": 293518,
+    "sha256": "679bae48bc7f038b42d6eac16fac1479f36ad08bbd4e32fce5e8b81ec3c87400"
+  },
+  {
+    "file": "kanban-1280.jpg",
+    "bytes": 329158,
+    "sha256": "825ad343ba91407395873f2900a8c6d142a6b795137feebebca43be601dca157"
+  },
+  {
+    "file": "kanban-1440.jpg",
+    "bytes": 348900,
+    "sha256": "4acbf30d011ceb808b85c194964bbe82125b6c332806cb53961db7afdefbe1ae"
+  },
+  {
+    "file": "approvals-960.jpg",
+    "bytes": 108502,
+    "sha256": "2e3f21a30d13375ea716ad8e6324d185c8ba85a020e3d830fad488ee9f7acfe0"
+  },
+  {
+    "file": "approvals-1280.jpg",
+    "bytes": 138298,
+    "sha256": "5f60638e71504308e9256b7c7f1a2151b49b2f0067db63c8179c815f82b2e0b6"
+  },
+  {
+    "file": "approvals-1440.jpg",
+    "bytes": 157924,
+    "sha256": "2242007aea0ab807b3b0954d1a03ba7b2ed1a7464f927c03fac94f0bc917565a"
+  },
+  {
+    "file": "settings-960.jpg",
+    "bytes": 279632,
+    "sha256": "ef6bd3c4a6a9a75662008c053b3606d2dd7bdab27173ee011174d5b63c10f9b2"
+  },
+  {
+    "file": "settings-1280.jpg",
+    "bytes": 356266,
+    "sha256": "35ff6dba02a6634dfa54e461dfd1049a7ad52abc0f864e6a99de5ca6dc7d8a29"
+  },
+  {
+    "file": "settings-1440.jpg",
+    "bytes": 407253,
+    "sha256": "67c551ff75e9c86ad4c8369e80b5b684930de5d8d50d30ded8cc5ee31c819c53"
+  },
+  {
+    "file": "fresh-settings.jpg",
+    "bytes": 327017,
+    "sha256": "df177fbbd24a68d72ffab90fc4339a71406d810042fb6fffe1f9c7a03f4f41cc"
+  },
+  {
+    "file": "fresh-configured.jpg",
+    "bytes": 357667,
+    "sha256": "04fad8163115b9f3093c7f800734af814b7c07795073db2b0e6c679d622b9d12"
+  },
+  {
+    "file": "plan-review.jpg",
+    "bytes": 302515,
+    "sha256": "958c136f71b9f3fd386ecc965525304e962b06cd6981cc61722c361d3b3c5499"
+  },
+  {
+    "file": "plan-confirm.jpg",
+    "bytes": 258514,
+    "sha256": "0ebbfa04529a29b6c1536613b02385722b0a5fdc164e247abad674783b167bf5"
+  },
+  {
+    "file": "approval-pending.jpg",
+    "bytes": 191898,
+    "sha256": "9ea8d7565e622ba1cb71513bc75c6db5018d64539154401cf232fc22b34a7698"
+  },
+  {
+    "file": "plan-result.jpg",
+    "bytes": 312074,
+    "sha256": "48b54ad1307c184528c80baf938bd6f5f286930a190be4565a7ccc04ec70d5bf"
+  },
+  {
+    "file": "restart-plan.jpg",
+    "bytes": 275038,
+    "sha256": "990e4431682e16b751e870a38ec0a54cf137662c81dce2b4cc7a4c78995a0795"
+  },
+  {
+    "file": "terminal-small.jpg",
+    "bytes": 302199,
+    "sha256": "7c71f638881ee0d2b1ee2282d578e76571cd9f55f92e631c19e44323660edae9"
+  },
+  {
+    "file": "terminal-wide.jpg",
+    "bytes": 403297,
+    "sha256": "220cd5a3c8514f8a9c8e248eb3b81c8583464d036acc7514491c0639b4f4c34e"
+  }
+]

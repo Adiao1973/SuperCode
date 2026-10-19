@@ -1,82 +1,97 @@
-import { useEffect, useReducer, useState } from "react";
+import { DeferredContent } from "./components/DeferredContent";
+import { useEffect, useReducer, useState, useRef, useCallback, lazy } from "react";
+import { AppShell, type NavId } from "@/components/AppShell";
+import { CommandPalette } from "@/components/CommandPalette";
+import { paletteItems, type PaletteChoice } from "@/lib/command-palette";
+import type { TaskEntry, Workspace } from "@/lib/agent";
 import { getVersion } from "@tauri-apps/api/app";
-import { CommanderView } from "@/components/CommanderView";
-import { Badge } from "@/components/ui/badge";
-import { ApprovalsView } from "@/components/ApprovalsView";
-import { KanbanView } from "@/components/KanbanView";
+const CommanderView = lazy(() => import("@/components/CommanderView").then(module => ({ default: module.CommanderView })));
+const ApprovalsView = lazy(() => import("@/components/ApprovalsView").then(module => ({ default: module.ApprovalsView })));
+const KanbanView = lazy(() => import("@/components/KanbanView").then(module => ({ default: module.KanbanView })));
 import { SessionsWorkspace } from "@/components/SessionsWorkspace";
-import { SettingsView } from "@/components/SettingsView";
+const SettingsView = lazy(() => import("@/components/SettingsView").then(module => ({ default: module.SettingsView })));
 import { listHistorySessions } from "@/lib/agent";
-import { permissionCenter } from "@/lib/permissions";
-import { cn } from "@/lib/utils";
+import { permissionCenter, type PendingPermission } from "@/lib/permissions";
 import { initialSessionsState, sessionsReducer } from "@/lib/sessions";
-import {
-  LayoutGrid,
-  MessageSquare,
-  Settings,
-  ShieldCheck,
-  Terminal,
-} from "lucide-react";
-
-/** 产品导航项。研发阶段编号仅保留在开发文档中。 */
-const NAV_ITEMS = [
-  { id: "commander", label: "指挥官", icon: LayoutGrid },
-  { id: "sessions", label: "会话", icon: MessageSquare },
-  { id: "kanban", label: "任务看板", icon: LayoutGrid },
-  { id: "approvals", label: "审批中心", icon: ShieldCheck },
-  { id: "settings", label: "设置", icon: Settings },
-] as const;
-
-type NavId = (typeof NAV_ITEMS)[number]["id"];
 
 function App() {
   const [version, setVersion] = useState<string | null>(null);
-  useEffect(() => { void getVersion().then(setVersion).catch(() => {}); }, []);
+  useEffect(() => {
+    void getVersion()
+      .then(setVersion)
+      .catch(() => {});
+  }, []);
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  const commandNonce = useRef(0);
+  const paletteOrigin = useRef<HTMLElement | null>(null);
+  const [cachedTasks, setCachedTasks] = useState<TaskEntry[]>([]);
+  const [tasksLoaded, setTasksLoaded] = useState(false);
+  const [boardRequest, setBoardRequest] = useState<{ id: string; kind: "detail" | "create"; nonce: number } | null>(null);
+  const cacheTasks = useCallback((rows: TaskEntry[]) => { setCachedTasks(rows); setTasksLoaded(true); }, []);
+  const clearBoardRequest = useCallback(() => setBoardRequest(null), []);
+  const openPalette = useCallback(() => { paletteOrigin.current = document.activeElement instanceof HTMLElement ? document.activeElement : null; setPaletteOpen(true); }, []);
   const [nav, setNav] = useState<NavId>("sessions");
-  const [sessions, dispatch] = useReducer(
-    sessionsReducer,
-    undefined,
-    () => initialSessionsState(),
+  const [commanderVisited, setCommanderVisited] = useState(false);
+  useEffect(() => { if (nav === "commander") setCommanderVisited(true); }, [nav]);
+  const [sessions, dispatch] = useReducer(sessionsReducer, undefined, () =>
+    initialSessionsState(),
   );
-  const activeNav = NAV_ITEMS.find((item) => item.id === nav) ?? NAV_ITEMS[0];
+  const [pendingPermissions, setPendingPermissions] = useState<PendingPermission[]>([]);
+  const pendingCount = pendingPermissions.length;
+  const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
+  useEffect(
+    () => permissionCenter.onPending(setPendingPermissions),
+    [],
+  );
+  const activeSession = sessions.items.find(
+    (item) => item.key === sessions.activeKey,
+  );
+  const workspace = workspaces.find(
+    (item) => item.id === activeSession?.workspaceId,
+  );
+
+  const commandWorkspaceId = workspace?.id ?? activeSession?.workspaceId ?? "default";
+  const commandWorkspaceName = workspace?.name ?? (commandWorkspaceId === "default" ? "默认空间" : "当前会话空间（待核对）");
+
+  const [historyLoading, setHistoryLoading] = useState(true);
+  const [historyError, setHistoryError] = useState("");
+  const [historyRevision, setHistoryRevision] = useState(0);
 
   // Refresh persisted sessions on entry, including commander-created sessions.
   useEffect(() => {
     if (nav !== "sessions") return;
+    let alive = true; setHistoryLoading(true); setHistoryError("");
     void listHistorySessions()
-      .then((sessions) => dispatch({ type: "hydrate", sessions }))
-      .catch(() => {}); // 历史加载失败不阻塞新会话
-  }, [nav]);
+      .then((sessions) => { if (alive) dispatch({ type: "hydrate", sessions }); })
+      .catch((e) => { if (alive) setHistoryError(String(e)); })
+      .finally(() => { if (alive) setHistoryLoading(false); });
+    return () => { alive = false; };
+  }, [nav, historyRevision]);
 
-  // 审批事件订阅（应用级一次）：待决请求按 ACP session id 路由进对应会话（内联卡片）
+  const approvalIdentity = JSON.stringify(sessions.items.map(item => [item.key, item.acpSessionId]));
+  // One global collection drives all inline views, even if approval arrives before SessionStarted.
+  useEffect(() => { void permissionCenter.setup().catch(() => {}); }, []);
   useEffect(() => {
-    void permissionCenter.setup();
-    const offAdd = permissionCenter.onPendingAdded((pending) =>
-      dispatch({
-        type: "approvalAdd",
-        acpSessionId: pending.request.session_id,
-        pending,
-      }),
-    );
-    const offArrived = permissionCenter.onDecisionArrived((record) =>
-      dispatch({
-        type: "approvalRemoveByTool",
-        acpSessionId: record.request.session_id,
-        toolCallId: record.request.tool_call_id,
-      }),
-    );
-    return () => {
-      offAdd();
-      offArrived();
-    };
-  }, []);
+    dispatch({ type: "approvalSync", pending: pendingPermissions });
+  }, [pendingPermissions, approvalIdentity]);
 
   // 全局快捷键：⌘N 新建会话、⌘1..8 切换会话（配合详情页 ⌘R 运行 / ⌘. 停止）
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      if (
+        e.defaultPrevented ||
+        e.isComposing ||
+        e.keyCode === 229 ||
+        (e.target as HTMLElement | null)?.closest?.(
+          "[data-session-terminal]",
+        ) ||
+        document.querySelector("[role=dialog]")
+      )
+        return;
       if (!(e.metaKey || e.ctrlKey)) {
         return;
       }
+      if (e.key.toLowerCase() === "k" && !e.altKey && !e.shiftKey && !e.repeat) { e.preventDefault(); openPalette(); return; }
       if (e.key.toLowerCase() === "n") {
         e.preventDefault();
         setNav("sessions");
@@ -97,80 +112,98 @@ function App() {
     return () => window.removeEventListener("keydown", onKey);
   }, [sessions.items]);
 
+  const chooseCommand = (choice: PaletteChoice) => {
+    if (choice.kind === "module") setNav(choice.target);
+    if (choice.kind === "session" && sessions.items.some((item) => item.key === choice.target)) { setNav("sessions"); dispatch({ type: "activate", key: choice.target }); }
+    if (choice.kind === "new-session") { setNav("sessions"); dispatch({ type: "new" }); }
+    if (choice.kind === "task" || choice.kind === "new-task") { setBoardRequest({ id: choice.kind === "task" ? choice.target : commandWorkspaceId, kind: choice.kind === "task" ? "detail" : "create", nonce: ++commandNonce.current }); setNav("kanban"); }
+    if (choice.kind !== "task" && choice.kind !== "new-task") requestAnimationFrame(() => {
+      const target = choice.kind === "session" || choice.kind === "new-session" ? document.querySelector<HTMLElement>("[data-session-heading]") : document.querySelector<HTMLElement>("[data-app-heading]");
+      target?.focus();
+    });
+  };
   return (
-    <div className="bg-background text-foreground flex h-dvh">
-      {/* 侧栏：品牌 + 模块导航 + agent 状态（多 agent 注册表为 Phase 2） */}
-      <aside className="bg-sidebar flex w-56 shrink-0 flex-col border-r">
-        <div className="flex items-center gap-2 px-4 py-4">
-          <Terminal className="text-primary size-5" />
-          <span className="font-heading text-base font-semibold tracking-tight">
-            SuperCode
-          </span>
-          <Badge variant="secondary" className="ml-auto text-[10px]">
-            {version ? `v${version}` : ""}{import.meta.env.DEV ? " dev" : ""}
-          </Badge>
-        </div>
-        <div className="border-t" />
-        <nav className="flex flex-col gap-1 p-2">
-          {NAV_ITEMS.map(({ id, label, icon: Icon }) => (
-            <button
-              key={id}
-              type="button"
-              onClick={() => setNav(id)}
-              className={cn(
-                "hover:bg-sidebar-accent flex items-center gap-2.5 rounded-md px-3 py-2 text-sm transition-colors",
-                nav === id
-                  ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                  : "text-sidebar-foreground/80",
-              )}
-            >
-              <Icon className="size-4" />
-              {label}
-            </button>
-          ))}
-        </nav>
-        <div className="mt-auto p-4">
-          <div className="border-t py-3" />
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <span className="size-2 rounded-full bg-emerald-500" />
-            ACP Agents · 在会话中选择（管理与环境见设置）
-          </div>
-        </div>
-      </aside>
-
-      {/* 主区 */}
-      <main className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-13 shrink-0 items-center gap-3 border-b px-5">
-          <h1 className="text-sm font-semibold">{activeNav.label}</h1>
-        </header>
-        <div className={nav === "commander" ? "min-h-0 flex-1" : "hidden"}><CommanderView active={nav === "commander"} onSettings={() => setNav("settings")} /></div>
-        {nav === "sessions" && <SessionsWorkspace state={sessions} dispatch={dispatch} />}
-        {nav === "approvals" && <ApprovalsView />}
-        {nav === "settings" && <SettingsView />}
-        {nav === "kanban" && (
-          <KanbanView
-            onWorktreeSession={(workspace, task, worktree) => {
-              const existing = sessions.items.find((entry) => entry.taskId === task.id);
-              setNav("sessions");
-              if (existing) dispatch({ type: "activate", key: existing.key });
-              else dispatch({ type: "new", workspace, taskId: task.id, cwd: worktree.path, prompt: task.title });
-            }}
-            bindableSessions={sessions.items.map((it) => ({
-              key: it.key,
-              title: it.title,
-              acpSessionId: it.acpSessionId,
-            }))}
-            onOpenSession={(agentSessionId) => {
-              const target = sessions.items.find((it) => it.acpSessionId === agentSessionId);
-              if (target) {
-                setNav("sessions");
-                dispatch({ type: "activate", key: target.key });
-              }
-            }}
-          />
-        )}
-      </main>
-    </div>
+    <><CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} onChoose={chooseCommand} returnFocus={paletteOrigin} tasksLoaded={tasksLoaded} items={paletteOpen ? paletteItems(sessions.items, cachedTasks, workspaces, commandWorkspaceName) : []} />
+    <AppShell
+      nav={nav}
+      onNavigate={setNav}
+      onSearch={openPalette}
+      pendingCount={pendingCount}
+      version={version}
+      project={{
+        name:
+          workspace?.name ??
+          (activeSession?.workspaceId === "default" ? "默认空间" : "项目空间"),
+        cwd: activeSession?.draft.cwd ?? "",
+        agent: activeSession?.draft.agentId ?? "",
+      }}
+    >
+      <div
+        hidden={nav !== "commander"}
+        inert={nav !== "commander"}
+        className={nav === "commander" ? "min-h-0 flex-1" : "hidden"}
+      >
+        {(commanderVisited || nav === "commander") && <DeferredContent><CommanderView
+          active={nav === "commander"}
+          currentCwd={activeSession?.draft.cwd ?? workspace?.path ?? ""}
+          currentAgent={activeSession?.draft.agentId ?? ""}
+          workspaces={workspaces}
+          onSettings={() => setNav("settings")}
+          onOpenSession={(session) => {
+            dispatch({ type: "openHistory", session });
+            setNav("sessions");
+          }}
+        /></DeferredContent>}
+      </div>
+      <div
+        hidden={nav !== "sessions"}
+        inert={nav !== "sessions"}
+        className={nav === "sessions" ? "flex min-h-0 flex-1" : "hidden"}
+      >
+        <SessionsWorkspace
+          state={sessions}
+          dispatch={dispatch}
+          visible={nav === "sessions"}
+          historyState={{ loading: historyLoading, error: historyError, onRetry: () => setHistoryRevision((value) => value + 1) }}
+          onWorkspacesChange={setWorkspaces}
+        />
+      </div>
+      {nav === "approvals" && <DeferredContent><ApprovalsView /></DeferredContent>}
+      {nav === "settings" && <DeferredContent><SettingsView onWorkspacesChanged={setWorkspaces} /></DeferredContent>}
+      {nav === "kanban" && (
+        <DeferredContent><KanbanView
+          onTasksLoaded={cacheTasks}
+          request={boardRequest}
+          onRequestHandled={clearBoardRequest}
+          onWorktreeSession={(workspace, task, worktree) => {
+            const existing = sessions.items.find(
+              (entry) => entry.taskId === task.id,
+            );
+            setNav("sessions");
+            if (existing) dispatch({ type: "activate", key: existing.key });
+            else
+              dispatch({
+                type: "new",
+                workspace,
+                taskId: task.id,
+                cwd: worktree.path,
+                prompt: task.title,
+              });
+          }}
+          bindableSessions={sessions.items.map((it) => ({
+            key: it.key,
+            title: it.title,
+            acpSessionId: it.acpSessionId,
+          }))}
+          onOpenSession={async (agentSessionId) => {
+            const rows = (await listHistorySessions()).filter((row) => row.agent_session_id === agentSessionId);
+            if (rows.length !== 1) throw new Error("绑定会话不存在或关联不唯一，请刷新历史后重试。");
+            dispatch({ type: "openHistory", session: rows[0] });
+            setNav("sessions");
+          }}
+        /></DeferredContent>
+      )}
+    </AppShell></>
   );
 }
 

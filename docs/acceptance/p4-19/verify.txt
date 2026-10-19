@@ -1,0 +1,6 @@
+2026-10-13 macOS arm64
+just verify: PASS (exit 0)
+Frontend: 33 files, 100 tests passed
+Rust: 162 passed, 1 existing smoke ignored
+Test typecheck, build, fmt --check, clippy --all-targets -- -D warnings: PASS
+Native Tauri: five pages, query failure/recovery, delayed SQLite query skeleton, loopback network failure, copy/save toast, keyboard pause/Escape/focus, light/dark 960x640 with reduced motion: PASS

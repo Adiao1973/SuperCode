@@ -2,6 +2,7 @@
  * 设置页「Agent 管理」区块（P2-2）：注册表合并视图 + 安装徽标 + 自定义 CRUD + 安装引导。
  * 用户自定义写入 ~/.supercode/agents.json（覆盖内置同 id = 用户覆盖语义，删除即恢复出厂）。
  */
+import { EmptyState, InlineError, LoadingState } from "./FeedbackState";
 import { useCallback, useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -64,7 +65,7 @@ export function AgentsSection() {
   const [showForm, setShowForm] = useState(false);
 
   const refresh = useCallback(async () => {
-    setLoading(true);
+    setLoading(true); setError(null);
     try {
       setAgents(await listAgents());
     } catch (e) {
@@ -150,16 +151,24 @@ export function AgentsSection() {
         </Button>
       </div>
 
+      <p className="mb-4 text-xs text-muted-foreground">检测命令版本；登录与模型可用性需在会话中验证。</p>
+
+      {loading && <LoadingState label="正在检测 Agent 命令…" />}
+      {error && <InlineError title="Agent 操作未完成" message={error} onRetry={() => void refresh()} retrying={loading || submitting} />}
+      {!loading && !error && agents.length === 0 && <EmptyState title="暂无 Agent 条目" description="新增已安装的 Agent 命令后，在会话中完成认证与运行验证。" />}
+
       {showForm && (
         <div className="mb-3 flex flex-col gap-2 rounded-md border p-3">
           <div className="grid grid-cols-2 gap-2">
             <Input
+              aria-label="Agent 标识"
               value={form.id}
               onChange={(e) => setForm((f) => ({ ...f, id: e.target.value }))}
               placeholder="id（[a-z0-9-]+，如 my-agent）"
               className="font-mono text-xs"
             />
             <Input
+              aria-label="Agent 显示名"
               value={form.displayName}
               onChange={(e) => setForm((f) => ({ ...f, displayName: e.target.value }))}
               placeholder="显示名（缺省用 id）"
@@ -167,6 +176,7 @@ export function AgentsSection() {
             />
           </div>
           <Input
+            aria-label="Agent 启动命令"
             value={form.command}
             onChange={(e) => setForm((f) => ({ ...f, command: e.target.value }))}
             placeholder="spawn 命令，如 my-agent --acp"
@@ -174,12 +184,14 @@ export function AgentsSection() {
           />
           <div className="grid grid-cols-2 gap-2">
             <Input
+              aria-label="版本检测参数"
               value={versionArgsText}
               onChange={(e) => setVersionArgsText(e.target.value)}
               placeholder="version_args 逗号分隔（缺省 --version）"
               className="font-mono text-xs"
             />
             <select
+              aria-label="Agent 驱动协议"
               value={form.driverKind}
               onChange={(e) =>
                 setForm((f) => ({ ...f, driverKind: e.target.value as AgentInput["driverKind"] }))
@@ -249,16 +261,16 @@ export function AgentsSection() {
                 {DRIVER_LABEL[agent.driver_kind]}
               </Badge>
               {agent.installed_version ? (
-                <Badge variant="outline" className="border-emerald-500/50 text-emerald-500 text-[10px]">
-                  ✓ {agent.installed_version}
+                <Badge variant="outline" className="border-emerald-500/50 text-success text-[10px]">
+                  命令已检测 · {agent.installed_version}
                 </Badge>
               ) : (
-                <Badge variant="outline" className="border-amber-500/50 text-amber-500 text-[10px]">
+                <Badge variant="outline" className="border-amber-500/50 text-warning text-[10px]">
                   {agent.driver_kind === "acp" ? "ACP 未就绪（探测失败或超时）" : "未检测到（失败或超时）"}
                 </Badge>
               )}
               {agent.cli_version && (
-                <Badge variant="outline" className="border-emerald-500/50 text-emerald-500 text-[10px]">
+                <Badge variant="outline" className="border-emerald-500/50 text-success text-[10px]">
                   Claude CLI 已安装 · {agent.cli_version}
                 </Badge>
               )}
@@ -295,7 +307,7 @@ export function AgentsSection() {
 
       <p className="text-muted-foreground mt-2 text-[11px]">
         内置条目只读；自定义写入 ~/.supercode/agents.json（重启保留）。同 id 覆盖内置，删除后恢复出厂。
-        {error && <span className="text-destructive"> · {error}</span>}
+
       </p>
     </section>
   );

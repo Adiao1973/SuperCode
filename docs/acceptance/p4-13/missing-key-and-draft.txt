@@ -1,0 +1,14 @@
+说明：下方为原生工具状态变化的人工摘录，不是完整 AX 导出。随后保存时工具仅返回“无变化”；该原始返回保留在末尾。
+
+状态变化工具返回摘录（从设置返回指挥官）：
+text p413-loopback-fixture · 尚未保存密钥 配置可用不代表推理已验证
+任务目标：为中文待办应用提出开发计划\n保留已有数据，先审阅再执行。
+工作目录：/private/tmp/sc-p413/other
+checkbox OpenCode (opencode), Value: 1
+checkbox MiMo (mimo), Value: 1
+checkbox (disabled) ZCode (zcode), Value: 0
+button (disabled) 生成计划
+
+随后原始返回：
+There has been no change in the accessibility tree for Window: "SuperCode · 规划目标验收".
+The focused UI element is 84 heading 指挥官, Value: 1

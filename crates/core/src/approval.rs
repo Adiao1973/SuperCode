@@ -15,6 +15,13 @@ fn serialize_uuid<S: serde::Serializer>(
     serializer.serialize_str(&value.to_string())
 }
 
+fn serialize_optional_uuid<S: serde::Serializer>(
+    value: &Option<Uuid>,
+    serializer: S,
+) -> std::result::Result<S::Ok, S::Error> {
+    serde::Serialize::serialize(&value.map(|id| id.to_string()), serializer)
+}
+
 use crate::driver::{PermissionDecision, PermissionOptionKind, PermissionRequest};
 use crate::error::{CoreError, Result};
 
@@ -28,7 +35,7 @@ pub struct PendingPermission {
 
 /// 裁决来源：预授权规则（带命中模式与效果）、权限模式兜底或用户。
 #[derive(Debug, Clone, PartialEq, serde::Serialize)]
-#[serde(rename_all = "snake_case")]
+#[serde(tag = "type", rename_all = "snake_case")]
 pub enum DecisionSource {
     Rule {
         pattern: String,
@@ -106,6 +113,11 @@ fn is_edit_class_request(request: &PermissionRequest) -> bool {
 /// 裁决留痕记录（`subscribe_decisions()` 广播；SQLite 持久化在 P0-8 落地）。
 #[derive(Debug, Clone, serde::Serialize)]
 pub struct DecisionRecord {
+    #[serde(
+        skip_serializing_if = "Option::is_none",
+        serialize_with = "serialize_optional_uuid"
+    )]
+    pub request_id: Option<Uuid>,
     pub request: PermissionRequest,
     pub source: DecisionSource,
     pub decision: PermissionDecision,
@@ -233,7 +245,7 @@ struct Waiting {
 /// 一条等待用户应答的请求
 struct PendingWaiter {
     request: PermissionRequest,
-    tx: oneshot::Sender<PermissionDecision>,
+    tx: oneshot::Sender<(PermissionDecision, DecisionSource)>,
 }
 
 /// 审批代理。clone 友好（内部共享状态），CLI/桌面宿主持有一份传给 driver 即可。
@@ -303,6 +315,7 @@ impl ApprovalBroker {
                     ))
                 })?;
             return Ok(PipelineOutcome::Decision(Box::new(DecisionRecord {
+                request_id: None,
                 request: request.clone(),
                 source: DecisionSource::Rule {
                     pattern: pattern.clone(),
@@ -322,6 +335,7 @@ impl ApprovalBroker {
                     CoreError::PermissionFailed("agent 未提供拒绝选项（plan 模式）".into())
                 })?;
             return Ok(PipelineOutcome::Decision(Box::new(DecisionRecord {
+                request_id: None,
                 request: request.clone(),
                 source: DecisionSource::Mode { mode },
                 decision,
@@ -336,6 +350,7 @@ impl ApprovalBroker {
                     CoreError::PermissionFailed("agent 未提供允许选项（full 模式）".into())
                 })?;
             return Ok(PipelineOutcome::Decision(Box::new(DecisionRecord {
+                request_id: None,
                 request: request.clone(),
                 source: DecisionSource::Mode { mode },
                 decision,
@@ -351,6 +366,7 @@ impl ApprovalBroker {
         if let Some((pattern, RuleEffect::Allow)) = &matched {
             return match self.rule_decision(request, pattern, RuleEffect::Allow)? {
                 Some(decision) => Ok(PipelineOutcome::Decision(Box::new(DecisionRecord {
+                    request_id: None,
                     request: request.clone(),
                     source: DecisionSource::Rule {
                         pattern: pattern.clone(),
@@ -370,6 +386,7 @@ impl ApprovalBroker {
                     CoreError::PermissionFailed("agent 未提供允许选项（autoedit 模式）".into())
                 })?;
             return Ok(PipelineOutcome::Decision(Box::new(DecisionRecord {
+                request_id: None,
                 request: request.clone(),
                 source: DecisionSource::Mode { mode },
                 decision,
@@ -382,6 +399,7 @@ impl ApprovalBroker {
                 .rule_decision(request, "<default-deny>", RuleEffect::Deny)?
                 .ok_or_else(|| CoreError::PermissionFailed("agent 未提供拒绝选项".into()))?;
             Ok(PipelineOutcome::Decision(Box::new(DecisionRecord {
+                request_id: None,
                 request: request.clone(),
                 source: DecisionSource::Mode { mode },
                 decision,
@@ -412,10 +430,11 @@ impl ApprovalBroker {
             });
         }
         match decision_rx.await {
-            Ok(decision) => {
+            Ok((decision, source)) => {
                 let _ = self.decisions_tx.send(DecisionRecord {
+                    request_id: Some(id),
                     request,
-                    source: DecisionSource::User,
+                    source,
                     decision: decision.clone(),
                 });
                 Ok(decision)
@@ -514,7 +533,13 @@ impl ApprovalBroker {
                     .ok()
                     .and_then(|option| option);
                 if let Some(decision) = decision {
-                    let _ = waiter.tx.send(decision);
+                    let _ = waiter.tx.send((
+                        decision,
+                        DecisionSource::Rule {
+                            pattern: "<cancelled>".into(),
+                            effect: RuleEffect::Deny,
+                        },
+                    ));
                 }
                 // 无 reject option 时丢弃通道 → resolve 侧 fail-closed，同样解锁
             }
@@ -530,11 +555,20 @@ impl ApprovalBroker {
     /// 用户应答：回填等待中的 resolve。未知/已完成的 id 返回错误。
     pub async fn respond(&self, request_id: Uuid, decision: PermissionDecision) -> Result<()> {
         let mut waiting = self.waiting.lock().await;
+        if let Some(waiter) = waiting.entries.get(&request_id)
+            && !waiter
+                .request
+                .options
+                .iter()
+                .any(|option| option.option_id == decision.option_id)
+        {
+            return Err(CoreError::PermissionFailed("审批选项不属于该请求".into()));
+        }
         match waiting.entries.remove(&request_id) {
             Some(waiter) => {
                 waiter
                     .tx
-                    .send(decision)
+                    .send((decision, DecisionSource::User))
                     .map_err(|_| CoreError::PermissionFailed("resolve 侧已放弃等待".into()))?;
                 Ok(())
             }
@@ -930,5 +964,27 @@ mod tests {
         let allowed = broker.resolve_fail_closed(sample_request()).await.unwrap();
         assert_eq!(allowed.option_id, "allow-once");
         assert_eq!(broker.mode(), PermissionMode::FullAccess);
+    }
+    #[tokio::test]
+    async fn invalid_option_keeps_request_retryable_and_cancel_is_not_user_decision() {
+        let broker = ApprovalBroker::with_rules(PermissionRules::default());
+        let mut pending = broker.subscribe();
+        let mut records = broker.subscribe_decisions();
+        let clone = broker.clone();
+        let task = tokio::spawn(async move { clone.resolve(sample_request()).await });
+        let request = pending.recv().await.unwrap();
+        assert!(
+            broker
+                .respond(request.id, decision("missing-option"))
+                .await
+                .is_err()
+        );
+        assert_eq!(broker.reject_all_pending().await, 1);
+        assert_eq!(task.await.unwrap().unwrap().option_id, "reject-once");
+        let record = records.recv().await.unwrap();
+        let json = serde_json::to_value(record).unwrap();
+        assert_eq!(json["request_id"], request.id.to_string());
+        assert_eq!(json["source"]["type"], "rule");
+        assert_eq!(json["source"]["pattern"], "<cancelled>");
     }
 }

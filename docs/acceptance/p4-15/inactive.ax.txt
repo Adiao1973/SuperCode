@@ -1,0 +1,76 @@
+Window: "SuperCode · 执行监控验收", App: SuperCode P411.
+0 standard window SuperCode · 执行监控验收, Secondary Actions: Raise
+	1 scroll area
+		2 HTML content Description: SuperCode, URL: 127.0.0.1:1453/
+			3 container 应用导航
+				4 text SuperCode v1.0.0
+				5 container 模块
+					6 button 指挥官
+					7 button 会话
+					8 button 任务看板
+					9 button 审批中心
+					10 button 设置
+				11 button (expanded) 折叠导航, Secondary Actions: Collapse
+			12 container
+				13 heading 指挥官, Value: 1
+					14 text 指挥官
+				15 pop up button 当前项目：默认空间
+				16 container 计划历史
+					17 heading 计划历史, Value: 2
+						18 text 计划历史
+					19 button 刷新
+					20 button 并行与依赖 已完成
+					21 button 失败与跳过 失败
+					22 button 失活记录 运行中
+					23 button 取消验收 已取消
+				24 button (collapsed) 规划新目标, Secondary Actions: Expand
+				25 heading 失活记录, Value: 3
+					26 text 失活记录
+				27 container
+					28 text /tmp/sc-p415/project  ·  运行中
+				29 container 计划执行状态
+					30 description list 任务状态统计
+						31 text 排队中
+						32 text 0
+						33 text 运行中
+						34 text 1
+						35 text 已完成
+						36 text 0
+						37 text 失败
+						38 text 0
+						39 text 已跳过
+						40 text 0
+						41 text 已取消
+						42 text 0
+						43 text 已中断
+						44 text 0
+					45 text 记录尚未结束，当前应用未在执行。可能来自其他进程或上次中断；不会自动恢复，也不代表任务已完成。
+					46 container 第 1 批
+						47 heading 第 1 批, Value: 4
+							48 text 第  1  批
+						49 container 失活记录 a
+							50 heading 失活记录 a, Value: 5
+								51 text 失活记录 a
+							52 text 运行中
+							53 container
+								54 text a  ·  opencode  · 依赖： 无
+							55 summary 查看完整任务提示词, Value: off
+								56 text 查看完整任务提示词
+							57 heading 结果预览, Value: 6
+								58 text 结果预览
+							59 text 没有已保存的结果。
+							60 text 尚无可查看的会话（未启动、尚未建立或已删除）。
+							61 text 任务结束后可查看已保存会话。
+	62 close button
+	63 full screen button Help: this button also has an action to zoom the window, Secondary Actions: zoom the window
+	64 minimize button
+	65 text SuperCode · 执行监控验收
+66 menu bar
+	67 SuperCode P411
+	68 File
+	69 Edit
+	70 View
+	71 Window
+	72 Help
+
+The focused UI element is 2 HTML content Description: SuperCode, URL: 127.0.0.1:1453/

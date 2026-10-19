@@ -2,6 +2,16 @@ use super::{Store, TASK_STATUSES, TaskEntry, now_rfc3339};
 use crate::error::{CoreError, Result};
 
 impl Store {
+    /// Stored creation-time cwd; board moves must never rewrite it.
+    pub async fn task_stored_cwd(&self, id: &str) -> Result<String> {
+        sqlx::query_scalar("SELECT cwd FROM tasks WHERE id=?")
+            .bind(id)
+            .fetch_optional(&self.pool)
+            .await
+            .map_err(|e| CoreError::Db(e.to_string()))?
+            .ok_or_else(|| CoreError::Db("任务不存在".into()))
+    }
+
     /// 一条语句移动看板归属与状态；会话、执行 cwd 和标题保持原值。
     pub async fn move_task(&self, id: &str, workspace_id: &str, status: &str) -> Result<TaskEntry> {
         if !TASK_STATUSES.contains(&status) {

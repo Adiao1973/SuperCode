@@ -1,0 +1,18 @@
+{
+  "new_process_invocations": "",
+  "runs": [
+    [
+      "draft",
+      "/tmp/sc-p413/project"
+    ]
+  ],
+  "session_count": 1,
+  "model_requests": [
+    {
+      "objective": "为中文待办应用提出开发计划\n保留已有数据，先审阅再执行。",
+      "agents": [
+        "mimo"
+      ]
+    }
+  ]
+}

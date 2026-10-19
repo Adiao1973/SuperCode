@@ -1,0 +1,83 @@
+{
+  "method": "Native macOS WebKit getComputedStyle resolved sRGB; WCAG relative luminance; 18 semantic text/surface pairs per theme. Disabled controls, decorative borders and terminal ANSI colors excluded.",
+  "results": {
+    "light": {
+      "computedColors": {
+        "background": "rgb(250, 250, 252)",
+        "foreground": "rgb(32, 33, 39)",
+        "card": "rgb(255, 255, 255)",
+        "muted": "rgb(238, 238, 243)",
+        "muted-foreground": "rgb(98, 101, 114)",
+        "primary": "rgb(79, 70, 229)",
+        "primary-foreground": "rgb(255, 255, 255)",
+        "accent": "rgb(233, 231, 255)",
+        "accent-foreground": "rgb(63, 54, 185)",
+        "success": "rgb(23, 107, 67)",
+        "warning": "rgb(135, 85, 0)",
+        "destructive": "rgb(180, 35, 54)",
+        "sidebar-accent": "rgb(229, 227, 248)",
+        "sidebar-accent-foreground": "rgb(63, 54, 185)"
+      },
+      "contrast": {
+        "foreground / background": 15.398,
+        "foreground / card": 16.052,
+        "foreground / muted": 13.881,
+        "muted-foreground / background": 5.559,
+        "muted-foreground / card": 5.795,
+        "muted-foreground / muted": 5.011,
+        "success / background": 6.255,
+        "success / card": 6.521,
+        "success / muted": 5.639,
+        "warning / background": 6.05,
+        "warning / card": 6.307,
+        "warning / muted": 5.454,
+        "destructive / background": 6.228,
+        "destructive / card": 6.493,
+        "destructive / muted": 5.615,
+        "primary-foreground / primary": 6.288,
+        "accent-foreground / accent": 7.107,
+        "sidebar-accent-foreground / sidebar-accent": 6.835
+      },
+      "minimum": 5.011
+    },
+    "dark": {
+      "computedColors": {
+        "background": "rgb(24, 25, 29)",
+        "foreground": "rgb(240, 240, 245)",
+        "card": "rgb(32, 33, 39)",
+        "muted": "rgb(41, 43, 51)",
+        "muted-foreground": "rgb(176, 179, 193)",
+        "primary": "rgb(170, 165, 255)",
+        "primary-foreground": "rgb(24, 25, 29)",
+        "accent": "rgb(52, 49, 79)",
+        "accent-foreground": "rgb(208, 204, 255)",
+        "success": "rgb(130, 214, 165)",
+        "warning": "rgb(243, 195, 107)",
+        "destructive": "rgb(255, 145, 164)",
+        "sidebar-accent": "rgb(52, 49, 79)",
+        "sidebar-accent-foreground": "rgb(208, 204, 255)"
+      },
+      "contrast": {
+        "foreground / background": 15.463,
+        "foreground / card": 14.132,
+        "foreground / muted": 12.427,
+        "muted-foreground / background": 8.417,
+        "muted-foreground / card": 7.693,
+        "muted-foreground / muted": 6.765,
+        "success / background": 10.129,
+        "success / card": 9.257,
+        "success / muted": 8.141,
+        "warning / background": 10.73,
+        "warning / card": 9.806,
+        "warning / muted": 8.624,
+        "destructive / background": 8.228,
+        "destructive / card": 7.52,
+        "destructive / muted": 6.613,
+        "primary-foreground / primary": 7.975,
+        "accent-foreground / accent": 8.104,
+        "sidebar-accent-foreground / sidebar-accent": 8.104
+      },
+      "minimum": 6.613
+    }
+  }
+}

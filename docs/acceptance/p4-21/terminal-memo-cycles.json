@@ -1,0 +1,30 @@
+{
+  "source": "f57bc99",
+  "cycles": 20,
+  "terminalInputEveryOpen": true,
+  "navigation": [
+    "tasks",
+    "sessions"
+  ],
+  "scope": "host and owned descendants; devtools build after mixed replay; not fixed baseline memory pass",
+  "samples": [
+    {
+      "checkpoint": "before",
+      "hostRssKiB": 142912,
+      "ownedTotalRssKiB": 202336,
+      "ownedChildren": 2
+    },
+    {
+      "checkpoint": "cycle5",
+      "hostRssKiB": 143504,
+      "ownedTotalRssKiB": 143504,
+      "ownedChildren": 0
+    },
+    {
+      "checkpoint": "cycle15",
+      "hostRssKiB": 143584,
+      "ownedTotalRssKiB": 143584,
+      "ownedChildren": 0
+    }
+  ]
+}

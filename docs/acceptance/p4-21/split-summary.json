@@ -1,0 +1,167 @@
+[
+  {
+    "label": "manual-final-split",
+    "visibility": [
+      "visible"
+    ],
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "viewports": [
+        "1280x800"
+      ],
+      "splitterRanges": [
+        {
+          "min": 21.293,
+          "max": 21.293
+        },
+        {
+          "min": 55.506,
+          "max": 100
+        }
+      ],
+      "minVirtualItems": 2,
+      "maxVirtualItems": 2,
+      "totalElements": 545,
+      "longtaskSupported": false
+    },
+    "frameCount": 1742,
+    "p95Ms": 18,
+    "maxMs": 59
+  },
+  {
+    "label": "list-keyboard-split-30s",
+    "visibility": [
+      "visible"
+    ],
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "viewports": [
+        "1280x800"
+      ],
+      "splitterRanges": [
+        {
+          "min": 26.331,
+          "max": 31.369
+        },
+        {
+          "min": 55.506,
+          "max": 55.506
+        }
+      ],
+      "minVirtualItems": 2,
+      "maxVirtualItems": 2,
+      "totalElements": 617,
+      "longtaskSupported": false
+    },
+    "frameCount": 1733,
+    "p95Ms": 24,
+    "maxMs": 67
+  },
+  {
+    "label": "list-keyboard-no-ax-30s",
+    "visibility": [
+      "visible"
+    ],
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "viewports": [
+        "1280x800"
+      ],
+      "splitterRanges": [
+        {
+          "min": 26.331,
+          "max": 31.369
+        },
+        {
+          "min": 55.506,
+          "max": 55.506
+        }
+      ],
+      "minVirtualItems": 2,
+      "maxVirtualItems": 2,
+      "totalElements": 617,
+      "longtaskSupported": false
+    },
+    "frameCount": 1709,
+    "p95Ms": 21,
+    "maxMs": 71
+  },
+  {
+    "label": "coalesced-list-terminal-30s",
+    "visibility": [
+      "visible"
+    ],
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "viewports": [
+        "1280x800"
+      ],
+      "splitterRanges": [
+        {
+          "min": 26.331,
+          "max": 31.369
+        },
+        {
+          "min": 55.506,
+          "max": 55.506
+        }
+      ],
+      "minVirtualItems": 2,
+      "maxVirtualItems": 2,
+      "totalElements": 616,
+      "longtaskSupported": false
+    },
+    "frameCount": 1742,
+    "p95Ms": 23,
+    "maxMs": 71
+  },
+  {
+    "label": "contained-list-terminal-30s",
+    "visibility": [
+      "visible"
+    ],
+    "viewport": [
+      1280,
+      800,
+      2
+    ],
+    "dom": {
+      "viewports": [
+        "1280x800"
+      ],
+      "splitterRanges": [
+        {
+          "min": 26.331,
+          "max": 31.369
+        },
+        {
+          "min": 55.506,
+          "max": 55.506
+        }
+      ],
+      "minVirtualItems": 2,
+      "maxVirtualItems": 2,
+      "totalElements": 616,
+      "longtaskSupported": false
+    },
+    "frameCount": 1722,
+    "p95Ms": 18,
+    "maxMs": 65
+  }
+]

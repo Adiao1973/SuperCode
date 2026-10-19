@@ -1,0 +1,85 @@
+Window: "SuperCode · 审批反馈验收", App: SuperCode P411.
+0 standard window SuperCode · 审批反馈验收, Secondary Actions: Raise
+	1 scroll area
+		2 HTML content Description: SuperCode, URL: 127.0.0.1:1453/
+			3 container 应用导航
+				4 text SuperCode v1.0.0
+				5 container 模块
+					6 button 指挥官
+					7 button 会话
+					8 button 任务看板
+					9 button 审批中心
+					10 button 设置
+				11 button (expanded) 折叠导航, Secondary Actions: Collapse
+			12 container
+				13 heading 指挥官, Value: 1
+					14 text 指挥官
+				15 pop up button 当前项目：默认空间
+				16 container 计划历史
+					17 heading 计划历史, Value: 2
+						18 text 计划历史
+					19 button 刷新
+					20 button 同名审批并发 已完成
+					21 button 取消审批验收 已取消
+					22 button 退出审批验收 等待确认
+				23 button (collapsed) 规划新目标, Secondary Actions: Expand
+				24 heading 取消审批验收, Value: 3
+					25 text 取消审批验收
+				26 container
+					27 text /tmp/sc-p416/project  ·  已取消
+				28 container 计划执行状态
+					29 description list 任务状态统计
+						30 text 排队中
+						31 text 0
+						32 text 运行中
+						33 text 0
+						34 text 已完成
+						35 text 0
+						36 text 失败
+						37 text 0
+						38 text 已跳过
+						39 text 0
+						40 text 已取消
+						41 text 2
+						42 text 已中断
+						43 text 0
+					44 container 第 1 批
+						45 heading 第 1 批, Value: 4
+							46 text 第  1  批
+						47 container 取消审批验收 命令任务
+							48 heading 取消审批验收 命令任务, Value: 5
+								49 text 取消审批验收 命令任务
+							50 text 已取消
+							51 container
+								52 text command  ·  opencode  · 依赖： 无
+							53 summary 查看完整任务提示词, Value: off
+								54 text 查看完整任务提示词
+							55 heading 结果预览, Value: 6
+								56 text 结果预览
+							57 text 没有已保存的结果。
+							58 button 查看会话：取消审批验收 命令任务
+						59 container 取消审批验收 编辑任务
+							60 heading 取消审批验收 编辑任务, Value: 5
+								61 text 取消审批验收 编辑任务
+							62 text 已取消
+							63 container
+								64 text edit  ·  opencode  · 依赖： 无
+							65 summary 查看完整任务提示词, Value: off
+								66 text 查看完整任务提示词
+							67 heading 结果预览, Value: 6
+								68 text 结果预览
+							69 text 没有已保存的结果。
+							70 button 查看会话：取消审批验收 编辑任务
+	71 close button
+	72 full screen button Help: this button also has an action to zoom the window, Secondary Actions: zoom the window
+	73 minimize button
+	74 text SuperCode · 审批反馈验收
+75 menu bar
+	76 SuperCode P411
+	77 File
+	78 Edit
+	79 View
+	80 Window
+	81 Help
+
+The focused UI element is 2 HTML content Description: SuperCode, URL: 127.0.0.1:1453/

@@ -1,0 +1,38 @@
+{
+  "date": "2026-10-11",
+  "platform": "macOS arm64",
+  "peer": "synthetic ACP; no network/model/key",
+  "sessions": [
+    {
+      "id": "d338c653-80e7-423a-a849-91648b1bd9a6",
+      "agent_id": "opencode",
+      "agent_session_id": "p49-91404",
+      "cwd": "/tmp/sc-p49/project-a",
+      "title": "P49 底部输入\n第二行 中文",
+      "status": "cancelled",
+      "workspace_id": "default",
+      "user_messages": [
+        "[{\"type\":\"text\",\"text\":\"P49 底部输入\\n第二行 中文\"}]",
+        "[{\"type\":\"text\",\"text\":\"P49 续聊验收\"}]"
+      ]
+    }
+  ],
+  "passed": [
+    "native Shift-Enter multiline",
+    "native Enter run",
+    "cancel via Command-period and bottom button",
+    "resume preserves ACP id",
+    "configuration Tab trap/Escape return",
+    "running Agent/cwd disabled; plan mode selectable",
+    "300-line paste retained across approval page",
+    "960x640 terminal/composer visible",
+    "terminal focus Command-R/period/N/1 does not run or switch",
+    "light/dark/reduce layout"
+  ],
+  "pending": [],
+  "user_confirmation": {
+    "date": "2026-10-11",
+    "reply": "正常了",
+    "scope": "Actual Chinese IME follow-up acceptance after switching from English spelling suggestion; user reported normal behavior."
+  }
+}

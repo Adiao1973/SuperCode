@@ -3,7 +3,8 @@
  * 会话按工作空间分节——项目空间（绑定项目根路径）+ 默认空间（不绑项目的聊天/电脑操作）。
  * 项目空间内新建会话 cwd 预填空间路径；删除项目空间仅摘分组，会话移入默认空间。
  */
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { EmptyState, InlineError, LoadingState } from "./FeedbackState";
+import { memo, useId, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -17,10 +18,13 @@ import { cn } from "@/lib/utils";
 import {
   DEFAULT_WORKSPACE,
   sessionStatus,
+  filterSessionTitle,
   type SessionEntry,
   type SessionsAction,
   type SessionsState,
 } from "@/lib/sessions";
+import { WorkspacePanels } from "@/components/WorkspacePanels";
+import { createReadingMemory, type ReadingMemory } from "@/lib/reading";
 import { RunConsole } from "@/components/RunConsole";
 import {
   Check,
@@ -29,10 +33,14 @@ import {
   MessageSquarePlus,
   Plus,
   Trash2,
+  Search,
   X,
 } from "lucide-react";
 
 interface SessionsWorkspaceProps {
+  historyState?: { loading: boolean; error: string; onRetry: () => void };
+  visible?: boolean;
+  onWorkspacesChange?: (workspaces: Workspace[]) => void;
   state: SessionsState;
   dispatch: React.Dispatch<SessionsAction>;
 }
@@ -44,24 +52,58 @@ const STATUS_TONE: Record<string, string> = {
   idle: "bg-muted-foreground/30",
 };
 
-export function SessionsWorkspace({ state, dispatch }: SessionsWorkspaceProps) {
+export function SessionsWorkspace({
+  state,
+  dispatch,
+  visible = true,
+  onWorkspacesChange,
+  historyState,
+}: SessionsWorkspaceProps) {
+  const projectPathHint = useId();
+  const committedState = useRef(state);
+  useLayoutEffect(() => { committedState.current = state; }, [state]);
   const active = state.items.find((it) => it.key === state.activeKey) ?? null;
+  const [query, setQuery] = useState("");
+  const readingCache = useRef(new Map<string, ReadingMemory>());
+  useEffect(() => {
+    const keys = new Set(state.items.map((entry) => entry.key));
+    for (const key of readingCache.current.keys())
+      if (!keys.has(key)) readingCache.current.delete(key);
+  }, [state.items]);
+  const readingFor = (key: string) => {
+    let memory = readingCache.current.get(key);
+    if (!memory) {
+      memory = createReadingMemory();
+      readingCache.current.set(key, memory);
+    }
+    return memory;
+  };
+  const knownKeys = useRef(new Set(state.items.map((entry) => entry.key)));
+  useEffect(() => {
+    if (state.activeKey && !knownKeys.current.has(state.activeKey))
+      setQuery("");
+    knownKeys.current = new Set(state.items.map((entry) => entry.key));
+  }, [state.activeKey, state.items]);
   const [confirmKey, setConfirmKey] = useState<string | null>(null);
   const [confirmWs, setConfirmWs] = useState<string | null>(null);
 
   // 工作空间列表（IPC）；创建/删除后刷新
+  const [workspaceLoading, setWorkspaceLoading] = useState(true);
+  const [workspaceError, setWorkspaceError] = useState("");
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [creating, setCreating] = useState(false);
   const [newPath, setNewPath] = useState("");
   const [createError, setCreateError] = useState<string | null>(null);
 
   const refreshWorkspaces = useCallback(async () => {
+    setWorkspaceLoading(true); setWorkspaceError("");
     try {
-      setWorkspaces(await listWorkspaces());
-    } catch {
-      /* 空间列表加载失败不阻塞会话：按默认空间单组展示 */
-    }
-  }, []);
+      const values = await listWorkspaces();
+      setWorkspaces(values);
+      onWorkspacesChange?.(values);
+    } catch (e) { setWorkspaceError(String(e)); }
+    finally { setWorkspaceLoading(false); }
+  }, [onWorkspacesChange]);
 
   useEffect(() => {
     void refreshWorkspaces();
@@ -72,7 +114,14 @@ export function SessionsWorkspace({ state, dispatch }: SessionsWorkspaceProps) {
   const groups = useMemo(() => {
     const list: Workspace[] = workspaces.length
       ? workspaces
-      : [{ id: DEFAULT_WORKSPACE, name: "默认空间", path: null, kind: "default" }];
+      : [
+          {
+            id: DEFAULT_WORKSPACE,
+            name: "默认空间",
+            path: null,
+            kind: "default",
+          },
+        ];
     return list.map((workspace) => ({
       workspace,
       sessions: state.items.filter(
@@ -83,6 +132,26 @@ export function SessionsWorkspace({ state, dispatch }: SessionsWorkspaceProps) {
       ),
     }));
   }, [workspaces, state.items]);
+
+  const filteredGroups = groups
+    .map((group) => ({
+      ...group,
+      visibleSessions: group.sessions.filter((entry) =>
+        filterSessionTitle(entry.title, query),
+      ),
+    }))
+    .filter((group) => !query.trim() || group.visibleSessions.length > 0);
+  const matchCount = filteredGroups.reduce(
+    (n, group) => n + group.visibleSessions.length,
+    0,
+  );
+  const activeWorkspace = groups.find((group) =>
+    group.sessions.some((entry) => entry.key === active?.key),
+  )?.workspace;
+  const newSession = (workspace?: Workspace) => {
+    setQuery("");
+    dispatch({ type: "new", workspace });
+  };
 
   const createSpace = useCallback(async () => {
     if (!newPath.trim()) {
@@ -105,7 +174,11 @@ export function SessionsWorkspace({ state, dispatch }: SessionsWorkspaceProps) {
       setConfirmWs(null);
       try {
         await deleteWorkspace(ws.id);
-        dispatch({ type: "reassignWorkspace", from: ws.id, to: DEFAULT_WORKSPACE });
+        dispatch({
+          type: "reassignWorkspace",
+          from: ws.id,
+          to: DEFAULT_WORKSPACE,
+        });
         await refreshWorkspaces();
       } catch (e) {
         setCreateError(String(e));
@@ -125,8 +198,9 @@ export function SessionsWorkspace({ state, dispatch }: SessionsWorkspaceProps) {
           return;
         }
       }
-      if (state.activeKey === entry.key) {
-        const rest = state.items.filter((it) => it.key !== entry.key);
+      const latest = committedState.current;
+      if (latest.activeKey === entry.key) {
+        const rest = latest.items.filter((it) => it.key !== entry.key);
         dispatch({
           type: "activate",
           key: rest[0]?.key ?? "",
@@ -134,241 +208,383 @@ export function SessionsWorkspace({ state, dispatch }: SessionsWorkspaceProps) {
       }
       dispatch({ type: "remove", key: entry.key });
     },
-    [state.activeKey, state.items, dispatch],
+    [dispatch],
   );
+  const activateSession = useCallback((key: string) => dispatch({ type: "activate", key }), [dispatch]);
+  const requestDelete = useCallback((key: string, confirmed: boolean) => {
+    if (!confirmed) { setConfirmKey(key); return; }
+    setConfirmKey(null);
+    const entry = committedState.current.items.find(item => item.key === key);
+    if (entry) void removeSession(entry);
+  }, [removeSession]);
 
   return (
-    <div className="flex min-h-0 flex-1">
-      {/* 会话列表：按工作空间分节（ADR-0007） */}
-      <aside className="flex w-56 shrink-0 flex-col border-r">
-        <div className="flex items-center justify-between px-3 py-2.5">
-          <span className="text-muted-foreground text-xs font-medium">
-            会话（{state.items.length}）
-          </span>
-          <div className="flex items-center">
-            {import.meta.env.DEV && active && (
-              <Button
-                size="sm"
-                variant="ghost"
-                className="h-7 px-2 text-[10px]"
-                onClick={() => dispatch({ type: "seed", key: active.key })}
-                title="向当前会话注入 320 条合成事件（虚拟列表滚动压测，仅开发模式）"
-              >
-                压测
-              </Button>
-            )}
-            <Button
-              size="sm"
-              variant="ghost"
-              className="h-7 px-2"
-              onClick={() => setCreating((v) => !v)}
-              title="新建项目空间（绑定一个项目目录）"
-            >
-              <FolderPlus className="size-4" />
-            </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              className="h-7 px-2"
-              onClick={() => dispatch({ type: "new" })}
-              title="新建会话（⌘N，默认空间）"
-            >
-              <MessageSquarePlus className="size-4" />
-            </Button>
-          </div>
-        </div>
-
-        {creating && (
-          <div className="space-y-1.5 px-3 pb-2">
-            <div className="flex gap-1.5">
-              <Input
-                value={newPath}
-                onChange={(e) => setNewPath(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && void createSpace()}
-                placeholder="/path/to/project"
-                className="h-7 min-w-0 flex-1 font-mono text-[11px]"
-                autoFocus
-              />
-              <Button size="sm" variant="ghost" className="h-7 px-1.5" onClick={() => void createSpace()} title="创建">
-                <Check className="size-3.5" />
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                className="h-7 px-1.5"
-                onClick={() => {
-                  setCreating(false);
-                  setNewPath("");
-                  setCreateError(null);
-                }}
-                title="取消"
-              >
-                <X className="size-3.5" />
-              </Button>
-            </div>
-            <p className="text-muted-foreground text-[10px] leading-snug">
-              {createError ? (
-                <span className="text-destructive">{createError}</span>
-              ) : (
-                "项目根目录的绝对路径；同路径去重，目录须已存在"
-              )}
-            </p>
-          </div>
-        )}
-
-        <div className="min-h-0 flex-1 overflow-y-auto px-2 pb-2">
-          {groups.map(({ workspace, sessions }) => (
-            <section key={workspace.id} className="mb-2">
-              <div className="group/ws flex items-center gap-1.5 px-1.5 py-1">
-                <Folder className="text-muted-foreground size-3 shrink-0" />
-                <span className="min-w-0 flex-1 truncate text-[11px] font-medium" title={workspace.path ?? undefined}>
-                  {workspace.name}
-                </span>
-                <span className="text-muted-foreground/60 shrink-0 text-[10px] tabular-nums">
-                  {sessions.length}
-                </span>
+    <WorkspacePanels
+      list={
+        <aside className="flex h-full min-w-0 flex-col">
+          <div className="flex items-center justify-between px-3 py-2.5">
+            <span className="text-muted-foreground text-xs font-medium">
+              会话（{state.items.length}）
+            </span>
+            <div className="flex items-center">
+              {import.meta.env.DEV && active && (
                 <Button
                   size="sm"
                   variant="ghost"
-                  className="h-5 w-5 shrink-0 px-0"
-                  onClick={() => dispatch({ type: "new", workspace })}
-                  title={workspace.kind === "project" ? `在「${workspace.name}」中新建会话（cwd 预填空间路径）` : "在默认空间新建会话"}
+                  className="h-7 px-2 text-[10px]"
+                  onClick={() => dispatch({ type: "seed", key: active.key })}
+                  title="向当前会话注入 320 条合成事件（虚拟列表滚动压测，仅开发模式）"
                 >
-                  <Plus className="size-3" />
+                  压测
                 </Button>
-                {workspace.kind === "project" && (
-                  <button
-                    type="button"
-                    title={
-                      confirmWs === workspace.id
-                        ? "再点一次确认：会话将移入默认空间（不会删除）"
-                        : "删除该空间（会话移入默认空间，不删除）"
-                    }
-                    onClick={() => {
-                      if (confirmWs === workspace.id) {
-                        void removeSpace(workspace);
-                      } else {
-                        setConfirmWs(workspace.id);
-                      }
-                    }}
-                    className={cn(
-                      "hidden shrink-0 px-0.5 group-hover/ws:block",
-                      confirmWs === workspace.id
-                        ? "text-destructive text-[10px] font-medium"
-                        : "text-muted-foreground/50 hover:text-destructive",
-                    )}
-                  >
-                    {confirmWs === workspace.id ? "确认?" : <Trash2 className="size-3" />}
-                  </button>
-                )}
-              </div>
-              <div className="flex flex-col gap-1">
-                {sessions.map((entry) => (
-                  <SessionListItem
-                    key={entry.key}
-                    entry={entry}
-                    active={entry.key === state.activeKey}
-                    confirmDelete={confirmKey === entry.key}
-                    onActivate={() => dispatch({ type: "activate", key: entry.key })}
-                    onDelete={() => {
-                      if (confirmKey === entry.key) {
-                        setConfirmKey(null);
-                        void removeSession(entry);
-                      } else {
-                        setConfirmKey(entry.key);
-                      }
-                    }}
-                  />
-                ))}
-                {sessions.length === 0 && (
-                  <p className="text-muted-foreground/50 px-2.5 py-1 text-[10px]">暂无会话</p>
-                )}
-              </div>
-            </section>
-          ))}
-        </div>
-      </aside>
+              )}
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-7 px-2"
+                onClick={() => setCreating((v) => !v)}
+                title="新建项目空间（绑定一个项目目录）"
+              >
+                <FolderPlus className="size-4" />
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-7 px-2"
+                onClick={() => newSession()}
+                title="新建会话（⌘N，默认空间）"
+              >
+                <MessageSquarePlus className="size-4" />
+              </Button>
+            </div>
+          </div>
 
+          <div className="relative mx-3 mb-3">
+            <Search
+              aria-hidden="true"
+              className="text-muted-foreground pointer-events-none absolute left-2 top-2 size-3.5"
+            />
+            <Input
+              aria-label="按标题过滤会话"
+              placeholder="过滤标题…"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Escape" && !event.nativeEvent.isComposing) {
+                  event.stopPropagation();
+                  setQuery("");
+                }
+              }}
+              className="h-8 pl-7 pr-7 text-xs"
+            />
+            {query && (
+              <button
+                type="button"
+                aria-label="清除标题过滤"
+                onClick={() => setQuery("")}
+                className="text-muted-foreground hover:text-foreground absolute right-1 top-1 rounded p-1 focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <X className="size-4" />
+              </button>
+            )}
+          </div>
+          {query.trim() && (
+            <p
+              role="status"
+              className="text-muted-foreground px-3 pb-2 text-[11px]"
+            >
+              找到 {matchCount} 个会话
+            </p>
+          )}
+          {creating && (
+            <div className="space-y-1.5 px-3 pb-2">
+              <div className="flex gap-1.5">
+                <Input
+                  aria-label="新项目目录"
+                  aria-describedby={projectPathHint}
+                  aria-invalid={!!createError}
+                  value={newPath}
+                  onChange={(e) => setNewPath(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && void createSpace()}
+                  placeholder="/path/to/project"
+                  className="h-7 min-w-0 flex-1 font-mono text-[11px]"
+                  autoFocus
+                />
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-7 px-1.5"
+                  onClick={() => void createSpace()}
+                  title="创建"
+                >
+                  <Check className="size-3.5" />
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-7 px-1.5"
+                  onClick={() => {
+                    setCreating(false);
+                    setNewPath("");
+                    setCreateError(null);
+                  }}
+                  title="取消"
+                >
+                  <X className="size-3.5" />
+                </Button>
+              </div>
+              <p id={projectPathHint} className="text-muted-foreground text-[10px] leading-snug">
+                {createError ? (
+                  <span role="alert" className="text-destructive">{createError}</span>
+                ) : (
+                  "项目根目录的绝对路径；同路径去重，目录须已存在"
+                )}
+              </p>
+            </div>
+          )}
+
+          <div className="min-h-0 flex-1 overflow-y-auto px-2 pb-2">
+            {(workspaceLoading || historyState?.loading) && <LoadingState label="正在读取会话与项目…" />}
+            {workspaceError && <InlineError title="项目列表读取失败" message={workspaceError} onRetry={() => void refreshWorkspaces()} retrying={workspaceLoading} />}
+            {historyState?.error && <InlineError title="历史会话读取失败" message={historyState.error} onRetry={historyState.onRetry} retrying={historyState.loading} />}
+            {matchCount === 0 && query.trim() && (
+              <EmptyState title="没有匹配的会话" description="试试其他标题，或清除过滤。" />
+            )}
+            {filteredGroups.map(({ workspace, sessions, visibleSessions }) => (
+              <section key={workspace.id} className="mb-2">
+                <div className="group/ws flex items-center gap-1.5 px-1.5 py-1">
+                  <Folder className="text-muted-foreground size-3 shrink-0" />
+                  <span
+                    className="min-w-0 flex-1 truncate text-[11px] font-medium"
+                    title={workspace.path ?? undefined}
+                  >
+                    {workspace.name}
+                  </span>
+                  <span className="text-muted-foreground shrink-0 text-[10px] tabular-nums">
+                    {query.trim()
+                      ? `${visibleSessions.length}/${sessions.length}`
+                      : sessions.length}
+                  </span>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-5 w-5 shrink-0 px-0"
+                    onClick={() => newSession(workspace)}
+                    title={
+                      workspace.kind === "project"
+                        ? `在「${workspace.name}」中新建会话（cwd 预填空间路径）`
+                        : "在默认空间新建会话"
+                    }
+                  >
+                    <Plus className="size-3" />
+                  </Button>
+                  {workspace.kind === "project" && (
+                    <button
+                      type="button"
+                      title={
+                        confirmWs === workspace.id
+                          ? "再点一次确认：会话将移入默认空间（不会删除）"
+                          : "删除该空间（会话移入默认空间，不删除）"
+                      }
+                      onClick={() => {
+                        if (confirmWs === workspace.id) {
+                          void removeSpace(workspace);
+                        } else {
+                          setConfirmWs(workspace.id);
+                        }
+                      }}
+                      className={cn(
+                        "shrink-0 rounded px-0.5 opacity-0 group-hover/ws:opacity-100 focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring",
+                        confirmWs === workspace.id
+                          ? "text-destructive text-[10px] font-medium"
+                          : "text-muted-foreground hover:text-destructive",
+                      )}
+                    >
+                      {confirmWs === workspace.id ? (
+                        "确认?"
+                      ) : (
+                        <Trash2 className="size-3" />
+                      )}
+                    </button>
+                  )}
+                </div>
+                {workspace.path && (
+                  <p
+                    title={workspace.path}
+                    className="text-muted-foreground truncate px-1.5 pb-2 font-mono text-[10px]"
+                  >
+                    {workspace.path}
+                  </p>
+                )}
+                <div className="flex flex-col gap-0.5">
+                  {visibleSessions.map((entry) => {
+                    const status = sessionStatus(entry);
+                    return <SessionListItem
+                      key={entry.key}
+                      sessionKey={entry.key}
+                      title={entry.title}
+                      agentId={entry.draft.agentId}
+                      cwd={entry.draft.cwd}
+                      statusLabel={status.label}
+                      statusTone={status.tone}
+                      approvalCount={entry.pendingApprovals.length}
+                      running={entry.stream.running}
+                      active={entry.key === state.activeKey}
+                      confirmDelete={confirmKey === entry.key}
+                      onActivate={activateSession}
+                      onDelete={requestDelete}
+                    />;
+                  })}
+                  {sessions.length === 0 && (
+                    !workspaceLoading && !historyState?.loading && !historyState?.error && <EmptyState compact title="暂无会话" />
+                  )}
+                </div>
+              </section>
+            ))}
+          </div>
+        </aside>
+      }
+    >
       {/* 活动会话详情 */}
-      <section className="min-w-0 flex-1">
+      <section className="flex h-full min-w-0 flex-col">
+        {active && (
+          <div
+            aria-label="当前会话上下文"
+            className="shrink-0 border-b px-4 py-2.5"
+          >
+            <h2 data-session-heading tabIndex={-1} title={active.title} className="truncate text-sm font-medium">
+              {active.title}
+            </h2>
+            <p className="text-muted-foreground flex min-w-0 items-center gap-2 text-[11px]">
+              <span className="max-w-32 truncate" title={activeWorkspace?.name}>
+                {activeWorkspace?.name ?? "默认空间"}
+              </span>
+              <span className="shrink-0">{active.draft.agentId}</span>
+              <span
+                title={active.draft.cwd}
+                className="min-w-0 truncate font-mono"
+              >
+                {active.draft.cwd}
+              </span>
+            </p>
+            {query.trim() && !filterSessionTitle(active.title, query) && (
+              <p className="text-muted-foreground pt-1 text-[11px]">
+                当前会话不在筛选结果中{" "}
+                <button
+                  type="button"
+                  className="text-primary underline underline-offset-2"
+                  onClick={() => setQuery("")}
+                >
+                  显示当前会话
+                </button>
+              </p>
+            )}
+          </div>
+        )}
         {active ? (
-          <RunConsole key={active.key} session={active} dispatch={dispatch} />
+          <div className="min-h-0 flex-1">
+            <RunConsole
+              key={active.key}
+              readingMemory={readingFor(active.key)}
+              session={active}
+              dispatch={dispatch}
+              visible={visible}
+            />
+          </div>
         ) : (
           <div className="text-muted-foreground flex h-full flex-col items-center justify-center gap-3 text-sm">
             <MessageSquarePlus className="size-8 opacity-40" />
-            <Button size="sm" variant="outline" onClick={() => dispatch({ type: "new" })}>
+            <Button size="sm" variant="outline" onClick={() => newSession()}>
               新建会话
             </Button>
           </div>
         )}
       </section>
-    </div>
+    </WorkspacePanels>
   );
 }
 
-function SessionListItem({
-  entry,
+const SessionListItem = memo(function SessionListItem({
+  sessionKey, title, agentId, cwd, statusLabel, statusTone, approvalCount, running,
   active,
   confirmDelete,
   onActivate,
   onDelete,
 }: {
-  entry: SessionEntry;
+  sessionKey: string; title: string; agentId: string; cwd: string;
+  statusLabel: string; statusTone: ReturnType<typeof sessionStatus>["tone"]; approvalCount: number; running: boolean;
   active: boolean;
   confirmDelete: boolean;
-  onActivate: () => void;
-  onDelete: () => void;
+  onActivate: (key: string) => void;
+  onDelete: (key: string, confirmed: boolean) => void;
 }) {
-  const status = sessionStatus(entry);
   return (
-    <button
-      type="button"
-      onClick={onActivate}
+    <div
       className={cn(
-        "group hover:bg-sidebar-accent flex w-full flex-col gap-0.5 rounded-md px-2.5 py-2 text-left transition-colors",
-        active ? "bg-sidebar-accent" : "",
-        confirmDelete && "border-destructive/60 border",
+        "group flex items-start rounded-md transition-colors hover:bg-sidebar-accent",
+        active && "bg-sidebar-accent",
+        confirmDelete && "ring-1 ring-destructive/60",
       )}
     >
-      <span className="flex w-full items-center gap-2">
-        <span className={cn("size-1.5 shrink-0 rounded-full", STATUS_TONE[status.tone])} />
-        <span className="truncate text-[13px]">{entry.title}</span>
-        <span
-          role="button"
-          tabIndex={-1}
-          title={
-            entry.stream.running
-              ? "运行中不可删除"
-              : confirmDelete
-                ? "再点一次确认删除"
-                : "删除会话"
-          }
-          onClick={(e) => {
-            e.stopPropagation();
-            if (!entry.stream.running) {
-              onDelete();
-            }
-          }}
-          className={cn(
-            "ml-auto hidden shrink-0 px-1 group-hover:block",
-            confirmDelete
-              ? "text-destructive text-[10px] font-medium"
-              : "text-muted-foreground/50 hover:text-destructive",
-          )}
-        >
-          {confirmDelete ? "确认?" : <Trash2 className="size-3.5" />}
+      <button
+        type="button"
+        aria-label={`选择会话 ${title}`}
+        aria-current={active ? "true" : undefined}
+        onClick={() => onActivate(sessionKey)}
+        className="flex min-w-0 flex-1 flex-col gap-1 rounded-md px-2.5 py-2.5 text-left outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+      >
+        <span className="flex w-full items-center gap-2">
+          <span
+            aria-hidden="true"
+            className={cn(
+              "size-1.5 shrink-0 rounded-full",
+              STATUS_TONE[statusTone],
+            )}
+          />
+          <span
+            title={title}
+            className="truncate text-[13px] font-medium"
+          >
+            {title}
+          </span>
         </span>
-      </span>
-      <span className="text-muted-foreground flex w-full items-center gap-2 pl-3.5 text-[10px]">
-        {status.label}
-        {entry.pendingApprovals.length > 0 ? (
-          <span className="text-amber-400">{entry.pendingApprovals.length} 待审批</span>
-        ) : (
-          entry.acpSessionId && (
-            <code className="truncate">…{entry.acpSessionId.slice(-6)}</code>
-          )
+        <span className="text-muted-foreground flex w-full items-center gap-2 pl-3.5 text-[10px]">
+          <span>{statusLabel}</span>
+          <span className="truncate">{agentId}</span>
+          {approvalCount > 0 && (
+            <span className="text-warning shrink-0">
+              {approvalCount} 待审批
+            </span>
+          )}
+        </span>
+        <span
+          title={cwd}
+          className="text-muted-foreground w-full truncate pl-3.5 font-mono text-[10px]"
+        >
+          {cwd}
+        </span>
+      </button>
+      <button
+        type="button"
+        disabled={running}
+        aria-label={`删除会话 ${title}`}
+        title={
+          running
+            ? "运行中不可删除"
+            : confirmDelete
+              ? "再点一次确认删除"
+              : "删除会话"
+        }
+        onClick={() => onDelete(sessionKey, confirmDelete)}
+        className={cn(
+          "mr-1 mt-2 shrink-0 rounded p-1 opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed",
+          confirmDelete
+            ? "text-destructive opacity-100 text-[10px]"
+            : "text-muted-foreground hover:text-destructive",
         )}
-      </span>
-    </button>
+      >
+        {confirmDelete ? "确认?" : <Trash2 className="size-3.5" />}
+      </button>
+    </div>
   );
-}
+});

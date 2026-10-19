@@ -1,0 +1,28 @@
+Window: "SuperCode · 规划目标验收", App: SuperCode P411.
+0 standard window SuperCode · 规划目标验收, Secondary Actions: Raise
+	1 scroll area
+		2 HTML content Description: SuperCode, URL: 127.0.0.1:1453/
+			3 container 确认执行计划
+				4 heading 确认执行计划, Value: 2
+					5 text 确认执行计划
+				6 container
+					7 text 将启动  2 个任务，按照依赖顺序执行。请确认已查看各任务的完整提示词。
+				8 container
+					9 text 目录： /tmp/sc-p414/project
+				10 container
+					11 text 并发： 2  · 工作空间：默认 · 权限：变更前确认
+				12 button 返回审阅
+				13 button 确认执行
+	14 close button
+	15 full screen button Help: this button also has an action to zoom the window, Secondary Actions: zoom the window
+	16 minimize button
+	17 text SuperCode · 规划目标验收
+18 menu bar
+	19 SuperCode P411
+	20 File
+	21 Edit
+	22 View
+	23 Window
+	24 Help
+
+The focused UI element is 12 button 返回审阅

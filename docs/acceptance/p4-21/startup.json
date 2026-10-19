@@ -1,0 +1,12 @@
+{
+  "samplesMs": [
+    1011,
+    881,
+    898,
+    915,
+    929
+  ],
+  "medianMs": 915,
+  "baselineMedianMs": 747,
+  "method": "process-cold, warm OS cache, CUA launch + AX-ready upper bound; not first paint"
+}

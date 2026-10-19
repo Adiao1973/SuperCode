@@ -1,0 +1,57 @@
+{
+  "plans": [
+    {
+      "objective": "并发审批验收",
+      "status": "succeeded",
+      "tasks": [
+        {
+          "id": "a",
+          "status": "succeeded",
+          "session_id": "7d25fb66-f61d-4d87-844c-4bb8e8ac4764"
+        },
+        {
+          "id": "b",
+          "status": "succeeded",
+          "session_id": "3c9bbacc-6f2c-438b-986e-e10723689df1"
+        },
+        {
+          "id": "c",
+          "status": "succeeded",
+          "session_id": "16e93522-8153-4ec4-ac51-08c21239d6a3"
+        }
+      ]
+    },
+    {
+      "objective": "取消与依赖阻断验收",
+      "status": "cancelled",
+      "tasks": [
+        {
+          "id": "a",
+          "status": "cancelled",
+          "session_id": "528bf329-131a-448a-a90e-e654cfd4d48d"
+        },
+        {
+          "id": "b",
+          "status": "cancelled",
+          "session_id": "8f30b52e-b1b4-4028-99a5-20c55a83399b"
+        },
+        {
+          "id": "c",
+          "status": "cancelled",
+          "session_id": null
+        }
+      ]
+    }
+  ],
+  "approval_decisions": [
+    [
+      "allow",
+      1
+    ],
+    [
+      "reject",
+      3
+    ]
+  ],
+  "session_new_count": 6
+}

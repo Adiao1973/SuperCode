@@ -1,0 +1,148 @@
+Window: "SuperCode · 执行监控验收", App: SuperCode P411.
+0 standard window SuperCode · 执行监控验收, Secondary Actions: Raise
+	1 scroll area
+		2 HTML content Description: SuperCode, URL: 127.0.0.1:1453/
+			3 container 应用导航
+				4 text SuperCode v1.0.0
+				5 container 模块
+					6 button 指挥官
+					7 button 会话
+					8 button 任务看板
+					9 button 审批中心
+					10 button 设置
+				11 button (expanded) 折叠导航, Secondary Actions: Collapse
+			12 container
+				13 heading 指挥官, Value: 1
+					14 text 指挥官
+				15 pop up button 当前项目：默认空间
+				16 container 计划历史
+					17 heading 计划历史, Value: 2
+						18 text 计划历史
+					19 button 刷新
+					20 button (disabled) 并行与依赖 等待确认
+					21 button (disabled) 失败与跳过 等待确认
+					22 button (disabled) 失活记录 运行中
+					23 button (disabled) 取消验收 等待确认
+				24 container 规划目标
+					25 heading 规划目标, Value: 2
+						26 text 规划目标
+					27 text 描述目标，选择项目和 Agent，再生成计划供审阅。
+					28 button 模型设置
+					29 container
+						30 text p413-loopback-fixture · 配置可用 配置可用不代表推理已验证
+						31 button (disabled) 刷新配置与 Agent
+					32 container
+						33 text 任务目标
+						34 text entry area (disabled, settable) 任务目标, Value: [text entry area: 任务目标], Placeholder: 说明要实现什么，以及必须遵守的约束
+							35 text 说明要实现什么，以及必须遵守的约束
+						36 container 工作项目
+							37 text 工作项目
+							38 pop up button (disabled) 项目空间, Value: 当前目录 / 自选目录
+							39 button (disabled) 使用当前项目
+							40 text field (disabled, settable) 工作目录, Value: /tmp/supercode-p13, Placeholder: 选择已存在的项目目录
+							41 button (disabled) 选择目录
+							42 text 使用已存在的绝对目录；选择项目仅用于本次规划。
+						43 container 参与规划的 Agent
+							44 text 参与规划的 Agent
+							45 container
+								46 checkbox (disabled) OpenCode (opencode), Value: 1
+								47 text OpenCode opencode  · ACP 已接入
+							48 container
+								49 checkbox (disabled) Claude Code (claude-code), Value: 0
+								50 text Claude Code claude-code  · ACP 已接入
+							51 container
+								52 checkbox (disabled) Codex (codex), Value: 0
+								53 text Codex codex  · ACP 已接入
+							54 container
+								55 checkbox (disabled) MiMo (mimo), Value: 0
+								56 text MiMo mimo  · ACP 已接入
+							57 container
+								58 checkbox (disabled) ZCode (zcode), Value: 0
+								59 text ZCode zcode  · 驱动尚未接入，暂不可选
+							60 text 已接入不代表已安装或已登录；执行前仍会检查。此处不会启动 Agent 或探测版本。
+						61 button (disabled) 生成计划
+						62 text 将调用指挥官模型；生成后先审阅，确认前不执行任务。
+				63 button 取消当前操作
+				64 container
+					65 text 执行并发上限
+					66 number field (disabled, settable) 并发上限, Value: 2
+						67 stepper 0
+							68 unknown
+							69 unknown
+				70 heading 并行与依赖, Value: 3
+					71 text 并行与依赖
+				72 container
+					73 text /tmp/sc-p415/project  ·  运行中
+				74 container 计划执行状态
+					75 description list 任务状态统计
+						76 text 排队中
+						77 text 1
+						78 text 运行中
+						79 text 1
+						80 text 已完成
+						81 text 1
+						82 text 失败
+						83 text 0
+						84 text 已跳过
+						85 text 0
+						86 text 已取消
+						87 text 0
+						88 text 已中断
+						89 text 0
+					90 container 第 1 批
+						91 heading 第 1 批, Value: 4
+							92 text 第  1  批
+						93 container 并行与依赖 a
+							94 heading 并行与依赖 a, Value: 5
+								95 text 并行与依赖 a
+							96 text 运行中
+							97 container
+								98 text a  ·  opencode  · 依赖： 无
+							99 summary 查看完整任务提示词, Value: off
+								100 text 查看完整任务提示词
+							101 heading 结果预览, Value: 6
+								102 text 结果预览
+							103 text 执行中，尚无已保存的结果。
+							104 button (disabled) 查看会话：并行与依赖 a
+							105 text 执行结束后可查看已保存会话。
+						106 container 并行与依赖 b
+							107 heading 并行与依赖 b, Value: 5
+								108 text 并行与依赖 b
+							109 text 已完成
+							110 container
+								111 text b  ·  opencode  · 依赖： 无
+							112 summary 查看完整任务提示词, Value: off
+								113 text 查看完整任务提示词
+							114 heading 结果预览, Value: 6
+								115 text 结果预览
+							116 text starteddone
+							117 button 查看会话：并行与依赖 b
+					118 container 第 2 批
+						119 heading 第 2 批, Value: 4
+							120 text 第  2  批
+						121 container 并行与依赖 c
+							122 heading 并行与依赖 c, Value: 5
+								123 text 并行与依赖 c
+							124 text 排队中
+							125 container
+								126 text c  ·  opencode  · 依赖： a、b
+							127 text 等待前置任务全部成功及可用执行名额。
+							128 summary 查看完整任务提示词, Value: off
+								129 text 查看完整任务提示词
+							130 heading 结果预览, Value: 6
+								131 text 结果预览
+							132 text 没有已保存的结果。
+							133 text 尚无可查看的会话（未启动、尚未建立或已删除）。
+	134 close button
+	135 full screen button Help: this button also has an action to zoom the window, Secondary Actions: zoom the window
+	136 minimize button
+	137 text SuperCode · 执行监控验收
+138 menu bar
+	139 SuperCode P411
+	140 File
+	141 Edit
+	142 View
+	143 Window
+	144 Help
+
+The focused UI element is 2 HTML content Description: SuperCode, URL: 127.0.0.1:1453/

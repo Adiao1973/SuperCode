@@ -1,0 +1,83 @@
+Window: "SuperCode · 审批反馈验收", App: SuperCode P411.
+0 standard window SuperCode · 审批反馈验收, Secondary Actions: Raise
+	1 scroll area
+		2 HTML content Description: SuperCode, URL: 127.0.0.1:1453/
+			3 container 应用导航
+				4 text SuperCode v1.0.0
+				5 container 模块
+					6 button 指挥官
+					7 button 会话
+					8 button 任务看板
+					9 button 审批中心，2 项待审批
+					10 button 设置
+				11 button (expanded) 折叠导航, Secondary Actions: Collapse
+			12 container
+				13 heading 会话, Value: 1
+					14 text 会话
+				15 pop up button 当前项目：默认空间
+				16 button (expanded) 隐藏会话列表, Secondary Actions: Collapse
+				17 text 会话（ 11 ）
+				18 button 压测, Help: 向当前会话注入 320 条合成事件（虚拟列表滚动压测，仅开发模式）
+				19 button 新建项目空间（绑定一个项目目录）
+				20 button 新建会话（⌘N，默认空间）
+				21 text field (settable) 按标题过滤会话, Placeholder: 过滤标题…
+				22 text 中文规划项目 1
+				23 button 在「中文规划项目」中新建会话（cwd 预填空间路径）
+				24 button 删除该空间（会话移入默认空间，不删除）
+				25 container /tmp/sc-p413/project
+					26 text /tmp/sc-p413/project
+				27 button 选择会话 中文规划项目上下文
+				28 button 删除会话 中文规划项目上下文, Help: 删除会话
+				29 text 默认空间 10
+				30 button 在默认空间新建会话
+				31 button 选择会话 同名审批并发 编辑任务
+				32 button 删除会话 同名审批并发 编辑任务, Help: 删除会话
+				33 button 选择会话 同名审批并发 命令任务
+				34 button 删除会话 同名审批并发 命令任务, Help: 删除会话
+				35 button 选择会话 取消验收 a
+				36 button 删除会话 取消验收 a, Help: 删除会话
+				37 button 选择会话 失败与跳过 a
+				38 button 删除会话 失败与跳过 a, Help: 删除会话
+				39 button 选择会话 并行与依赖 c
+				40 button 删除会话 并行与依赖 c, Help: 删除会话
+				41 button 选择会话 并行与依赖 a
+				42 button 删除会话 并行与依赖 a, Help: 删除会话
+				43 button 选择会话 并行与依赖 b
+				44 button 删除会话 并行与依赖 b, Help: 删除会话
+				45 button 选择会话 实现确认流程
+				46 button 删除会话 实现确认流程, Help: 删除会话
+				47 button 选择会话 梳理中文待办交互
+				48 button 删除会话 梳理中文待办交互, Help: 删除会话
+				49 button 选择会话 新会话
+				50 button 删除会话 新会话, Help: 删除会话
+				51 splitter 调整会话列表宽度, Value: 25.856
+				52 container 当前会话上下文
+					53 heading 新会话, Value: 2
+						54 text 新会话
+					55 text 默认空间 opencode /tmp/supercode-p13
+				56 text 选择 Agent 并输入任务，点击「运行」开始。
+				57 splitter (disabled) 调整终端高度, Help: 上下键调整；Enter 收起或展开终端
+				58 container 会话输入区
+					59 text entry area (settable) 任务提示词, Value: [text entry area: 任务提示词]
+						60 text (settable) printf '中文审批'
+# 完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。完整命令用于复制验收。
+COMMAND_END
+					61 pop up button 配置会话
+					62 button 运行
+					63 text Enter 运行 · Shift-Enter 换行 · ⌘R 运行 · ⌘. 停止
+					64 button 宽松权限：部分操作不会进入审批 · 查看配置
+				65 button 打开终端
+				66 text 空闲
+	67 close button
+	68 full screen button Help: this button also has an action to zoom the window, Secondary Actions: zoom the window
+	69 minimize button
+	70 text SuperCode · 审批反馈验收
+71 menu bar
+	72 SuperCode P411
+	73 File
+	74 Edit
+	75 View
+	76 Window
+	77 Help
+
+The focused UI element is 59 text entry area (settable) 任务提示词, Value: [text entry area: 任务提示词]

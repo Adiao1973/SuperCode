@@ -1,0 +1,156 @@
+{
+  "method": "WCAG relative luminance for opaque sRGB token pairs; excludes disabled controls, gradients, opacity blends and runtime diff syntax",
+  "target": 4.5,
+  "pairs": [
+    {
+      "theme": "light",
+      "foreground": "foreground",
+      "background": "background",
+      "ratio": 15.398,
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "foreground": "muted-foreground",
+      "background": "background",
+      "ratio": 5.559,
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "foreground": "muted-foreground",
+      "background": "muted",
+      "ratio": 5.011,
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "foreground": "primary-foreground",
+      "background": "primary",
+      "ratio": 6.288,
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "foreground": "accent-foreground",
+      "background": "accent",
+      "ratio": 7.107,
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "foreground": "destructive",
+      "background": "background",
+      "ratio": 6.228,
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "foreground": "success",
+      "background": "background",
+      "ratio": 6.255,
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "foreground": "warning",
+      "background": "background",
+      "ratio": 6.05,
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "foreground": "sidebar-foreground",
+      "background": "sidebar",
+      "ratio": 14.249,
+      "pass": true
+    },
+    {
+      "theme": "light",
+      "foreground": "sidebar-accent-foreground",
+      "background": "sidebar-accent",
+      "ratio": 6.835,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "foreground": "foreground",
+      "background": "background",
+      "ratio": 15.463,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "foreground": "muted-foreground",
+      "background": "background",
+      "ratio": 8.417,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "foreground": "muted-foreground",
+      "background": "muted",
+      "ratio": 6.765,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "foreground": "primary-foreground",
+      "background": "primary",
+      "ratio": 7.975,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "foreground": "accent-foreground",
+      "background": "accent",
+      "ratio": 8.104,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "foreground": "destructive",
+      "background": "background",
+      "ratio": 8.228,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "foreground": "success",
+      "background": "background",
+      "ratio": 10.129,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "foreground": "warning",
+      "background": "background",
+      "ratio": 10.73,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "foreground": "sidebar-foreground",
+      "background": "sidebar",
+      "ratio": 14.132,
+      "pass": true
+    },
+    {
+      "theme": "dark",
+      "foreground": "sidebar-accent-foreground",
+      "background": "sidebar-accent",
+      "ratio": 8.104,
+      "pass": true
+    }
+  ],
+  "changes": {
+    "lightMutedOnBackground": 5.559,
+    "removedAlphaOverrides": [
+      "session count 60%",
+      "workspace delete 50%",
+      "kanban bind action 60%",
+      "kanban delete 40%",
+      "timeout notice 80%"
+    ]
+  }
+}

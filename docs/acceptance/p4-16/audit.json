@@ -1,0 +1,150 @@
+{
+  "permission_responses_per_agent": {
+    "50796": [
+      {
+        "outcome": {
+          "outcome": "selected",
+          "optionId": "ok"
+        }
+      }
+    ],
+    "50795": [
+      {
+        "outcome": {
+          "outcome": "selected",
+          "optionId": "no"
+        }
+      }
+    ],
+    "50872": [
+      {
+        "outcome": {
+          "outcome": "selected",
+          "optionId": "no"
+        }
+      }
+    ],
+    "51028": [
+      {
+        "outcome": {
+          "outcome": "selected",
+          "optionId": "no"
+        }
+      }
+    ],
+    "51094": [
+      {
+        "outcome": {
+          "outcome": "selected",
+          "optionId": "no"
+        }
+      }
+    ]
+  },
+  "all_logged_responses_once": true,
+  "copy_full_command_verified": true,
+  "native_failure_injection": false,
+  "error_retry_checked_by": "controlled frontend IPC fixture",
+  "runs": [
+    {
+      "objective": "同名审批并发",
+      "status": "succeeded",
+      "tasks": [
+        {
+          "id": "command",
+          "status": "succeeded",
+          "session_id": "260e6182-6433-4fd4-b7d0-ddeca49ce2d6"
+        },
+        {
+          "id": "edit",
+          "status": "succeeded",
+          "session_id": "63762173-cf8f-4660-a361-8e4fd24fe3ba"
+        }
+      ]
+    },
+    {
+      "objective": "取消审批验收",
+      "status": "cancelled",
+      "tasks": [
+        {
+          "id": "command",
+          "status": "cancelled",
+          "session_id": "26f46f1c-39db-40af-8e7f-e1ad668907b9"
+        },
+        {
+          "id": "edit",
+          "status": "cancelled",
+          "session_id": "600c2213-b245-4014-a8db-5edf61199ad1"
+        }
+      ]
+    },
+    {
+      "objective": "退出审批验收",
+      "status": "cancelled",
+      "tasks": [
+        {
+          "id": "command",
+          "status": "cancelled",
+          "session_id": "4d9d0f48-6807-48e4-ad8a-49db28bea36f"
+        },
+        {
+          "id": "edit",
+          "status": "cancelled",
+          "session_id": "13930602-b49c-44d3-8edd-327d8f0a6c8c"
+        }
+      ]
+    }
+  ],
+  "persisted_approval_records": [
+    {
+      "session_id": "13930602-b49c-44d3-8edd-327d8f0a6c8c",
+      "tool_call_id": "same-tool",
+      "tool_name": "同名工具",
+      "decision": "no",
+      "decided_by": "rule:<cancelled>"
+    },
+    {
+      "session_id": "260e6182-6433-4fd4-b7d0-ddeca49ce2d6",
+      "tool_call_id": "same-tool",
+      "tool_name": "同名工具",
+      "decision": "no",
+      "decided_by": "user"
+    },
+    {
+      "session_id": "26f46f1c-39db-40af-8e7f-e1ad668907b9",
+      "tool_call_id": "same-tool",
+      "tool_name": "同名工具",
+      "decision": "no",
+      "decided_by": "rule:<cancelled>"
+    },
+    {
+      "session_id": "4d9d0f48-6807-48e4-ad8a-49db28bea36f",
+      "tool_call_id": "same-tool",
+      "tool_name": "同名工具",
+      "decision": "no",
+      "decided_by": "rule:<cancelled>"
+    },
+    {
+      "session_id": "600c2213-b245-4014-a8db-5edf61199ad1",
+      "tool_call_id": "same-tool",
+      "tool_name": "同名工具",
+      "decision": "no",
+      "decided_by": "rule:<cancelled>"
+    },
+    {
+      "session_id": "63762173-cf8f-4660-a361-8e4fd24fe3ba",
+      "tool_call_id": "same-tool",
+      "tool_name": "同名工具",
+      "decision": "ok",
+      "decided_by": "user"
+    },
+    {
+      "session_id": "687bee53-c6e3-4895-91d2-63576d03330e",
+      "tool_call_id": "same-tool",
+      "tool_name": "同名工具",
+      "decision": "no",
+      "decided_by": "rule:<cancelled>"
+    }
+  ],
+  "fixture_agents_after_exit": 0
+}

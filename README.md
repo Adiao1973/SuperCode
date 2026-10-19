@@ -1,156 +1,84 @@
 # SuperCode
 
-**多 Agent 桌面总控客户端** —— 不重新发明 coding agent，而是站在各家成熟 agent CLI 的肩膀上，做它们的"最高指挥中心"。
+多 Agent 桌面工作台：在一个 macOS App 中管理本机 coding agent 的会话、计划、审批、任务与终端。通过 ACP 接入 OpenCode、Claude Code、Codex 和 MiMo，沿用各 CLI 的安装与认证。
 
-```
-┌─────────────────────────────────────────────┐
-│  SuperCode（总控）                            │
-│  工作空间 · 多会话 · 审批中心 · 任务看板 · Diff 审查 │
-├─────────────────────────────────────────────┤
-│  Agent 适配层（ACP 优先，headless 兜底）         │
-└──────────────┬──────────────────────────────┘
-               ↓ stdio JSON-RPC（ACP v1）
-   opencode ─ claude-code ─ codex ─ MiMo ─ …
-```
+## 版本与安装
 
-- **协议优先**：以 [Agent Client Protocol](https://agentclientprotocol.com)（Zed 发起，v1 稳定）为通用接入底座——新增 agent ≈ 注册表加一条命令
-- **审批是第一公民**：所有 agent 的权限请求汇入统一审批中心（会话级权限模式 + 预授权规则 + 人工裁决 + fail-closed）
-- **Mac 优先**，后续兼容 Windows；桌面端 Tauri v2 + Rust 核心 + React 19
+**v2.0.0 正在进行发布验收，尚未发布。** 当前公开下载为 [v1.0.0](https://github.com/Adiao1973/SuperCode/releases/tag/v1.0.0)。2.0 的功能、升级与性能证据见 [Phase 4 验收](docs/acceptance/phase4.md)，发布进度见 [路线图](docs/roadmap.md)。
 
-## 当前状态：v1.0.0（AI 指挥官 · 多 Agent · 工作区）
+本轮交付范围为 **macOS Apple Silicon**，实测系统 macOS 26.5.2；不声明 Intel 或 Windows 支持。安装时将 DMG 中的 App 复制到 Applications，校验和随 Release 提供。安装包没有 Apple Developer ID 签名或公证；本地安装测试不代表下载隔离状态下的 Gatekeeper 验收，详见 [安装发布记录](docs/acceptance/p4-24.md)。
 
-[下载 v1.0.0（macOS Apple Silicon）](https://github.com/Adiao1973/SuperCode/releases/tag/v1.0.0)
+## 工作台能力
 
-安装包未使用 Apple Developer ID 签名或公证；仅在 macOS 26.5.2 arm64 实机验收，不声明 Intel/Windows 支持。下载后将 App 复制至 Applications；校验和附于 Release。详见 [Phase 3 验收](docs/acceptance/phase3.md)。
-
-✅ **桌面端全功能已在真实 opencode + GLM 上验收通过**（[Phase 1 验收记录](docs/acceptance/phase1.md)）：
-
-| 能力 | 说明 |
+| 能力 | 用法与边界 |
 |---|---|
-| 多会话并行 | 多会话同时运行互不串台；⌘N/⌘1-8/⌘R/⌘. 快捷键；协议级取消 |
-| 会话视图 | 流式消息 + 思考 + 工具时间线（虚拟列表，200+ 条目流畅）；edit 结构化 diff / write 磁盘懒读 |
-| 权限模式 | 会话级四档一键切换（计划 / 确认 / 自动编辑 / 完全访问，ADR-0006）+ 规则库（SQLite 持久，deny>ask>allow）；待决卡片内联会话流，审批中心跨会话聚合 |
-| 持久化与恢复 | 事件流落库；重启后历史会话恢复；续聊经 session/load 恢复上下文；会话删除级联 |
-| 工作空间 | 项目空间=项目根路径（同项目会话自动归组，历史按 cwd 回填）；默认空间承载聊天/电脑操作类任务（ADR-0007） |
-| 任务看板 | 任务=标题+空间+绑定会话+状态（待办→进行→评审→完成）；点击绑定会话跳转；会话删除自动解绑 |
-| 环境探测 | opencode 安装/版本/默认模型检测；严格模式引导（检测并给出可复制的收紧配置，补客户端管辖边界外的白名单缺口） |
+| 工作区与会话 | 按项目目录组织，多会话并行；可折叠导航、调整列表和终端尺寸 |
+| 消息阅读 | 流式 Markdown、代码复制、思考与工具折叠、文件变更详情；向上阅读保留位置 |
+| AI 指挥官 | 输入目标，选择目录和 Agent，生成计划；审阅并显式确认后才执行 |
+| 执行监控 | 查看依赖批次、进度、审批和结果，跳转对应会话；重启只恢复历史，不自动重跑 |
+| 权限审批 | 会话内处理请求，审批中心统一汇总；支持权限模式与预授权规则 |
+| 任务看板 | 拖拽或键盘移动，查看绑定会话与 worktree；跨空间移动仅调整分组，不改变执行目录 |
+| 外观与操作 | 系统/浅色/深色主题、减少动态、Cmd-K 搜索、键盘导航与读屏名称 |
+| 内嵌终端 | 使用会话实际 cwd；切换模块或收起终端保留进程，关闭终端或切换会话结束 shell |
 
-v0.1.0（Phase 0 · CLI 原型）的 ACP 全链路验收见 [docs/acceptance/phase0.md](docs/acceptance/phase0.md)。
+审批只能处理 Agent 转交的请求。CLI 自身的白名单可能提前放行操作；会话配置中的权限提示和收紧引导用于说明这一边界，见 [权限决策](docs/adr/0006-permission-modes.md)。
 
-v0.3.0 包含 Claude Code、Codex、MiMo ACP 接入、Agent 管理、任务 worktree 隔离、看板拖拽与会话内嵌终端。用户授权本版跳过 ZCode：其 StreamJson 实现保留独立分支，当前 Start Plan 未能通过 headless CLI 验收，发布版不能运行 ZCode。详见 [Phase 2 验收](docs/acceptance/phase2.md) 和 [路线图](docs/roadmap.md)。
+Windows、ZCode 接入延期；NativeDriver 仅限核心库，产品中的 Codex 仍使用 ACP。具体范围以 [路线图](docs/roadmap.md) 为准。
 
-可在设置页管理 Agent，在会话中选择已安装并完成认证的 ACP agent。任务看板可跨列/空间拖拽，已有会话及 worktree 保持原执行归属；「隔离会话」建立独立任务目录；会话底部「打开终端」使用实际 cwd，关闭或切换会话/页面会结束 shell。
+## 开始使用
 
-## 环境要求
+1. 安装并认证至少一个 Agent CLI。设置页提供安装命令和版本检测；版本检测成功不等于模型认证成功。需要通过 npx 启动的适配器还需 Node.js。
+2. 添加项目空间，选择已存在的项目目录；新建会话，确认 Agent、实际目录和权限模式。
+3. 在底部输入任务，Enter 或 ⌘R 运行，Shift-Enter 换行，⌘. 停止；需要授权时在请求卡片中处理。
+4. 需要多任务规划时，在设置中配置指挥官模型，再进入「指挥官」生成、审阅并确认计划。普通 Agent 会话不要求配置指挥官 API。
 
-- macOS（当前研发与发布范围；Windows 支持延期）
-- Rust ≥ 1.88（edition 2024）、Node + pnpm
-- [opencode](https://opencode.ai) ≥ 1.18 已安装并完成认证；也可选择 Claude Code/Codex/MiMo，按设置页指引安装相应 CLI/ACP adapter 并完成各自认证
-  - 注意：需在 `~/.config/opencode/opencode.jsonc` 显式固定默认模型（ACP 会话不继承登录态默认模型，会回退到 zen 免费模型并限流），例如：
-    ```jsonc
-    { "model": "zhipuai-coding-plan/glm-5.3-flash" }
-    ```
-  - Homebrew / 官方脚本安装均可——打包 .app 已内置常见安装目录的 PATH 修正（launchd 环境不继承 shell PATH）
-- [just](https://github.com/casey/just)（一键命令，可选）
+OpenCode 建议在自己的配置中显式选择可用模型，避免默认免费模型限流。各 Agent CLI 的模型和登录状态与指挥官 API 独立配置；App 不会把 CLI 登录自动转换成直连 API 凭据。
 
-## 快速开始
+### 本机数据
 
-```bash
-git clone <repo> && cd SuperCode
-just verify          # 前端构建 + fmt/clippy/全部测试
-just dev             # 桌面端开发模式（Tauri dev）
-just build           # 打包 .app 与 .dmg（target/release/bundle/）
-```
+数据库位于 `~/Library/Application Support/SuperCode/supercode.db`，可用 `SUPERCODE_DB` 指定其他路径。历史会话、计划、规则、外观和布局偏好保存在本机。
 
-桌面端速览：
+指挥官的连接参数与 key 在设置中分别保存到本机 SQLite；保存 key 后无需每次启动前设置终端变量。环境变量仍可作为备用来源。SQLite、密钥和真实连接配置不提交 GitHub；本机数据库仍应作为敏感文件保管。保存成功与模型验证是两个状态，验证会显式调用 API，但不会执行生成的任务。
 
-- **新建空间**：侧栏 ➕文件夹 → 输入项目根目录（如 `/Users/you/Code/myapp`），同项目会话自动归组；不绑项目的会话放「默认空间」
-- **跑任务**：空间内新建会话（cwd 自动预填）→ 输入提示词 ⌘R 运行；确认模式下每个 bash/edit 都会弹内联审批卡
-- **权限模式**：表单右侧选择器（计划=只读全拒 / 确认=逐次询问 / 自动编辑=edit 类放行 / 完全访问=全放行），运行中可热切换
-- **续聊**：跑过的会话直接输入新提示词再运行（自动 session/load 恢复上下文）；重启后历史仍在
-- **严格模式**（推荐）：会话运行框检测到"宽松"时，展开「收紧引导」复制 `opencode.jsonc` 片段写入项目目录——之后 bash/edit 全部进 SuperCode 审批（否则 opencode 自带白名单会静默放行部分操作，见 ADR-0006 管辖边界）
-
-CLI 支持 `./target/debug/supercode run|resume|sessions|detect`。
-
-v1.0.0 计划校验：
+### CLI
 
 ```bash
+# 仅校验计划，不执行任务
 cargo run -p supercode-cli -- plan validate docs/examples/commander-plan.json
-```
-
-该命令只验证计划并输出依赖批次，不执行任务。
-
-### 预授权规则语法
-
-```
-*                全匹配
-bash             裸工具名（任意参数）
-bash(git status) 精确命令
-bash(git diff *) 通配（* 跨空格；尾通配宽容：也匹配无参的 git diff）
-```
-
-求值优先级 `deny > ask > allow`；模式兜底在其后（plan 拒绝 / full 放行 / autoedit 放行 edit 类）。**面向 agent 的规则建议用通配**——agent 常自行拼接命令，精确规则容易漏配。
-
-### 数据位置
-
-- 会话库：`~/Library/Application Support/SuperCode/supercode.db`（`SUPERCODE_DB` 覆盖）
-- opencode stderr 日志：`~/.local/share/opencode/log/`
-
-dev 已集成的 P3-2 提供“设置 → 指挥官模型”，连接参数和 key 可在 App 内分开保存到本机 SQLite，数据库不上传 GitHub。密钥保存后无需终端环境变量，重启 App 仍可直接使用；环境变量保留为备用来源。点击“验证模型并生成示例计划”可直接验证，计划不会自动执行。CLI 默认同样读取本机配置与密钥；显式 --config 只读取指定配置及其环境变量。配置后可运行：
-
-```bash
+# 使用本机已保存配置生成计划
 cargo run -p supercode-cli -- plan generate '为待办应用提出开发计划，不执行任务'
-# 或显式使用本机配置文件（不要提交真实连接信息）：
-cargo run -p supercode-cli -- plan generate '设计任务计划' --config /tmp/commander.json
 ```
 
-`docs/examples/commander-config.json` 只包含占位值。v1.0.0 包含已验收的 P3-1～P3-7，真实 MiMo App/CLI 计划生成通过。计划持久化、状态机与核心 ACP 批次调度已实现并完成真实双 agent 验收。CLI 预览、显式确认执行及结果报告已实现；桌面「指挥官」入口已在 macOS 验收：填写目标、已存在的绝对工作目录和参与规划的 Agent → 生成草稿 → 展开审阅完整提示词/依赖 →「审阅并执行」→ 确认后查看进度、审批和结果。可取消本应用的操作；重启恢复历史，不自动重跑。Windows 实机专项留待 P3-8/9。
-
-P3-7 提供核心 `NativeDriver`（Codex app-server stdio），支持线程恢复、一次性工具审批和取消。产品中的 Codex 会话及指挥官仍走 ACP；原生驱动目前通过专用示例验收：`cargo run -p supercode-core --example codex_native -- /绝对工作目录 new text`。示例默认沿用本机 Codex 登录与模型；可用 `SUPERCODE_NATIVE_TEST_MODEL` 仅覆盖本次验收子进程模型，不写用户配置。详见 [P3-7 验收](docs/acceptance/p3-7.md)。
-
-当前路线聚焦 macOS：Windows P3-8/P3-9 延期，未经平台验收的实现保留独立分支、未合 dev。本轮 v1.0.0 目标为 macOS，[P3-10A 整体回归](docs/acceptance/p3-10a.md)已通过，并修复窄窗口会话控制栏挤压问题；P3-10B 已完成 arm64 安装包及启动验收，发布记录见 [Phase 3](docs/acceptance/phase3.md)。详见 [路线图](docs/roadmap.md) 与 [平台决策](docs/adr/0008-macos-priority.md)。
-
-指挥官 CLI 闭环（dev）：
+构建 CLI 后，可创建执行草稿、审阅，再显式执行和读取报告：
 
 ```bash
-# 使用已保存的模型和密钥，仅生成并保存 draft；目录须已存在且为绝对路径
 supercode plan run '任务目标' --cwd /absolute/project --agents opencode,codex
-# 先审阅返回的 plan/prompts，再复制 summary.run_id 确认执行
 supercode plan execute <run-id> --yes --jobs 2
 supercode plan report <run-id>
 ```
 
-`execute` 没有 `--yes` 不运行；未预授权操作默认拒绝，可用 `--allow`/`--deny` 指定规则。stdout 为 JSON，进度写 stderr；失败非零，Ctrl-C 等待取消后退出 130。报告包含各状态数量、会话引用和最后回复（最多 8 KiB），读取不重跑任务。
+目录须已存在且为绝对路径。`execute` 没有 `--yes` 不运行；未预授权操作默认拒绝，可用 `--allow` / `--deny` 设置规则。报告读取不重跑任务。配置示例只含占位值，见 [文档入口](docs/README.md)。
 
-## 架构与文档
+## 本地开发
 
-从 [文档导航](docs/README.md) 进入；当前进度看 roadmap，执行步骤看 development-process，历史过程不作为现行规则。
-
-- [docs/architecture.md](docs/architecture.md) —— 设计单一事实源：分层架构、核心接口（AgentEvent / ApprovalBroker / envcheck / EventAggregator）、事件管道（Rust 合帧 → Tauri Channel）、IPC 契约、数据模型
-- [docs/roadmap.md](docs/roadmap.md) —— 分期任务清单（当前进度、下一任务及验收入口）
-- [docs/development-process.md](docs/development-process.md) —— 闭环开发流程：文档先行 → 实现 → 验证 → 归档；分支模型 `feat/fix → dev → tag → main`
-- [docs/adr/](docs/adr/) —— 架构决策记录（ACP 选型 / Tauri+Rust / React+shadcn / opencode 先行 / 分支模型 / 权限模式 / 工作空间模型）
-- [docs/acceptance/](docs/acceptance/) —— 分期与任务验收记录（各 Phase 与任务，顶部结论优先）
-
-```
-crates/core    # supercode-core：driver 适配层、审批、事件、进程、注册表、envcheck、SQLite
-crates/cli     # supercode CLI（Phase 0 宿主）
-apps/desktop   # Tauri v2 + React 19 桌面端（Phase 1 起）
-tools/         # 辅助脚本（图标生成等）
-```
-
-## 开发
+需要 Rust ≥ 1.88、Node.js ≥ 22.12、pnpm，以及 macOS Tauri 构建工具；一键命令使用 [just](https://github.com/casey/just)。真实运行还需对应 CLI 和可用认证。
 
 ```bash
-just verify    # 前端构建 + fmt --check + clippy(-D warnings) + cargo test —— DoD 硬标准
-just fix       # 自动修复
-just dev       # 桌面开发模式
-just build     # 打包 .app/.dmg
-just smoke     # 真实 opencode 冒烟（CLI，需本机认证）
+git clone https://github.com/Adiao1973/SuperCode.git
+cd SuperCode
+pnpm install
+just verify    # 文档链接、版本一致性、前端类型/测试/构建、Rust fmt/clippy/test
+just dev       # 桌面开发
+just build     # 原始 App 和 DMG，位于 target/release/bundle/
+just smoke     # 本机真实 OpenCode 冒烟，需要认证
 ```
 
-从 `dev` 切短分支开发，验收后 `--no-ff` 合回；版本稳定打 tag 后合入 `main`（详见开发流程文档）。
+从 `dev` 切任务分支，预写验收、实现、验证、归档后 `--no-ff` 合回。发布前完成阶段验收，再打 tag、合 main、发布资产。唯一流程规范见 [开发流程](docs/development-process.md)。
 
-## License
+- [文档导航](docs/README.md)：架构、设计、ADR、验收与历史入口。
+- [路线图](docs/roadmap.md)：当前状态、下一任务及延期项。
+- [架构](docs/architecture.md)：现行接口、数据和行为约束。
 
-[MIT](LICENSE)
+核心代码位于 `crates/core`，CLI 位于 `crates/cli`，Tauri + React 桌面端位于 `apps/desktop`。
+
+[MIT License](LICENSE)

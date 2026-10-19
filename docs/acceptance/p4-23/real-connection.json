@@ -1,0 +1,16 @@
+{
+  "provider_alias": "MiMo",
+  "native_generate_error": "HTTP request failed",
+  "dns_resolved": true,
+  "tls_attempts": 2,
+  "tls_error_type": "SSLEOFError",
+  "http_response_received": false,
+  "sessions_created": 0,
+  "plans_created": 0,
+  "isolated_credentials_after_cleanup": 0,
+  "isolated_config_after_cleanup": 0,
+  "original_database_opened_readonly": true,
+  "real_end_to_end_passed": false,
+  "record_kind": "historical_failed_attempt",
+  "superseded_by": "real-end-to-end.json"
+}

@@ -1,0 +1,76 @@
+Window: "SuperCode · 执行监控验收", App: SuperCode P411.
+0 standard window SuperCode · 执行监控验收, Secondary Actions: Raise
+	1 scroll area
+		2 HTML content Description: SuperCode, URL: 127.0.0.1:1453/
+			3 container 应用导航
+				4 text SuperCode v1.0.0
+				5 container 模块
+					6 button 指挥官
+					7 button 会话
+					8 button 任务看板
+					9 button 审批中心
+					10 button 设置
+				11 button (expanded) 折叠导航, Secondary Actions: Collapse
+			12 container
+				13 heading 会话, Value: 1
+					14 text 会话
+				15 pop up button 当前项目：默认空间
+				16 button (expanded) 隐藏会话列表, Secondary Actions: Collapse
+				17 text 会话（ 7 ）
+				18 button 压测, Help: 向当前会话注入 320 条合成事件（虚拟列表滚动压测，仅开发模式）
+				19 button 新建项目空间（绑定一个项目目录）
+				20 button 新建会话（⌘N，默认空间）
+				21 text field (settable) 按标题过滤会话, Placeholder: 过滤标题…
+				22 text 中文规划项目 1
+				23 button 在「中文规划项目」中新建会话（cwd 预填空间路径）
+				24 button 删除该空间（会话移入默认空间，不删除）
+				25 container /tmp/sc-p413/project
+					26 text /tmp/sc-p413/project
+				27 button 选择会话 中文规划项目上下文
+				28 button 删除会话 中文规划项目上下文, Help: 删除会话
+				29 text 默认空间 6
+				30 button 在默认空间新建会话
+				31 button 选择会话 并行与依赖 c
+				32 button 删除会话 并行与依赖 c, Help: 删除会话
+				33 button 选择会话 并行与依赖 b
+				34 button 删除会话 并行与依赖 b, Help: 删除会话
+				35 button 选择会话 并行与依赖 a
+				36 button 删除会话 并行与依赖 a, Help: 删除会话
+				37 button 选择会话 实现确认流程
+				38 button 删除会话 实现确认流程, Help: 删除会话
+				39 button 选择会话 梳理中文待办交互
+				40 button 删除会话 梳理中文待办交互, Help: 删除会话
+				41 button 选择会话 新会话
+				42 button 删除会话 新会话, Help: 删除会话
+				43 splitter 调整会话列表宽度, Value: 25.856
+				44 container 当前会话上下文
+					45 heading 并行与依赖 c, Value: 2
+						46 text 并行与依赖 c
+					47 text 默认空间 opencode /tmp/sc-p415/project
+				48 text fast
+				49 toggle button 查看原文, Value: off
+				50 button 复制全文
+				51 text starteddone
+				52 splitter (disabled) 调整终端高度, Help: 上下键调整；Enter 收起或展开终端
+				53 container 会话输入区
+					54 text entry area (settable) 任务提示词, Value: [text entry area: 任务提示词]
+						55 text 任务提示词
+					56 pop up button 配置会话
+					57 button (disabled) 运行
+					58 text Enter 运行 · Shift-Enter 换行 · ⌘R 运行 · ⌘. 停止
+					59 button 宽松权限：部分操作不会进入审批 · 查看配置
+				60 button 打开终端
+				61 text 已结束
+	62 close button
+	63 full screen button Help: this button also has an action to zoom the window, Secondary Actions: zoom the window
+	64 minimize button
+	65 text SuperCode · 执行监控验收
+66 menu bar
+	67 SuperCode P411
+	68 File
+	69 Edit
+	70 View
+	71 Window
+	72 Help
+
+The focused UI element is 13 heading 会话, Value: 1

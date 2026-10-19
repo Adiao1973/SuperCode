@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { pointerWithin, rectIntersection, useDroppable, type CollisionDetection, type KeyboardCoordinateGetter } from "@dnd-kit/core";
+import { pointerWithin, rectIntersection, useDroppable, useDndContext, type CollisionDetection, type KeyboardCoordinateGetter } from "@dnd-kit/core";
 import type { TaskEntry } from "@/lib/agent";
 import { cn } from "@/lib/utils";
 
@@ -27,6 +27,7 @@ export const boardKeyboardCoordinates: KeyboardCoordinateGetter = (event, { cont
 export function KanbanColumn({ workspaceId, status, row, column, label, disabled, children }: {
   workspaceId: string; status: TaskEntry["status"]; row: number; column: number; label: string; disabled: boolean; children: ReactNode;
 }) {
+  const { active } = useDndContext();
   const { setNodeRef, isOver } = useDroppable({ id: columnId(workspaceId, status), disabled, data: { workspaceId, status, row, column, label } });
-  return <div ref={setNodeRef} data-kanban-column data-workspace-id={workspaceId} data-task-status={status} role="region" aria-label={label} className={cn("bg-muted/30 flex min-h-28 flex-col gap-2 rounded-lg border p-2 transition-colors", isOver && "border-primary bg-primary/10")}>{children}</div>;
+  return <div ref={setNodeRef} data-kanban-column data-workspace-id={workspaceId} data-task-status={status} role="region" aria-label={label} className={cn("bg-muted/20 relative flex min-h-44 flex-col gap-2 rounded-lg border p-2 pb-14 transition-colors", isOver && "border-primary bg-primary/10")}>{children}{isOver && active && <div data-drop-placeholder aria-hidden="true" className="pointer-events-none absolute inset-x-2 bottom-2 rounded-md border border-dashed border-primary bg-primary/5 px-2 py-2 text-center text-xs text-primary">放到此列</div>}</div>;
 }
