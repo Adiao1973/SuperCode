@@ -1,21 +1,21 @@
 # SuperCode 文档导航
 
-先看当前进度，再按开发流程执行；这里不另设一套流程。更新：2026-10-11。
+更新：2026-10-19。先看路线图，再按开发流程执行；每类信息只在对应文档维护。
 
-| 要解决的问题 | 入口 | 内容边界 |
+| 需要了解 | 入口 | 内容边界 |
 |---|---|---|
-| 现在做到哪、下一步做什么？ | [Roadmap](roadmap.md) | 当前任务表、延期项、里程碑 |
-| 开发如何闭环？ | [开发流程](development-process.md) | 文档先行、实现、自动/真实验收、归档、dev 集成 |
-| 接口和数据怎么设计？ | [架构](architecture.md) | 现行契约与实现边界，含已集成 dev 的 P3-1～7 |
-| 2.0 体验如何升级？ | [分析与设计方向](design/desktop-v2.md) | 现状判断、开源选型、视觉/动效原则与预算；任务状态仍由 roadmap 维护 |
-| 为什么这样选？ | [ADR 索引](adr/README.md) | 重大决策及理由 |
-| 验收到底通过了吗？ | [验收索引](acceptance/README.md) | 最终结论、预写步骤、过程证据与偏差 |
-| 怎么使用产品？ | [项目 README](../README.md) | 使用方式、安装版本与 dev 差异 |
-| 查以前的设计和进度？ | [历史索引](history/README.md) | 只读历史，不代表当前规则或状态 |
-| 需要计划/配置样例？ | [计划](examples/commander-plan.json)、[配置](examples/commander-config.json) | 虚构示例；真实信息只留本机 |
+| 安装与使用 | [项目 README](../README.md) | 用户操作、版本与平台范围 |
+| 进度与下一任务 | [Roadmap](roadmap.md) | 当前任务表、延期项、里程碑 |
+| 开发如何闭环 | [开发流程](development-process.md) | 文档先行、实现、自动/真实验收、归档、分支与发布 |
+| 接口与数据设计 | [架构](architecture.md) | 现行实现契约，不以历史方案代替当前约束 |
+| 体验设计 | [设计索引](design/README.md) | 分析、选型、主题和动效规范 |
+| 决策理由 | [ADR 索引](adr/README.md) | 重大取舍及适用范围 |
+| 验收证据 | [验收索引](acceptance/README.md) | 顶部最终结论、预写步骤、过程证据与偏差 |
+| 历史方案与旧进度 | [历史索引](history/README.md) | 归档快照，不能作为当前待办 |
+| 计划与连接示例 | [计划](examples/commander-plan.json)、[配置](examples/commander-config.json) | 虚构占位值，真实信息只留本机 |
 
-当前已发布 v1.0.0，包含 P3-1～7；[Phase 3 验收](acceptance/phase3.md)汇总功能与安装证据。P3-6 已完成 macOS 桌面闭环，CLI 与桌面均支持计划预览、确认执行、取消及结果读取；Windows 实机验收留待 P3-8/9。P3-7 核心 Codex NativeDriver 已完成真实恢复、审批与取消验收，产品入口仍使用 ACP。用户授权全力开发 macOS，P3-8/P3-9 延期，Windows 实现保留独立分支；[P3-10A macOS 整体回归](acceptance/p3-10a.md)已通过；P3-10B 已验收并发布，Phase 3 闭环完成，见其[记录](acceptance/p3-10b.md)。P2-6 延期，Claude ACP 本机问题按用户要求暂不处理。下一版本 v2.0.0 规划为 Phase 4 体验升级，[P4-1 体验基线](acceptance/p4-1.md)已验收，[P4-2 原型与选型](acceptance/p4-2.md)已验收，[P4-3 前端验证与 fixture 基础](acceptance/p4-3.md)已验收，[P4-4 主题与外观偏好](acceptance/p4-4.md)已验收，[P4-5 动效基础与减少动态](acceptance/p4-5.md)已验收，[P4-6 AppShell、导航与焦点](acceptance/p4-6.md)已验收，[P4-7 可调整分栏](acceptance/p4-7.md)已验收，[P4-8 会话列表与上下文定位](acceptance/p4-8.md)已验收，[P4-9 底部输入区与配置弹层](acceptance/p4-9.md)已验收并接入 dev，[P4-10 流式 Markdown 与代码阅读](acceptance/p4-10.md)已验收并接入 dev；[分析](design/desktop-v2.md)与任务拆分已写入现行 roadmap。
+当前已发布 v1.0.0；v2.0.0 的 P4-1～23 已验收，P4-24 安装发布进行中，见 [Phase 4](acceptance/phase4.md)。发布前统一审阅全部文档，包括 README；当前任务状态仍以 roadmap 为准。
 
-每类信息只在对应入口维护：roadmap 不写操作流水账，architecture 不保存过时实现约定，验收历史不冒充当前状态。存量记录保留，历史段落由顶部最终结论限定。
+Windows、ZCode 与 Claude 本机环境问题依用户授权延期；NativeDriver 限核心库，产品使用 ACP。范围依据见 [平台决策](adr/0008-macos-priority.md)及路线图。
 
-[P4-23 全链路与升级验收](acceptance/p4-23.md)已验收并接入 dev：1.0 数据保留、真实 MiMo 中国入口及 OpenCode/Codex 链路、审批取消、worktree/看板/PTY 与重启通过；原模型配置与 key 未修改，P4-24 未启动。
+验收记录中的过程、旧版本号和“下一任务未启动”描述保留当时事实；读取时以任务顶部结论与当前 roadmap 为准，不把旧日志复制为现状。真实 endpoint/model/key、数据库及个人日志不进入文档或仓库。

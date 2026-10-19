@@ -1,0 +1,21 @@
+{
+  "original_mounted_installed_identical": true,
+  "bundle_entries": 3,
+  "bundle_modified": false,
+  "personal_database_accessed": false,
+  "dmg_verify_pass": true,
+  "app_version_observed": "2.0.0",
+  "five_pages_observed": true,
+  "real_acp_agent": "codex",
+  "completed_sessions": 1,
+  "persisted_messages": 2,
+  "tool_calls": 0,
+  "reply_marker": "P424_RELEASE_OK",
+  "restart_database_identical": true,
+  "restart_history_and_cwd_observed": true,
+  "pty_cwd_correct": true,
+  "pty_chinese_and_ansi_rendered": true,
+  "pty_exit_code": 0,
+  "isolated_credentials_rows": 0,
+  "test_app_closed": true
+}

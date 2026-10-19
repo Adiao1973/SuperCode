@@ -1,0 +1,25 @@
+{
+  "version": "2.0.0",
+  "bundle_version": "2.0.0",
+  "architecture": "arm64",
+  "codesign_inspection_exit": 0,
+  "signature_ad_hoc": true,
+  "team_identifier_present": false,
+  "codesign_verification_exit": 1,
+  "stapler_validation_exit": 65,
+  "developer_id_provided": false,
+  "notarization_provided": false,
+  "download_quarantine_gatekeeper_tested": false,
+  "assets": [
+    {
+      "name": "SHA256SUMS.txt",
+      "bytes": 94,
+      "sha256": "ce9765507b6c51e71ba948212abec24084234e61c6f6a4fb7d1f45447e41a90e"
+    },
+    {
+      "name": "SuperCode_2.0.0_aarch64.dmg",
+      "bytes": 11008878,
+      "sha256": "7ba0e0e0674e6f40891812cc0f443267f5ca62c241c187c1090100a2207e4065"
+    }
+  ]
+}
