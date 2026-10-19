@@ -1,14 +1,14 @@
 # SuperCode Roadmap
 
-> 当前任务状态的唯一入口。更新：2026-10-12。执行规则见 [开发流程](development-process.md)，现行实现见 [架构](architecture.md)，2.0 分析与选型见 [设计方向](design/desktop-v2.md)。版本阶段不等于功能已经交付。
+> 当前任务状态的唯一入口。更新：2026-10-19。执行规则见 [开发流程](development-process.md)，现行实现见 [架构](architecture.md)，2.0 分析与选型见 [设计方向](design/desktop-v2.md)。版本阶段不等于功能已经交付。
 
 ## 当前进度与下一步
 
-- 已发布 **v1.0.0**：macOS Apple Silicon，main/tag/GitHub Release；[阶段验收](acceptance/phase3.md)、[产物与安装发布](acceptance/p3-10b.md)。Phase 3 在批准范围内闭环完成。
-- 下一版本目标 **v2.0.0：桌面交互与视觉体验升级**，内部编号 **Phase 4 / P4-x**，避免与已发布的 Phase 2（v0.3.0）混淆。产品版本仍为 1.0.0；本文件不触发改版本、安装依赖或实现功能。
-- 本轮 DOC-3 路线规划见 [记录](acceptance/v2-roadmap.md)。**P4-1 基线与体验清单已验收**，见 [记录](acceptance/p4-1.md)；P4-2 独立原型与兼容选型已验收，见 [记录](acceptance/p4-2.md)；P4-3 前端验证与 fixture 基础已验收，见 [记录](acceptance/p4-3.md)；P4-4 设计 token、主题与外观偏好已验收，见 [记录](acceptance/p4-4.md)。P4-5 动效基础与减少动态已验收，见 [记录](acceptance/p4-5.md)。P4-6 AppShell、导航与焦点已验收，见 [记录](acceptance/p4-6.md)。P4-7 工作区/详情/终端可调整分栏已验收，见 [记录](acceptance/p4-7.md)。P4-8 会话列表与上下文定位已验收，见 [记录](acceptance/p4-8.md)。P4-9 底部输入区与配置弹层已验收并接入 dev，见 [记录](acceptance/p4-9.md)。P4-10 流式 Markdown 与代码阅读已验收并接入 dev，见 [记录](acceptance/p4-10.md)。P4-11 滚动锚点与思考/工具折叠已验收，见 [记录](acceptance/p4-11.md)。P4-12 工具与 diff 详情层次已验收，见 [记录](acceptance/p4-12.md)。P4-13 指挥官目标输入与项目/Agent 选择已验收，见 [记录](acceptance/p4-13.md)。P4-14 计划审阅与确认已验收，见 [记录](acceptance/p4-14.md)。P4-15 执行监控、结果与会话跳转已验收，见 [记录](acceptance/p4-15.md)。P4-16 审批上下文与裁决反馈已验收，见 [记录](acceptance/p4-16.md)。P4-17 看板视觉/拖拽与任务详情已验收，见 [记录](acceptance/p4-17.md)。P4-18 分组设置与初次配置引导已验收，见 [记录](acceptance/p4-18.md)。P4-19 统一空/错/加载/短反馈已验收，见 [记录](acceptance/p4-19.md)。P4-20 Cmd-K 与快捷键发现已验收并接入 dev，见 [记录](acceptance/p4-20.md)；P4-21 性能与资源回归已验收，见 [记录](acceptance/p4-21.md)；P4-22 可访问性与多尺寸回归已验收，见 [记录](acceptance/p4-22.md)。
-- 研发平台继续聚焦 macOS，见 [ADR-0008](adr/0008-macos-priority.md)。Windows P3-8/P3-9、ZCode P2-6 继续延期；Claude ACP 本机环境问题按用户要求暂不处理；NativeDriver 保持核心库范围，产品 Codex 使用 ACP。
-- 日常从 dev 切最小任务分支；每项文档先行、实现、自动/实际桌面验收、归档、--no-ff 合 dev。状态只用待办/进行中/待验收/已验收/延期；出口未过不合 dev，不提前跨任务实现。
+- 已发布 **v1.0.0**，见 [Phase 3](acceptance/phase3.md)。
+- **v2.0.0 / Phase 4**：P4-1～23 已验收；当前任务 **P4-24 安装与发布**，版本元数据已升至 2.0.0，尚未发布。阶段证据见 [Phase 4](acceptance/phase4.md)，安装和远端出口见 [P4-24](acceptance/p4-24.md)。
+- 发布前整理全部文档，包括根 README：统一现行入口、版本与状态，核对链接；保留历史证据，不改写旧版本验收事实。
+- 平台聚焦 macOS Apple Silicon。Windows P3-8/P3-9、ZCode P2-6 继续延期；Claude ACP 本机问题暂不处理；NativeDriver 限核心库，产品 Codex 使用 ACP，见 [ADR-0008](adr/0008-macos-priority.md)。
+- 开发与发布按唯一 [开发流程](development-process.md) 执行；下一功能任务须在当前任务闭环后确定。
 
 ## 已完成与延期
 

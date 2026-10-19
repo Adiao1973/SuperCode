@@ -1,6 +1,6 @@
 # P4-4 外观设计
 
-实现范围为 dev 的主题基础。整体布局及动效分别交由后续任务，状态以 [roadmap](../roadmap.md) 为准；持久化/IPC 约定见 [架构 §6.8](../architecture.md#68-外观偏好与首帧p4-4)。
+本文定义主题基础；布局见 [P4-7](../acceptance/p4-7.md)，动效见 [规范](desktop-v2-motion.md)，状态以 [roadmap](../roadmap.md) 为准；持久化/IPC 约定见 [架构 §6.8](../architecture.md#68-外观偏好与首帧p4-4)。
 
 | 角色 | 浅色 | 深色 |
 |---|---|---|

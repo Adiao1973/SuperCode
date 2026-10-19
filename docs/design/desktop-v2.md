@@ -1,6 +1,6 @@
 # v2.0.0 桌面体验分析与设计方向
 
-> 规划日期：2026-10-08。本文是目标与选型建议，不代表已实现设计。P4-1 的测量见 [基线](../acceptance/p4-1.md)，P4-2 独立原型与精确候选见 [决策](desktop-v2-prototype.md)；dev 已接入 P4-4 主题与外观偏好，见 [设计 token](desktop-v2-appearance.md)；P4-5 动效基础见 [规范](desktop-v2-motion.md)，P4-6 已接入产品 AppShell、折叠导航与项目定位，运行宿主保持和键盘焦点见 [验收](../acceptance/p4-6.md)；P4-7 已接入可调整列表/详情/终端分栏、本机尺寸记忆与窄窗口自动收拢，见 [验收](../acceptance/p4-7.md)。P4-8 已接入本地标题过滤、会话行状态/Agent/cwd 与常显上下文，见 [验收](../acceptance/p4-8.md)。P4-9 底部输入与配置弹层已验收并接入 dev，见 [记录](../acceptance/p4-9.md)。P4-10 已接入流式 Markdown、原文回退、安全外链确认与按需代码高亮，见 [记录](../acceptance/p4-10.md)。P4-11 已接入阅读锚点、离底提示和会话折叠记忆，见 [记录](../acceptance/p4-11.md)。P4-12 已接入工具分区、完整复制、长 diff 原文回退与懒读恢复，见 [记录](../acceptance/p4-12.md)。P4-13 已接入目标分区、项目预填/原生目录选择、Agent 多选与模型配置状态，见 [记录](../acceptance/p4-13.md)。任务顺序/状态只看 [roadmap](../roadmap.md)，开发规则只看 [development-process](../development-process.md)。
+> 规划日期：2026-10-08。本文保留规划时的分析与选型建议，不单独证明功能交付。主题与动效规范见 [设计索引](README.md)，现行契约见 [架构](../architecture.md)，交付证据见 [Phase 4](../acceptance/phase4.md)。任务状态只看 [roadmap](../roadmap.md)，开发规则只看 [development-process](../development-process.md)。
 
 ## 1. 结论与边界
 

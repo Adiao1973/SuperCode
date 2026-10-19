@@ -1,6 +1,6 @@
 # P4-5 动效基础
 
-dev 的动效基础已接入，任务状态与出口见 [roadmap](../roadmap.md) 和 [验收](../acceptance/p4-5.md)，持久化约定见 [architecture §6.9](../architecture.md#69-动效基础与减少动态p4-5)。
+本文定义已接入桌面端的动效基础，任务状态与出口见 [roadmap](../roadmap.md) 和 [验收](../acceptance/p4-5.md)，持久化约定见 [architecture §6.9](../architecture.md#69-动效基础与减少动态p4-5)。
 
 | 类型 | 完整模式 | 减少模式 |
 |---|---|---|
