@@ -14,7 +14,7 @@
 | 历史方案与旧进度 | [历史索引](history/README.md) | 归档快照，不能作为当前待办 |
 | 计划与连接示例 | [计划](examples/commander-plan.json)、[配置](examples/commander-config.json) | 虚构占位值，真实信息只留本机 |
 
-当前已发布 v1.0.0；v2.0.0 的 P4-1～23 已验收，P4-24 安装发布进行中，见 [Phase 4](acceptance/phase4.md)。发布前统一审阅全部文档，包括 README；当前任务状态仍以 roadmap 为准。
+当前已发布 **v2.0.0**，Phase 4 全部任务在批准的 macOS 范围内闭环完成，见 [阶段验收](acceptance/phase4.md)。发布前已整理 README 和文档入口、检查全部 Markdown 本地链接；后续任务仍以 roadmap 为准。
 
 Windows、ZCode 与 Claude 本机环境问题依用户授权延期；NativeDriver 限核心库，产品使用 ACP。范围依据见 [平台决策](adr/0008-macos-priority.md)及路线图。
 

@@ -8,7 +8,8 @@
 | Phase 1 / v0.2.0 | [整体验收](phase1.md) |
 | Phase 2 / v0.3.0 | [最终范围与整体验收](phase2.md)，[构建产物记录](phase2-artifacts.json) |
 | Phase 3 / v1.0.0 macOS arm64 | [阶段验收](phase3.md)，[构建产物](phase3-artifacts.json)，[P3-10B 安装与发布](p3-10b.md) |
-| P4-24 macOS 安装与发布 | [预写验收与发布记录](p4-24.md)；开发中 |
+| Phase 4 / v2.0.0 macOS arm64 | [阶段验收](phase4.md)，[产物记录](p4-24/artifacts.json) |
+| P4-24 macOS 安装与发布 | [已验收并发布](p4-24.md)；原始安装包、真实 ACP/PTY/重启与远端摘要 |
 | P4-23 全链路与升级 | [已验收：升级、真实 MiMo/双 Agent、审批取消、worktree/看板/PTY 与重启](p4-23.md) |
 | P4-22 可访问性与多尺寸回归 | [九格、键盘、中文IME与VoiceOver听读](p4-22.md)；已验收 |
 | P4-21 性能与资源回归 | [已验收：启动、流式、分栏与资源回归达标](p4-21.md) |
